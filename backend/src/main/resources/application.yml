@@ -1,6 +1,6 @@
 spring:
   config:
-    import: "optional:dotenv:.env"
+    import: classpath:/env.yml
   application:
     name: ballog
   jackson:

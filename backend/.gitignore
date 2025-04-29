@@ -4,7 +4,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-.env
+
+# 모든 위치의 env.yml 무시
+**/env.yml
 
 ### STS ###
 .apt_generated
