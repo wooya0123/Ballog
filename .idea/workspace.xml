@@ -4,11 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4e356c38-330e-4eb7-b84e-fcb5f7392acf" name="Changes" comment="init: 서버 프로젝트 구축" />
+    <list default="true" id="4e356c38-330e-4eb7-b84e-fcb5f7392acf" name="Changes" comment="feat: 기본 설정&#10;&#10;- application.yml 설정&#10;- BaseResponse 설정&#10;- GlobalExceptionHandler 설정&#10;- SpringSecurity 초기 설정&#10;- Swagger 초기 설정">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/backend/build.gradle" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$/backend">
+      <ProjectState />
+    </projectState>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -18,22 +26,31 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitLabMergeRequestFiltersHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPENED",
-    "assignee": {
-      "type": "org.jetbrains.plugins.gitlab.mergerequest.ui.filters.GitLabMergeRequestsFiltersValue.MergeRequestsMemberFilterValue.MergeRequestsAssigneeFilterValue",
-      "username": "zovl5546",
-      "fullname": "전승현"
+  <component name="GitLabMergeRequestFiltersHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPENED&quot;,
+    &quot;assignee&quot;: {
+      &quot;type&quot;: &quot;org.jetbrains.plugins.gitlab.mergerequest.ui.filters.GitLabMergeRequestsFiltersValue.MergeRequestsMemberFilterValue.MergeRequestsAssigneeFilterValue&quot;,
+      &quot;username&quot;: &quot;zovl5546&quot;,
+      &quot;fullname&quot;: &quot;전승현&quot;
     }
   }
-}]]></component>
-  <component name="GitLabMergeRequestsSettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "first": "https://lab.ssafy.com/s12-final/S12P31A404.git",
-    "second": "470a22db-6226-439c-849c-9004babd1535"
+}</component>
+  <component name="GitLabMergeRequestsSettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;first&quot;: &quot;https://lab.ssafy.com/s12-final/S12P31A404.git&quot;,
+    &quot;second&quot;: &quot;6d58b397-696a-43be-a896-2eaccec815fd&quot;
   }
-}]]></component>
+}</component>
+  <component name="JQLSearcherProjectManager">
+    <selected>-1</selected>
+    <searchers />
+  </component>
+  <component name="JiraServerManager">
+    <servers>
+      <JiraServer type="API_TOKEN" url="https://ssafy.atlassian.net/" />
+    </servers>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 6
@@ -45,9 +62,15 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Gradle.Build backend.executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "dev/be",
+    "Spring Boot.BallogApplication.executor": "Run",
+    "git-widget-placeholder": "feat/feat/be/S12P31A404-swagger-setting",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/SSAFY/IdeaProjects/S12P31A404/backend",
     "node.js.detected.package.eslint": "true",
@@ -55,14 +78,25 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "configurable.group.tools",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="BallogApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="ballog.main" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="notfound.ballog.BallogApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.22562.218" />
-        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-IU-243.22562.218" />
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.25659.59" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.25659.59" />
       </set>
     </attachedChunks>
   </component>
@@ -76,6 +110,12 @@
       <updated>1745821654427</updated>
       <workItem from="1745821655911" duration="28000" />
       <workItem from="1745821707095" duration="443000" />
+      <workItem from="1745899325399" duration="243000" />
+      <workItem from="1745899580136" duration="102000" />
+      <workItem from="1745899688704" duration="32000" />
+      <workItem from="1745899726995" duration="238000" />
+      <workItem from="1745899975290" duration="213000" />
+      <workItem from="1745900198159" duration="8053000" />
     </task>
     <task id="LOCAL-00001" summary="init: 서버 프로젝트 구축">
       <option name="closed" value="true" />
@@ -91,8 +131,24 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="init: 서버 프로젝트 구축" />
-    <option name="LAST_COMMIT_MESSAGE" value="init: 서버 프로젝트 구축" />
+    <MESSAGE value="feat: 기본 설정&#10;&#10;- application.yml 설정&#10;- BaseResponse 설정&#10;- GlobalExceptionHandler 설정&#10;- SpringSecurity 초기 설정&#10;- Swagger 초기 설정" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 기본 설정&#10;&#10;- application.yml 설정&#10;- BaseResponse 설정&#10;- GlobalExceptionHandler 설정&#10;- SpringSecurity 초기 설정&#10;- Swagger 초기 설정" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
