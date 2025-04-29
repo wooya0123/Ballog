@@ -1,10 +1,7 @@
 stages:
-  - build
   - deploy
 
 variables:
-  DOCKER_HOST: "tcp://docker:2375"
-  DOCKER_TLS_CERTDIR: ""
   DB_NAME: ${DB_NAME}
   DB_USER: ${DB_USER}
   DB_PASSWORD: ${DB_PASSWORD}
@@ -13,32 +10,42 @@ variables:
   MYSQL_USERNAME: ${MYSQL_USERNAME}
   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-  SPRING_BOOT_VERSION: "3.4.5"
-  JAVA_VERSION: "17"
-
-build:
-  stage: build
-  image: docker:20.10.16
-  services:
-    - name: docker:20.10.16-dind
-      command: ["--tls=false"]
-  script:
-    - docker info
-    - docker-compose build --no-cache backend
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker-compose push backend
-  only:
-    - dev/be
-  tags:
-    - ballog
 
 deploy:
   stage: deploy
-  script:
-    - docker-compose stop backend
-    - docker-compose rm -f backend
-    - docker-compose up -d backend
-  only:
-    - dev/be
   tags:
     - ballog
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - |
+      ssh -i ~/.ssh/id_rsa ubuntu@$SERVER_IP "
+        cd /home/ubuntu/S12P31A404 && 
+        git fetch &&
+        git checkout $CI_COMMIT_REF_NAME &&
+        git pull &&
+        
+        # 환경 변수 파일 생성
+        echo \"DB_NAME=${DB_NAME}\" > .env &&
+        echo \"DB_USER=${DB_USER}\" >> .env &&
+        echo \"DB_PASSWORD=${DB_PASSWORD}\" >> .env &&
+        echo \"JPA_DDL_AUTO=${JPA_DDL_AUTO}\" >> .env &&
+        echo \"MYSQL_DATABASE=${MYSQL_DATABASE}\" >> .env &&
+        echo \"MYSQL_USERNAME=${MYSQL_USERNAME}\" >> .env &&
+        echo \"MYSQL_PASSWORD=${MYSQL_PASSWORD}\" >> .env &&
+        echo \"MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\" >> .env &&
+        
+        # 백엔드 서비스 재빌드 및 배포
+        echo \"$CI_COMMIT_REF_NAME 브랜치: 백엔드 서비스 빌드 및 배포 중...\" &&
+        docker-compose down backend &&
+        docker-compose build backend &&
+        docker-compose up -d backend
+      "
+  only:
+    - dev/be
