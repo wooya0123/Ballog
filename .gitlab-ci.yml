@@ -2,14 +2,6 @@ stages:
   - deploy
 
 variables:
-  DB_NAME: ${DB_NAME}
-  DB_USER: ${DB_USER}
-  DB_PASSWORD: ${DB_PASSWORD}
-  JPA_DDL_AUTO: ${JPA_DDL_AUTO}
-  MYSQL_DATABASE: ${MYSQL_DATABASE}
-  MYSQL_USERNAME: ${MYSQL_USERNAME}
-  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
 deploy:
   stage: deploy
@@ -32,14 +24,14 @@ deploy:
         git pull &&
         
         # 환경 변수 파일 생성
-        echo \"DB_NAME=${DB_NAME}\" > .env &&
-        echo \"DB_USER=${DB_USER}\" >> .env &&
-        echo \"DB_PASSWORD=${DB_PASSWORD}\" >> .env &&
-        echo \"JPA_DDL_AUTO=${JPA_DDL_AUTO}\" >> .env &&
-        echo \"MYSQL_DATABASE=${MYSQL_DATABASE}\" >> .env &&
-        echo \"MYSQL_USERNAME=${MYSQL_USERNAME}\" >> .env &&
-        echo \"MYSQL_PASSWORD=${MYSQL_PASSWORD}\" >> .env &&
-        echo \"MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\" >> .env &&
+        echo \"DB_NAME=$DB_NAME\" > .env &&
+        echo \"DB_USER=$DB_USER\" >> .env &&
+        echo \"DB_PASSWORD=$DB_PASSWORD\" >> .env &&
+        echo \"JPA_DDL_AUTO=$JPA_DDL_AUTO\" >> .env &&
+        echo \"MYSQL_DATABASE=$MYSQL_DATABASE\" >> .env &&
+        echo \"MYSQL_USERNAME=$MYSQL_USERNAME\" >> .env &&
+        echo \"MYSQL_PASSWORD=$MYSQL_PASSWORD\" >> .env &&
+        echo \"MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD\" >> .env &&
         
         # 백엔드 서비스 재빌드 및 배포
         echo \"$CI_COMMIT_REF_NAME 브랜치: 백엔드 서비스 빌드 및 배포 중...\" &&
