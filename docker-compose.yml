@@ -20,6 +20,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=docker
 
   postgresql:
     image: postgres:15
