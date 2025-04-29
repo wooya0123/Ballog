@@ -11,25 +11,19 @@ services:
       - mysql
       - redis
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/${DB_NAME}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO}
-      - MYSQL_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
-      - MYSQL_USERNAME=${MYSQL_USERNAME}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - SPRING_REDIS_HOST=redis
-      - SPRING_REDIS_PORT=6379
-      - SPRING_PROFILES_ACTIVE=docker
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_CONFIG_IMPORT=optional:dotenv:.env
 
   postgresql:
     image: postgres:15
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_DB=ballog
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
