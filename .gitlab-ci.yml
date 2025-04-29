@@ -25,6 +25,8 @@ build:
     - docker-compose push backend
   only:
     - dev/be
+  tags:
+    - ballog
 
 deploy:
   stage: deploy
