@@ -37,7 +37,8 @@ deploy:
         
         # 백엔드 서비스 재빌드 및 배포
         echo \"$CI_COMMIT_REF_NAME 브랜치: 백엔드 서비스 빌드 및 배포 중...\" &&
-        docker-compose down backend &&
+        docker-compose stop backend &&
+        docker-compose rm -f backend &&
         docker-compose build backend &&
         docker-compose up -d backend
       "
