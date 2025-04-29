@@ -1,18 +1,24 @@
 FROM gradle:7.6.1-jdk17 AS build
 WORKDIR /app
-# 먼저 의존성 파일만 복사해서 캐시 활용
+
+ARG SPRING_BOOT_VERSION="3.4.5"
+ARG JAVA_VERSION=17
+
+# 먼저 의존성 파일만 복사
 COPY build.gradle settings.gradle ./
-# 의존성 다운로드 시 네트워크 타임아웃 증가 및 재시도 설정
-RUN gradle dependencies --no-daemon --stacktrace --info \
-    --build-cache \
+
+# build.gradle에서 스프링 부트 버전 설정
+RUN sed -i "s/springBootVersion = '.*'/springBootVersion = '${SPRING_BOOT_VERSION}'/" build.gradle || echo "Spring Boot version not found in build.gradle"
+
+# 의존성 다운로드
+RUN gradle dependencies --no-daemon --build-cache \
     -Dorg.gradle.internal.http.socketTimeout=120000 \
     -Dorg.gradle.internal.http.connectionTimeout=120000 \
-    -Dorg.gradle.internal.repository.max.retries=10 \
-    -Dorg.gradle.internal.repository.initial.backoff=500
+    -Dorg.gradle.internal.repository.max.retries=10
 
-# 그 다음 소스 코드 복사
+# 소스 코드 복사 및 빌드
 COPY . .
-RUN gradle build -x test --no-daemon --stacktrace
+RUN gradle build -x test --no-daemon
 
 FROM openjdk:17-slim
 WORKDIR /app
