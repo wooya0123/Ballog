@@ -8,18 +8,18 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "Ballog API 문서",
-                version = "v1"
+                title = "Ballog",
+                description = "Ballog API 문서",
+                version = "v1.0.0"
         )
 )
 @Configuration
 public class SwaggerConfig {
     @Bean
     public GroupedOpenApi api() {
-        String[] paths = {"/api/v1/**"};
         return GroupedOpenApi.builder()
                 .group("public-api")
-                .pathsToMatch(paths)
+                .pathsToMatch("/api/**")
                 .build();
     }
 }
