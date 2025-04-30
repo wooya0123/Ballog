@@ -23,24 +23,38 @@ deploy:
         git checkout $CI_COMMIT_REF_NAME &&
         git pull &&
         
-        # 환경 변수 파일 생성
+        # env.yml 파일을 올바른 위치에 생성 (src/main/resources 디렉토리)
+        mkdir -p backend/src/main/resources &&
+        echo \"db:\" > backend/src/main/resources/env.yml &&
+        echo \"  DB_URL: $DB_URL\" >> backend/src/main/resources/env.yml &&
+        echo \"  DB_USERNAME: $DB_USERNAME\" >> backend/src/main/resources/env.yml &&
+        echo \"  DB_PASSWORD: $DB_PASSWORD\" >> backend/src/main/resources/env.yml &&
+        
+        # MySQL 환경변수 추가
+        echo \"mysql:\" >> backend/src/main/resources/env.yml &&
+        echo \"  MYSQL_DB_URL: $MYSQL_DB_URL\" >> backend/src/main/resources/env.yml &&
+        echo \"  MYSQL_USERNAME: $MYSQL_USERNAME\" >> backend/src/main/resources/env.yml &&
+        echo \"  MYSQL_PASSWORD: $MYSQL_PASSWORD\" >> backend/src/main/resources/env.yml &&
+        
+        # Redis 환경변수 추가
+        echo \"redis:\" >> backend/src/main/resources/env.yml &&
+        echo \"  REDIS_HOST: $REDIS_HOST\" >> backend/src/main/resources/env.yml &&
+        echo \"  REDIS_PORT: $REDIS_PORT\" >> backend/src/main/resources/env.yml &&
+        
+        # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
         echo \"DB_URL=$DB_URL\" > .env &&
         echo \"DB_USERNAME=$DB_USERNAME\" >> .env &&
         echo \"DB_PASSWORD=$DB_PASSWORD\" >> .env &&
-        echo \"JPA_DDL_AUTO=$JPA_DDL_AUTO\" >> .env &&
-        echo \"REDIS_HOST=$REDIS_HOST\" >> .env &&
-        echo \"REDIS_PORT=$REDIS_PORT\" >> .env &&
-        echo \"MYSQL_DATABASE=$MYSQL_DATABASE\" >> .env &&
-        echo \"MYSQL_USERNAME=$MYSQL_USERNAME\" >> .env &&
+        echo \"MYSQL_DB_URL=$MYSQL_DB_URL\" >> .env &&
+        echo \"MYSQL_USERNAME=$MYSQL_USERNAME\" >> .env && 
         echo \"MYSQL_PASSWORD=$MYSQL_PASSWORD\" >> .env &&
-        echo \"MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD\" >> .env &&
         
         # 백엔드 서비스 재빌드 및 배포
         echo \"$CI_COMMIT_REF_NAME 브랜치: 백엔드 서비스 빌드 및 배포 중...\" &&
-        docker-compose stop backend &&
-        docker-compose rm -f backend &&
-        docker-compose build backend &&
-        docker-compose up -d backend
+        docker-compose stop backend nginx &&
+        docker-compose rm -f backend nginx &&
+        docker-compose build backend nginx &&
+        docker-compose up -d backend nginx
       "
   only:
     - dev/be
