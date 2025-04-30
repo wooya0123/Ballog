@@ -31,10 +31,10 @@ deploy:
         echo \"  DB_PASSWORD: $DB_PASSWORD\" >> backend/src/main/resources/env.yml &&
         
         # MySQL 환경변수 추가
-        echo \"mysql:\" >> backend/src/main/resources/env.yml &&
-        echo \"  MYSQL_DB_URL: $MYSQL_DB_URL\" >> backend/src/main/resources/env.yml &&
-        echo \"  MYSQL_USERNAME: $MYSQL_USERNAME\" >> backend/src/main/resources/env.yml &&
-        echo \"  MYSQL_PASSWORD: $MYSQL_PASSWORD\" >> backend/src/main/resources/env.yml &&
+        # echo \"mysql:\" >> backend/src/main/resources/env.yml &&
+        # echo \"  MYSQL_DB_URL: $MYSQL_DB_URL\" >> backend/src/main/resources/env.yml &&
+        # echo \"  MYSQL_USERNAME: $MYSQL_USERNAME\" >> backend/src/main/resources/env.yml &&
+        # echo \"  MYSQL_PASSWORD: $MYSQL_PASSWORD\" >> backend/src/main/resources/env.yml &&
         
         # Redis 환경변수 추가
         echo \"redis:\" >> backend/src/main/resources/env.yml &&
