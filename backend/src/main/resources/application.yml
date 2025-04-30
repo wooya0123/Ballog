@@ -29,5 +29,6 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
-
-
+server:
+  servlet:
+    context-path: /api
