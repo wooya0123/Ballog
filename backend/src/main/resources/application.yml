@@ -3,8 +3,6 @@ spring:
     import: classpath:/env.yml
   application:
     name: ballog
-  jackson:
-    property-naming-strategy: SNAKE_CASE
 
   datasource:
       url: ${DB_URL}

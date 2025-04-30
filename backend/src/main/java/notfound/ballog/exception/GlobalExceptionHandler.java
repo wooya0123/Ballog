@@ -1,4 +1,4 @@
-package notfound.ballog.common.exception;
+package notfound.ballog.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
