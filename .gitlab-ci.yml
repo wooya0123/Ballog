@@ -25,21 +25,18 @@ deploy:
         
         # env.yml 파일을 올바른 위치에 생성 (src/main/resources 디렉토리)
         mkdir -p backend/src/main/resources &&
-        echo \"db:\" > backend/src/main/resources/env.yml &&
-        echo \"  DB_URL: $DB_URL\" >> backend/src/main/resources/env.yml &&
-        echo \"  DB_USERNAME: $DB_USERNAME\" >> backend/src/main/resources/env.yml &&
-        echo \"  DB_PASSWORD: $DB_PASSWORD\" >> backend/src/main/resources/env.yml &&
+        echo \"DB_URL: $DB_URL\" >> backend/src/main/resources/env.yml &&
+        echo \"DB_USERNAME: $DB_USERNAME\" >> backend/src/main/resources/env.yml &&
+        echo \"DB_PASSWORD: $DB_PASSWORD\" >> backend/src/main/resources/env.yml &&
         
         # MySQL 환경변수 추가
-        # echo \"mysql:\" >> backend/src/main/resources/env.yml &&
-        # echo \"  MYSQL_DB_URL: $MYSQL_DB_URL\" >> backend/src/main/resources/env.yml &&
-        # echo \"  MYSQL_USERNAME: $MYSQL_USERNAME\" >> backend/src/main/resources/env.yml &&
-        # echo \"  MYSQL_PASSWORD: $MYSQL_PASSWORD\" >> backend/src/main/resources/env.yml &&
+        # echo \"MYSQL_DB_URL: $MYSQL_DB_URL\" >> backend/src/main/resources/env.yml &&
+        # echo \"MYSQL_USERNAME: $MYSQL_USERNAME\" >> backend/src/main/resources/env.yml &&
+        # echo \"MYSQL_PASSWORD: $MYSQL_PASSWORD\" >> backend/src/main/resources/env.yml &&
         
         # Redis 환경변수 추가
-        echo \"redis:\" >> backend/src/main/resources/env.yml &&
-        echo \"  REDIS_HOST: $REDIS_HOST\" >> backend/src/main/resources/env.yml &&
-        echo \"  REDIS_PORT: $REDIS_PORT\" >> backend/src/main/resources/env.yml &&
+        echo \"REDIS_HOST: $REDIS_HOST\" >> backend/src/main/resources/env.yml &&
+        echo \"REDIS_PORT: $REDIS_PORT\" >> backend/src/main/resources/env.yml &&
         
         # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
         echo \"DB_URL=$DB_URL\" > .env &&
