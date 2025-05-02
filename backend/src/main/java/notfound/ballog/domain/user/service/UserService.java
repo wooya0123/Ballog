@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import notfound.ballog.domain.user.dto.UserDto;
 import notfound.ballog.domain.user.entity.PlayerCard;
 import notfound.ballog.domain.user.entity.User;
-import notfound.ballog.domain.user.repository.PlayerCardRepository;
 import notfound.ballog.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
