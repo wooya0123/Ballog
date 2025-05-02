@@ -4,7 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4e356c38-330e-4eb7-b84e-fcb5f7392acf" name="Changes" comment="# 커밋 메시지를 작성해주세요.&#10;# -----------------------------------&#10;&#10;type: 제목&#10;&#10;- content1&#10;- content2&#10;&#10;S12P31A404-nn&#10;&#10;# -----------------------------------&#10;# 커밋 메시 작성 가이드&#10;# -----------------------------------&#10;&#10;# [사용 가능한 type 목록]&#10;# - init     : 초반 환경설정&#10;# - feat     : 새로운 기능 추가&#10;# - fix      : 버그 수정&#10;# - refactor : 코드 리팩토링 (기능 변화 없음)&#10;# - docs     : 문서 수정 (README, 주석 등)&#10;# - design   : CSS 등 UI 디자인 변경&#10;# - comment  : 주석 추가 및 수정&#10;# - rename   : 파일/폴더명 수정, 이동&#10;# - remove   : 파일 삭제&#10;# - deploy   : 배포 관련 작업&#10;&#10;# [제목 및 본문 작성 규칙]&#10;# - type은 영어 소문자로 작성&#10;# - 제목은 한글 기준 20자 이내로 간결하게 작성&#10;# - 마침표 및 특수문자 금지 (예: !, .)&#10;# - 제목(type: 제목)과 본문 사이 한 줄 띄우기&#10;# - 본문은 변경한 내용과 이유를 리스트로 작성 (무엇을 왜 했는지 위주)&#10;&#10;# [예시]&#10;# feat: 회원가입 기능 추가&#10;#&#10;# - 이메일 인증 기능 구현&#10;# - 비밀번호 암호화 처리&#10;#&#10;# S12P31A404-7" />
+    <list default="true" id="4e356c38-330e-4eb7-b84e-fcb5f7392acf" name="Changes" comment="# 커밋 메시지를 작성해주세요.&#10;# -----------------------------------&#10;&#10;type: 제목&#10;&#10;- content1&#10;- content2&#10;&#10;S12P31A404-nn&#10;&#10;# -----------------------------------&#10;# 커밋 메시 작성 가이드&#10;# -----------------------------------&#10;&#10;# [사용 가능한 type 목록]&#10;# - init     : 초반 환경설정&#10;# - feat     : 새로운 기능 추가&#10;# - fix      : 버그 수정&#10;# - refactor : 코드 리팩토링 (기능 변화 없음)&#10;# - docs     : 문서 수정 (README, 주석 등)&#10;# - design   : CSS 등 UI 디자인 변경&#10;# - comment  : 주석 추가 및 수정&#10;# - rename   : 파일/폴더명 수정, 이동&#10;# - remove   : 파일 삭제&#10;# - deploy   : 배포 관련 작업&#10;&#10;# [제목 및 본문 작성 규칙]&#10;# - type은 영어 소문자로 작성&#10;# - 제목은 한글 기준 20자 이내로 간결하게 작성&#10;# - 마침표 및 특수문자 금지 (예: !, .)&#10;# - 제목(type: 제목)과 본문 사이 한 줄 띄우기&#10;# - 본문은 변경한 내용과 이유를 리스트로 작성 (무엇을 왜 했는지 위주)&#10;&#10;# [예시]&#10;# feat: 회원가입 기능 추가&#10;#&#10;# - 이메일 인증 기능 구현&#10;# - 비밀번호 암호화 처리&#10;#&#10;# S12P31A404-7">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/backend/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/controller/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/dto/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/entity/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/repository/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/request/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/response/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/notfound/ballog/domain/team/service/Test.java" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -57,33 +69,34 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.Build backend.executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Spring Boot.BallogApplication.executor": "Run",
-    "git-widget-placeholder": "dev/be",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/DEV/S12P31A404",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "configurable.group.tools",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.Build backend.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.BallogApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feat/be/S12P31A404-123-api-team&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/DEV/S12P31A404&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.tools&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\DEV\S12P31A404\backend" />
