@@ -14,33 +14,27 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Match {
+public class Participant {
 
     //    @Id
 //    @SequenceGenerator(
-//            name = "match_sequence",
-//            sequenceName = "match_sequence"
+//            name = "participant_sequence",
+//            sequenceName = "participant_sequence"
 //            // default value 50
 //    )
 //    @GeneratedValue(
 //            strategy = GenerationType.SEQUENCE,
-//            generator = "match_sequence"
+//            generator = "participant_sequence"
 //    )
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer participantId;
+
     private Integer matchId;
 
-    private Integer teamId;
+    private Integer userId;
 
-    private Integer stadiumId;
-
-    private String matchStatus;
-
-    private LocalDateTime matchDate;
-
-    private LocalDateTime startTime;
-
-    private LocalDateTime endTime;
+    private String participantType;
 
     private LocalDateTime createdAt;
 
