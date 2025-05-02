@@ -15,4 +15,10 @@ public class GlobalExceptionHandler {
         log.error("InternalServerException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
         return BaseResponse.error(BaseResponseStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public BaseResponse<BaseResponseStatus> EmailAlreadyExistsException(DuplicateEmailException e) {
+        log.error("EmailAlreadyExistsException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
+        return BaseResponse.error(BaseResponseStatus.DUPLICATE_EMAIL);
+    }
 }

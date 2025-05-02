@@ -18,11 +18,11 @@ public class BaseResponse<T> {
     }
 
     // 커스텀 상태 응답 생성자
-    private BaseResponse(BaseResponseStatus status) {
+    private BaseResponse(BaseResponseStatus status, T result) {
         this.isSuccess = status.isSuccess();
         this.code = status.getCode();
         this.message = status.getMessage();
-        this.result = null;
+        this.result = result;
     }
 
     // 데이터 없는 성공 응답
@@ -37,6 +37,6 @@ public class BaseResponse<T> {
 
     // 에러 응답
     public static <T> BaseResponse<T> error(BaseResponseStatus status) {
-        return new BaseResponse<>(status);
+        return new BaseResponse<>(status, null);
     }
 }
