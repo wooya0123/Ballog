@@ -39,9 +39,6 @@ public class Auth {
     @Column
     private String refreshToken;
 
-    @Column
-    private LocalDateTime refreshTokenExpiryDate;
-
     @Column(nullable = false)
     private Boolean isActive;
 

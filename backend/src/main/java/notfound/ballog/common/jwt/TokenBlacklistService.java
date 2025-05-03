@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class TokenBlacklistService {
     private final Set<String> blacklisted = new ConcurrentSkipListSet<>();
 
-    public void addBlacklist(String token) {
+    public void addToBlacklist(String token) {
         blacklisted.add(token);
     }
 

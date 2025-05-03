@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailService implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
 
     private final AuthRepository authRepository;
 
@@ -23,12 +23,11 @@ public class CustomUserDetailService implements UserDetailsService {
 
     /** 로그인 시 검증 */
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public CustomUserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // 이메일로 auth 조회
         Auth auth = authRepository.findByEmail(email)
                 .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
 
         return new CustomUserDetails(auth);
     }
-
 }
