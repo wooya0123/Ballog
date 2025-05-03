@@ -3,6 +3,7 @@ package notfound.ballog.exception;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.common.response.BaseResponseStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -16,9 +17,21 @@ public class GlobalExceptionHandler {
         return BaseResponse.error(BaseResponseStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(DuplicateEmailException.class)
-    public BaseResponse<BaseResponseStatus> EmailAlreadyExistsException(DuplicateEmailException e) {
-        log.error("EmailAlreadyExistsException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
-        return BaseResponse.error(BaseResponseStatus.DUPLICATE_EMAIL);
+    @ExceptionHandler(DuplicateDataException.class)
+    public BaseResponse<BaseResponseStatus> DuplicateDataExceptionHandler(DuplicateDataException e) {
+        log.error("DuplicateDataException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
+        return BaseResponse.error(e.getStatus());
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public BaseResponse<BaseResponseStatus> ValidationExceptionHandler(ValidationException e) {
+        log.error("ValidationException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
+        return BaseResponse.error(e.getStatus());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public BaseResponse<BaseResponseStatus> MethodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
+        log.error("MethodArgumentNotValidException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
+        return BaseResponse.error(BaseResponseStatus.BAD_REQUEST);
     }
 }

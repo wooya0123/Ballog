@@ -4,10 +4,10 @@ import lombok.Getter;
 import notfound.ballog.common.response.BaseResponseStatus;
 
 @Getter
-public class DuplicateEmailException extends RuntimeException {
+public class DuplicateDataException extends RuntimeException {
     private BaseResponseStatus status;
 
-    public DuplicateEmailException(BaseResponseStatus status) {
+    public DuplicateDataException(BaseResponseStatus status) {
         super(status.getMessage());
         this.status = status;
     }

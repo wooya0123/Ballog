@@ -27,14 +27,20 @@ public class Auth {
     private Integer id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
+
+    @Column
+    private String refreshToken;
+
+    @Column
+    private LocalDateTime refreshTokenExpiryDate;
 
     @Column(nullable = false)
     private Boolean isActive;
@@ -47,7 +53,7 @@ public class Auth {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    public static Auth of(AuthDto authDto) {
+    public static Auth toEntity(AuthDto authDto) {
         return Auth.builder()
                 .user(authDto.getUser())
                 .email(authDto.getEmail())
