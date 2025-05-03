@@ -1,7 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose") // ✅ 필수 추가 (Kotlin 2.0 이상에서 Compose 사용 시)
+    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.spotless)
 }
 
 android {

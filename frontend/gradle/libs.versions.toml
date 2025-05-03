@@ -39,3 +39,4 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
