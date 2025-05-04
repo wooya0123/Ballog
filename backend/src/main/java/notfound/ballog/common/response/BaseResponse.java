@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class BaseResponse<T> {
     private final Boolean isSuccess;
-    private final String message;
     private final int code;
+    private String message;
     private T result;
 
     // 성공 응답 생성자
@@ -38,5 +38,12 @@ public class BaseResponse<T> {
     // 에러 응답
     public static <T> BaseResponse<T> error(BaseResponseStatus status) {
         return new BaseResponse<>(status, null);
+    }
+
+    // 커스텀 메시지 에러 응답
+    public static <T> BaseResponse<T> error(BaseResponseStatus status, String message) {
+        BaseResponse<T> response = new BaseResponse<>(status, null);
+        response.message = message;
+        return response;
     }
 }

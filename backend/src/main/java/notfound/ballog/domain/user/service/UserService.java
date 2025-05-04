@@ -17,14 +17,12 @@ public class UserService {
 
     // 회원가입
     @Transactional
-    public User addUser(UserDto userDto) {
+    public User signUp(User newUser) {
         // 유저 저장
-        User newUser = User.of(userDto);
         User savedUser = userRepository.save(newUser);
 
         // 플레이어 카드 생성
-        PlayerCard newPlayerCard = PlayerCard.of(savedUser);
-        playerCardService.addPlayerCard(newPlayerCard);
+        playerCardService.addPlayerCard(savedUser);
 
         return savedUser;
     }
