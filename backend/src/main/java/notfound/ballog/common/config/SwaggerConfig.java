@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
                 version = "v1.0.0"
         )
 )
+
+/** 모든 api 경로 공개 */
 @Configuration
 public class SwaggerConfig {
     @Bean
