@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.dto.JwtTokenDto;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@Getter
 public class JwtTokenProvider {
 
     private final AuthRepository authRepository;
@@ -57,6 +59,7 @@ public class JwtTokenProvider {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Integer authId = userDetails.getAuth().getId();
 
+        // 모두 ROLE_USER로 설정될 예정
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));

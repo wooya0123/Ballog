@@ -17,6 +17,5 @@ public class AuthDto {
     private String email;
     private String password;
     private String refreshToken;
-    private LocalDateTime refreshTokenExpiryDate;
     private Boolean isActive;
 }
