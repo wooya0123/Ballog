@@ -17,7 +17,7 @@ public class UserIdDto {
 
     public static UserIdDto of(Auth auth) {
         return UserIdDto.builder()
-                .uuid(auth.getUser().getId())
+                .uuid(auth.getUser().getUserId())
                 .build();
     }
 }
