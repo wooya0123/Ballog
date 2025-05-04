@@ -15,18 +15,19 @@ public class Stadium {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer stadiumId;
 
+    @Column(nullable = false)
     private String stadiumName;
 
-    @Column(columnDefinition = "geography(Point, 4326)")
+    @Column(columnDefinition = "geography(Point, 4326)", nullable = false)
     private Point topLeft;
 
-    @Column(columnDefinition = "geography(Point, 4326)")
+    @Column(columnDefinition = "geography(Point, 4326)", nullable = false)
     private Point topRight;
 
-    @Column(columnDefinition = "geography(Point, 4326)")
+    @Column(columnDefinition = "geography(Point, 4326)", nullable = false)
     private Point bottomLeft;
 
-    @Column(columnDefinition = "geography(Point, 4326)")
+    @Column(columnDefinition = "geography(Point, 4326)", nullable = false)
     private Point bottomRight;
 
 }

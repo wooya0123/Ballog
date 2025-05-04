@@ -3,6 +3,7 @@ package notfound.ballog.domain.match.response;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import notfound.ballog.domain.match.dto.ParticipantDto;
 
 import java.util.List;
 

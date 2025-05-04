@@ -22,8 +22,8 @@ public class MatchController {
     private final MatchService matchService;
 
     @PostMapping("/me")
-    public BaseResponse<Void> addPesonalMatch(@RequestBody PersonalMatchAddRequest pesonalMatchAddRequest) {
-        matchService.addPesonalMatch(pesonalMatchAddRequest);
+    public BaseResponse<Void> addPesonalMatch(@AuthenticationPrincipal UUID userId, @RequestBody PersonalMatchAddRequest pesonalMatchAddRequest) {
+        matchService.addPesonalMatch(userId ,pesonalMatchAddRequest);
         return BaseResponse.ok();
     }
 
@@ -52,7 +52,8 @@ public class MatchController {
 
     @GetMapping("/stadiums")
     public BaseResponse<StadiumListResponse> getStadiums(){
-        return BaseResponse.ok(matchService.getStadiums());
+        StadiumListResponse resp = new StadiumListResponse(matchService.getStadiums());
+        return BaseResponse.ok(resp);
     }
 
 }

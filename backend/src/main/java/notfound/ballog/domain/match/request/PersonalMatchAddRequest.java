@@ -1,22 +1,27 @@
 package notfound.ballog.domain.match.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PersonalMatchAddRequest {
 
-    private LocalDateTime matchDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate matchDate;
 
-    private LocalDateTime startTime;
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime startTime;
 
-    private LocalDateTime endTime;
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime endTime;
 
-    private String location;
+    private Integer stadiumId;
 
 }
