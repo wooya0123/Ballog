@@ -7,11 +7,13 @@ import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.auth.request.LoginRequest;
 import notfound.ballog.domain.auth.request.SendEmailRequest;
+import notfound.ballog.domain.auth.request.VerifyEmailRequest;
 import notfound.ballog.domain.auth.response.CheckEmailResponse;
 import notfound.ballog.domain.auth.response.LoginResponse;
 import notfound.ballog.domain.auth.response.TokenRefreshResponse;
 import notfound.ballog.domain.auth.service.AuthService;
 import notfound.ballog.domain.auth.request.SignUpRequest;
+import notfound.ballog.domain.auth.service.EmailService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailService emailService;
 
     @PostMapping("/signup")
     public BaseResponse<Void> addUser(@Valid @RequestBody SignUpRequest request){
@@ -38,14 +41,14 @@ public class AuthController {
 
     @PostMapping("/logout")
     public BaseResponse<Void> logout(
-            @AuthenticationPrincipal(expression="auth.id") Integer authId){
+            @AuthenticationPrincipal(expression="auth.authId") Integer authId){
         authService.logOut(authId);
         return BaseResponse.ok();
     }
 
     @PostMapping("/refresh-token")
     public BaseResponse<TokenRefreshResponse> refreshToken(
-            @AuthenticationPrincipal(expression="auth.id") Integer authId,
+            @AuthenticationPrincipal(expression="auth.authId") Integer authId,
             @RequestHeader("Authorization") String header) {
 
         String refreshToken = header.replace("Bearer ", "");
@@ -65,8 +68,14 @@ public class AuthController {
     }
 
     @PostMapping("/send-email")
-    public BaseResponse<Void> sendEmail(@Valid @RequestBody SendEmailRequest request) {
+    public BaseResponse<Void> sendEmailCode(@Valid @RequestBody SendEmailRequest request) {
+        emailService.sendEmailCode(request);
+        return BaseResponse.ok();
+    }
 
+    @PostMapping("/verify-email")
+    public BaseResponse<Void> verifyEmailCode(@Valid @RequestBody VerifyEmailRequest request) {
+        emailService.verifyEmailCode(request);
         return BaseResponse.ok();
     }
 }

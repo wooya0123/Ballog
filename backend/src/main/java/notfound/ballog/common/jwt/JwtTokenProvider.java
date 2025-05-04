@@ -55,7 +55,7 @@ public class JwtTokenProvider {
     /** JWT 토큰 생성 */
     public JwtTokenDto generateToken(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Integer authId = userDetails.getAuth().getId();
+        Integer authId = userDetails.getAuth().getAuthId();
 
         // 모두 ROLE_USER로 설정될 예정
         String authorities = authentication.getAuthorities().stream()

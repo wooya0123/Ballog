@@ -24,7 +24,7 @@ public class Auth {
             sequenceName = "auth_seq",
             allocationSize = 1
     )
-    private Integer id;
+    private Integer authId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

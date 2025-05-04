@@ -20,7 +20,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID userId;
 
     @Column(nullable = false, length = 100)
     private String nickName;
