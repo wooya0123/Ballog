@@ -23,7 +23,7 @@ public class User {
     private UUID userId;
 
     @Column(nullable = false, length = 100)
-    private String nickName;
+    private String nickname;
 
     @Column(nullable = false, length = 30)
     private String gender;
