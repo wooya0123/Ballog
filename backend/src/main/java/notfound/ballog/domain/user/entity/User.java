@@ -40,7 +40,7 @@ public class User {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    public static User of(UserDto userDto) {
+    public static User toEntity(UserDto userDto) {
         return User.builder()
                 .nickName(userDto.getNickName())
                 .gender(userDto.getGender())

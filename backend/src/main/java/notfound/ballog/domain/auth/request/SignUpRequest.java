@@ -1,19 +1,52 @@
 package notfound.ballog.domain.auth.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import notfound.ballog.domain.auth.entity.Auth;
+import notfound.ballog.domain.user.entity.User;
 
 import java.time.LocalDate;
 
 @Getter
 public class SignUpRequest {
+    @Email @NotBlank(message = "이메일은 필수입니다.")
     private String email;
+
+    @Size
+    @NotBlank(message = "비밀번호는 필수입니다.")
     private String password;
+
+    @NotBlank(message = "성별은 필수입니다.")
     private String gender;
+
+    @NotBlank(message = "닉네임은 필수입니다.")
     private String nickName;
 
+    @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     private String profileImageUrl;
+
+    public User toUserEntity(SignUpRequest request) {
+        return User.builder()
+                .nickName(request.getNickName())
+                .gender(request.getGender())
+                .birthDate(request.getBirthDate())
+                .profileImageUrl(request.getProfileImageUrl())
+                .build();
+    }
+
+    public Auth toAuthEntity(User user, String email, String password) {
+        return Auth.builder()
+                .user(user)
+                .email(email)
+                .password(password)
+                .isActive(true)
+                .build();
+    }
 }

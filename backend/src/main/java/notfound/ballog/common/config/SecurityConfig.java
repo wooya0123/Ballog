@@ -1,47 +1,90 @@
 package notfound.ballog.common.config;
 
 import lombok.RequiredArgsConstructor;
+import notfound.ballog.common.jwt.JwtAuthenticationFilter;
+import notfound.ballog.domain.auth.service.CustomUserDetailService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    // 허용할 url 배열
-    private static final String[] commonUrl = new String[] {
-            "/swagger-ui/**",       // 스웨거
-            "/swagger-resources/**",// 스웨거
-            "/v3/api-docs/**",      // 스웨거
-            "/api-docs/**"          // 스웨거
-    };
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailService customUserDetailService;
+
+    /** static 리소스(swagger) 완전 제외 */
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+                .requestMatchers(
+                        "/api-docs/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**"
+                );
+    }
+
+    /** 인증 규칙, 필터 설정 */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Restful API를 사용하므로, csrf는 사용할 필요가 없다
+            // CSRF 비활성화(REST API 사용)
             .csrf(CsrfConfigurer::disable)
-            // 토큰 방식을 사용하므로, 서버에서 session을 관리하지 않음. 따라서 STATELESS로 설정
+            // 토큰 방식 사용(세션 사용하지 않음)
             .sessionManagement(
-                    sessionManagement -> sessionManagement
-                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    m -> m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 필터 적용 시킬 url과 아닌 url 구분(초기엔 다 허용)
-            .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+            .authorizeHttpRequests(authorize -> authorize
                 // 로그인 없이 허용할 url
-                .requestMatchers(commonUrl).permitAll()
-                .anyRequest().permitAll()
-            );
+                .requestMatchers(
+                        "/v1/auth/signup",
+                        "/v1/auth/login",
+                        "/v1/auth/send-email",
+                        "/v1/auth/verify-email",
+                        "/v1/auth/check-email"
+                ).permitAll()
+                // 그 외 모든 요청 인증 필요
+                .anyRequest().authenticated()
+            )
+            // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 실행
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
+    /** 인증 요청을 위임 받고 provider에게 전달 */
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    /** 실제 인증 로직 구현 */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(customUserDetailService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    /** passwordEncoder 설정 */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

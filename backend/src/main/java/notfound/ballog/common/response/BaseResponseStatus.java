@@ -19,9 +19,14 @@ public enum BaseResponseStatus {
     DATABASE_ERROR(false, 501, "데이터베이스 오류가 발생했습니다."),
 
     // 비즈니스 로직 관련 에러 (1000번대)
-    INVALID_USER_ID(false, 1001, "유효하지 않은 사용자 ID입니다."),
+    INVALID_EMAIL(false, 1001, "유효하지 않은 이메일입니다."),
     DUPLICATE_EMAIL(false, 1002, "이미 사용 중인 이메일입니다."),
-    PASSWORD_MISMATCH(false, 1003, "비밀번호가 일치하지 않습니다.");
+    PASSWORD_MISMATCH(false, 1003, "비밀번호가 일치하지 않습니다."),
+    INVALID_TOKEN(false, 1004, "유효하지 않은 토큰입니다."),
+    EXPIRED_TOKEN(false, 1005, "토큰이 만료되었습니다."),
+    MISSING_TOKEN(false, 1006, "요청에 토큰이 존재하지 않습니다."),
+
+    USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다.");
     /*
         이후 자유롭게 에러 추가
      */

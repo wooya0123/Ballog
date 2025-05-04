@@ -46,9 +46,9 @@ public class PlayerCard {
     @Column(columnDefinition = "SMALLINT")
     private int recovery;
 
-    public static PlayerCard of(User user) {
+    public static PlayerCard addBaseCard(User savedUser) {
         return PlayerCard.builder()
-                .user(user)
+                .user(savedUser)
                 .playStyle(null)
                 .rank(null)
                 .speed(0)
@@ -58,5 +58,4 @@ public class PlayerCard {
                 .recovery(0)
                 .build();
     }
-
 }
