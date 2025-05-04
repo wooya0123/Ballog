@@ -1,5 +1,6 @@
 package notfound.ballog.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.common.response.BaseResponseStatus;
@@ -32,12 +33,19 @@ public class GlobalExceptionHandler {
         return BaseResponse.error(e.getStatus());
     }
 
-    // Valid 에러
+    // RequestDto Valid 에러
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<BaseResponse<Void>> MethodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
+    public BaseResponse<Void> MethodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldError().getDefaultMessage();
         log.error("MethodArgumentNotValidException {}", message );
-        BaseResponse<Void> body = BaseResponse.error(BaseResponseStatus.BAD_REQUEST, message);
-        return ResponseEntity.ok(body);
+        return BaseResponse.error(BaseResponseStatus.BAD_REQUEST, message);
+    }
+
+    // 쿼리 파라미터 Valid 에러
+    @ExceptionHandler(ConstraintViolationException.class)
+    public BaseResponse<Void> ConstraintViolationExceptionHandler(ConstraintViolationException e) {
+        String message = e.getConstraintViolations().iterator().next().getMessage();
+        log.error("ConstraintViolationException {}", message);
+        return BaseResponse.error(BaseResponseStatus.BAD_REQUEST, message);
     }
 }

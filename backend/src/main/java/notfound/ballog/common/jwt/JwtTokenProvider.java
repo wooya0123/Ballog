@@ -5,6 +5,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.dto.JwtTokenDto;
@@ -28,9 +29,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @Getter
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
     private final AuthRepository authRepository;
+    private Key signingKey;
+
     @Value("${jwt.secret}")
     private String secret;
 
@@ -39,12 +43,6 @@ public class JwtTokenProvider {
 
     @Value("${jwt.refresh-expire-ms}")
     private Long refreshExpireMs;
-
-    private Key signingKey;
-
-    public JwtTokenProvider(AuthRepository authRepository) {
-        this.authRepository = authRepository;
-    }
 
     /** 키 생성 */
     @PostConstruct
@@ -121,10 +119,18 @@ public class JwtTokenProvider {
             Auth auth = authRepository.findById(authId)
                     .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
             CustomUserDetails userDetails = new CustomUserDetails(auth);
-            Collection<? extends GrantedAuthority> authorities = Arrays.stream(
-                    claims.get("auth").toString().split(","))
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+
+            Object authClaim = claims.get("auth");
+            Collection<? extends GrantedAuthority> authorities;
+            // Access 토큰인 경우
+            if (authClaim != null) {
+                authorities = Arrays.stream(authClaim.toString().split(","))
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList());
+            } else {
+                // Refresh 토큰은 db에서 권한 조회
+                authorities = userDetails.getAuthorities();
+            }
             return new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
         } catch (ExpiredJwtException e) {
             throw new ValidationException(BaseResponseStatus.EXPIRED_TOKEN);

@@ -13,7 +13,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -39,13 +38,4 @@ public class User {
     @UpdateTimestamp
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
-
-    public static User toEntity(UserDto userDto) {
-        return User.builder()
-                .nickName(userDto.getNickName())
-                .gender(userDto.getGender())
-                .birthDate(userDto.getBirthDate())
-                .profileImageUrl(userDto.getProfileImageUrl())
-                .build();
-    }
 }
