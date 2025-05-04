@@ -6,7 +6,6 @@ import notfound.ballog.domain.user.dto.PlayerCardDto;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

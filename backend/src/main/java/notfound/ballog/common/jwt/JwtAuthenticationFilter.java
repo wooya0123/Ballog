@@ -24,7 +24,6 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends GenericFilterBean {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final TokenBlacklistService tokenBlacklistService;
 
     /** Header에서 토큰 추출 */
     private String resolveToken(HttpServletRequest request) {
@@ -85,22 +84,16 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             // 5. 토큰 유효성 검사
             jwtTokenProvider.validateToken(token);
 
-            // 6. 블랙리스트에 존재하는지 확인
-            if (tokenBlacklistService.isBlacklisted(token)) {
-                throw new ValidationException(BaseResponseStatus.INVALID_TOKEN);
-            }
-
-            // 7. 토큰이 정상이면 인증 정보 꺼내서 Spring Security Context에 저장
+            // 6. 토큰이 정상이면 인증 정보 꺼내서 Spring Security Context에 저장
             // -> Controller에서 인증된 사용자 정보 사용 가능
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // 9. 다음 필터 실행
+            // 7. 다음 필터 실행
             chain.doFilter(request, response);
 
         } catch (ValidationException e) {
             setErrorResponse(httpResponse, e.getStatus());
-            return;
         }
     }
 

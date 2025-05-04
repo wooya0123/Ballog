@@ -15,7 +15,7 @@ import java.util.UUID;
 public class UserIdDto {
     private UUID uuid;
 
-    public static UserIdDto fromAuth(Auth auth) {
+    public static UserIdDto of(Auth auth) {
         return UserIdDto.builder()
                 .uuid(auth.getUser().getId())
                 .build();

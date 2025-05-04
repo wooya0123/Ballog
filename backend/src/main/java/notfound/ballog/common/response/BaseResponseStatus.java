@@ -26,7 +26,8 @@ public enum BaseResponseStatus {
     EXPIRED_TOKEN(false, 1005, "토큰이 만료되었습니다."),
     MISSING_TOKEN(false, 1006, "요청에 토큰이 존재하지 않습니다."),
 
-    USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다.");
+    USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다."),
+    USER_INACTIVE(false, 2001, "탈퇴한 사용자입니다.");
     /*
         이후 자유롭게 에러 추가
      */

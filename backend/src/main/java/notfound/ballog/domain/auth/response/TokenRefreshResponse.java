@@ -5,25 +5,19 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.auth.dto.JwtTokenDto;
-import notfound.ballog.domain.auth.entity.Auth;
-import notfound.ballog.domain.user.dto.UserIdDto;
-
-import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginResponse {
+public class TokenRefreshResponse {
     private String accessToken;
     private String refreshToken;
-    private UserIdDto user;
 
-    public static LoginResponse of(JwtTokenDto token, UserIdDto userIdDto) {
-        return LoginResponse.builder()
+    public static TokenRefreshResponse of(JwtTokenDto token) {
+        return TokenRefreshResponse.builder()
                 .accessToken(token.getAccessToken())
                 .refreshToken(token.getRefreshToken())
-                .user(userIdDto)
                 .build();
     }
 }
