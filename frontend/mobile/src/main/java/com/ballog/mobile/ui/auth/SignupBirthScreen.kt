@@ -1,4 +1,4 @@
-package com.ballog.mobile.ui.screens.signup
+package com.ballog.mobile.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,7 +7,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,6 +22,7 @@ import com.ballog.mobile.navigation.Routes
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Surface
 import com.ballog.mobile.ui.theme.System
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 @Composable
 fun SignupBirthScreen(
@@ -34,8 +34,16 @@ fun SignupBirthScreen(
     var hasError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val yearFocusRequester = remember { FocusRequester() }
     val monthFocusRequester = remember { FocusRequester() }
     val dayFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Request focus and show keyboard when the screen mounts
+    LaunchedEffect(Unit) {
+        yearFocusRequester.requestFocus()
+        keyboardController?.show()
+    }
 
     Box(
         modifier = Modifier
@@ -107,7 +115,9 @@ fun SignupBirthScreen(
                     placeholder = "YYYY",
                     hasError = hasError,
                     keyboardType = KeyboardType.Number,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(yearFocusRequester)
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))

@@ -185,7 +185,7 @@ fun SignupProfileScreen(navController: NavController) {
             Spacer(modifier = Modifier.weight(1f))
             BallogButton(
                 onClick = {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.TEAM_LIST) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -200,7 +200,7 @@ fun SignupProfileScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
             BallogButton(
                 onClick = {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.TEAM_LIST) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
