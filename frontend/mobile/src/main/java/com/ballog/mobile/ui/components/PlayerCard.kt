@@ -1,0 +1,101 @@
+package com.ballog.mobile.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ballog.mobile.R
+import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.Primary
+import com.ballog.mobile.ui.theme.pretendard
+
+@Composable
+fun PlayerCard(
+    name: String,
+    isManager: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .width(310.dp)
+            .height(48.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = Gray.Gray200
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = name,
+                    fontSize = 16.sp,
+                    fontFamily = pretendard,
+                    fontWeight = FontWeight.Medium,
+                    color = Gray.Gray800
+                )
+                
+                if (isManager) {
+                    Surface(
+                        shape = RoundedCornerShape(9999.dp),
+                        color = Color(0xFF7EE4EA).copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            text = "매니저",
+                            fontSize = 12.sp,
+                            fontFamily = pretendard,
+                            fontWeight = FontWeight.Normal,
+                            color = Primary,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+            
+            // Card Icon
+            Icon(
+                painter = painterResource(id = R.drawable.ic_card),
+                contentDescription = "카드",
+                tint = Gray.Gray800,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PlayerCardPreview() {
+    Column(
+        modifier = Modifier
+            .background(Color.White)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        PlayerCard(
+            name = "김가희",
+            isManager = true
+        )
+        PlayerCard(
+            name = "김가희",
+            isManager = false
+        )
+    }
+} 
