@@ -39,6 +39,12 @@ deploy:
         echo "REDIS_PORT: $REDIS_PORT" >> backend/src/main/resources/env.yml &&
 
         echo "JWT_SECRET: $JWT_SECRET" >> backend/src/main/resources/env.yml &&
+
+        # SMTP 환경변수 추가
+        echo "MAIL_HOST: $MAIL_HOST" >> backend/src/main/resources/env.yml &&
+        echo "MAIL_PORT: $MAIL_PORT" >> backend/src/main/resources/env.yml &&
+        echo "MAIL_USERNAME: $MAIL_USERNAME" >> backend/src/main/resources/env.yml &&
+        echo "MAIL_PASSWORD: $MAIL_PASSWORD" >> backend/src/main/resources/env.yml &&
         
         # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
         echo "DB_URL=$DB_URL" > .env &&
