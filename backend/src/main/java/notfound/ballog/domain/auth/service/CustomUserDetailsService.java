@@ -10,22 +10,33 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final AuthRepository authRepository;
 
-    /** 회원가입 시 이메일 중복 확인 */
-    public Boolean existsByEmail(String email) {
-        return authRepository.existsByEmail(email);
+    @Override
+    public CustomUserDetails loadUserByUsername(String email){
+        Auth auth = authRepository.findByEmail(email)
+                .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
+
+        return new CustomUserDetails(auth);
     }
 
-    /** 로그인 시 검증 */
-    @Override
-    public CustomUserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // 이메일로 auth 조회
-        Auth auth = authRepository.findByEmail(email)
+    // 이메일로 유저 조회
+    public CustomUserDetails loadUserByEmail(String email){
+        Auth auth = authRepository.findByEmailAndIsActiveTrue(email)
+                .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
+
+        return new CustomUserDetails(auth);
+    }
+
+    // AuthId로 유저 조회
+    public CustomUserDetails loadUserByAuthId(Integer authId) {
+        Auth auth = authRepository.findByAuthIdAndIsActiveTrue(authId)
                 .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
 
         return new CustomUserDetails(auth);

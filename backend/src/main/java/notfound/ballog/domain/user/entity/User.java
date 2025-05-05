@@ -3,6 +3,8 @@ package notfound.ballog.domain.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import notfound.ballog.domain.user.dto.UserDto;
+import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
+import notfound.ballog.domain.user.request.UpdateUserRequest;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,7 +15,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,10 +22,10 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID userId;
 
     @Column(nullable = false, length = 100)
-    private String nickName;
+    private String nickname;
 
     @Column(nullable = false, length = 30)
     private String gender;
@@ -40,12 +41,15 @@ public class User {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    public static User toEntity(UserDto userDto) {
-        return User.builder()
-                .nickName(userDto.getNickName())
-                .gender(userDto.getGender())
-                .birthDate(userDto.getBirthDate())
-                .profileImageUrl(userDto.getProfileImageUrl())
-                .build();
+    public User updateUser(UpdateUserRequest request) {
+        this.nickname = request.getNickname();
+        this.gender = request.getGender();
+        this.birthDate = request.getBirthDate();
+        return this;
+    }
+
+    public User updateProfileImage(UpdateProfileImageRequest request) {
+        this.profileImageUrl = request.getProfileImageUrl();
+        return this;
     }
 }

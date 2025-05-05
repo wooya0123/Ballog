@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class AuthDto {
-    private User user;
+    private String userId;
     private String email;
     private String password;
     private String refreshToken;

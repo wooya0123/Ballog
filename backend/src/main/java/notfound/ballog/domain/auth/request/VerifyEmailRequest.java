@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
+public class VerifyEmailRequest {
     @Email(message = "올바른 이메일을 입력하세요.")
     @NotBlank(message = "이메일을 입력하세요.")
     private String email;
 
-    @NotBlank(message = "비밀번호를 입력하세요.")
-    private String password;
+    @NotBlank(message = "이메일 인증코드를 입력하세요.")
+    private String authCode;
 }
