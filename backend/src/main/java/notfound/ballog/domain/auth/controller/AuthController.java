@@ -1,5 +1,7 @@
 package notfound.ballog.domain.auth.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +23,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-
+@Tag(
+        name = "Auth"
+)
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
@@ -32,18 +36,27 @@ public class AuthController {
     private final AuthService authService;
     private final EmailService emailService;
 
+    @Operation(
+            summary = "회원가입"
+    )
     @PostMapping("/signup")
     public BaseResponse<Void> addUser(@Valid @RequestBody SignUpRequest request){
         authService.signUp(request);
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "로그인"
+    )
     @PostMapping("/login")
     public BaseResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request){
         LoginResponse response = authService.login(request);
         return BaseResponse.ok(response);
     }
 
+    @Operation(
+            summary = "로그아웃"
+    )
     @PostMapping("/logout")
     public BaseResponse<Void> logout(
             @AuthenticationPrincipal UUID userId){
@@ -51,6 +64,9 @@ public class AuthController {
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "토큰 재발급"
+    )
     @PostMapping("/refresh-token")
     public BaseResponse<TokenRefreshResponse> refreshToken(
             @AuthenticationPrincipal UUID userId,
@@ -61,6 +77,9 @@ public class AuthController {
         return BaseResponse.ok(response);
     }
 
+    @Operation(
+            summary = "이메일 중복 확인"
+    )
     @GetMapping("/check-email")
     public BaseResponse<CheckEmailResponse> checkEmail(
             @RequestParam("email")
@@ -72,12 +91,18 @@ public class AuthController {
         return BaseResponse.ok(response);
     }
 
+    @Operation(
+            summary = "이메일 인증 코드 요청"
+    )
     @PostMapping("/send-email")
     public BaseResponse<Void> sendEmailCode(@Valid @RequestBody SendEmailRequest request) {
         emailService.sendEmailCode(request);
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "이메일 인증 코드 확인"
+    )
     @PostMapping("/verify-email")
     public BaseResponse<Void> verifyEmailCode(@Valid @RequestBody VerifyEmailRequest request) {
         emailService.verifyEmailCode(request);
