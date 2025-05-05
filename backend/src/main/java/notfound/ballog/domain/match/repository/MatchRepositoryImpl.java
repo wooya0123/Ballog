@@ -63,6 +63,7 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
                         match.matchDate,
                         match.startTime,
                         match.endTime))
+                .distinct()
                 .from(match)
                 .join(participant).on(match.matchId.eq(participant.matchId))
                 .join(stadium).on(match.stadiumId.eq(stadium.stadiumId))

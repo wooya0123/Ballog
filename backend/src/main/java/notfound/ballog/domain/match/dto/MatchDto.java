@@ -2,7 +2,7 @@ package notfound.ballog.domain.match.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
@@ -16,7 +16,7 @@ public class MatchDto {
 
     private String location;
 
-    private LocalDateTime matchDate;
+    private LocalDate matchDate;
 
     private LocalTime startTime;
 

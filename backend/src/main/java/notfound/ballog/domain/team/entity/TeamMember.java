@@ -1,9 +1,6 @@
 package notfound.ballog.domain.team.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import notfound.ballog.domain.team.request.TeamMemberAddRequest;
 
@@ -18,26 +15,28 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TeamMember {
 
-//    @Id
-//    @SequenceGenerator(
-//            name = "team_member_sequence",
-//            sequenceName = "team_member_sequence"
-//            // default value 50
-//    )
-//    @GeneratedValue(
-//            strategy = GenerationType.SEQUENCE,
-//            generator = "team_member_sequence"
-//    )
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @SequenceGenerator(
+            name = "team_member_sequence",
+            sequenceName = "team_member_sequence",
+            allocationSize = 1
+    )
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "team_member_sequence"
+    )
     private Integer teamMemberId;
 
+    @Column(nullable = false)
     private UUID userId;
 
+    @Column(nullable = false)
     private Integer teamId;
 
+    @Column(nullable = false)
     private String role;
 
+    @Column(nullable = false)
     private LocalDateTime joinedAt;
 
     public static TeamMember of(UUID userId, TeamMemberAddRequest req) {

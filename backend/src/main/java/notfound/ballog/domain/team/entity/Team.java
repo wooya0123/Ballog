@@ -1,12 +1,10 @@
 package notfound.ballog.domain.team.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import notfound.ballog.domain.team.request.TeamAddRequest;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,28 +15,30 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Team {
 
-    //    @Id
-//    @SequenceGenerator(
-//            name = "team_sequence",
-//            sequenceName = "team_sequence",
-//            allocationSize = 5
-//    )
-//    @GeneratedValue(
-//            strategy = GenerationType.SEQUENCE,
-//            generator = "team_sequence"
-//    )
-
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @SequenceGenerator(
+            name = "team_sequence",
+            sequenceName = "team_sequence",
+            allocationSize = 1
+    )
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "team_sequence"
+    )
     private Integer teamId;
 
+    @Column(nullable = false)
     private String teamName;
 
-    private String foundationDate;
+    @Column(nullable = false)
+    private LocalDate foundationDate;
 
     private String logoImageUrl;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     public static Team of(TeamAddRequest req){
