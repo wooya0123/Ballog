@@ -25,6 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ballog.mobile.R
+import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.Primary
+import com.ballog.mobile.ui.theme.System
 import com.ballog.mobile.ui.theme.pretendard
 
 enum class ButtonType {
@@ -51,17 +54,17 @@ fun BallogButton(
     enabled: Boolean = true
 ) {
     val backgroundColor = when (buttonColor) {
-        ButtonColor.ALERT -> Color(0xFFECEEF0)
-        ButtonColor.GRAY -> Color(0xFFECEEF0)
-        ButtonColor.BLACK -> Color(0xFF1B1B1D)
-        ButtonColor.PRIMARY -> Color(0xFF7EE4EA)
+        ButtonColor.ALERT -> Gray.Gray300
+        ButtonColor.GRAY -> Gray.Gray300
+        ButtonColor.BLACK -> Gray.Gray700
+        ButtonColor.PRIMARY -> Primary
     }
 
     val contentColor = when (buttonColor) {
-        ButtonColor.ALERT -> Color(0xFFEA4335)
-        ButtonColor.GRAY -> Color(0xFF9BA0A5)
-        ButtonColor.BLACK -> Color(0xFF7EE4EA)
-        ButtonColor.PRIMARY -> Color(0xFF1B1B1D)
+        ButtonColor.ALERT -> System.Red
+        ButtonColor.GRAY -> Gray.Gray500
+        ButtonColor.BLACK -> Primary
+        ButtonColor.PRIMARY -> Gray.Gray700
     }
 
     Surface(

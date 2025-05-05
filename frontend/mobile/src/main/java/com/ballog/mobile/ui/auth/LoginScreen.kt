@@ -1,4 +1,4 @@
-package com.ballog.mobile.ui.screens.login
+package com.ballog.mobile.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +16,8 @@ import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.Input
+import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.Surface
 import com.ballog.mobile.ui.theme.pretendard
 import kotlinx.coroutines.delay
 
@@ -76,7 +78,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Surface)
     ) {
         Column(
             modifier = Modifier
@@ -90,7 +92,7 @@ fun LoginScreen(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.W700,
                 lineHeight = 28.64.sp,
-                color = Color(0xFF1B1B1D),
+                color = Gray.Gray700,
                 fontFamily = pretendard
             )
 
@@ -131,7 +133,7 @@ fun LoginScreen(
                 text = "비밀번호를 잊으셨나요?",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.W500,
-                color = Color.Black,
+                color = Gray.Gray800,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -163,257 +165,6 @@ fun LoginScreen(
                 buttonColor = ButtonColor.BLACK,
                 label = if (isLoading) "로그인 중..." else "회원가입 / 로그인",
                 enabled = !isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 40.dp)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen()
-}
-
-@Preview(showBackground = true, name = "Error State")
-@Composable
-fun LoginScreenErrorPreview() {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isPasswordVisible by remember { mutableStateOf(false) }
-    var hasEmailError by remember { mutableStateOf(true) }
-    var hasPasswordError by remember { mutableStateOf(true) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(53.dp))
-
-            Text(
-                text = "풋살은 볼로그와 함께",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.W700,
-                lineHeight = 28.64.sp,
-                color = Color(0xFF1B1B1D),
-                fontFamily = pretendard
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Input(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "이메일",
-                hasError = hasEmailError,
-                errorMessage = "이메일을 입력해주세요",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Input(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "비밀번호",
-                hasError = hasPasswordError,
-                errorMessage = "비밀번호를 입력해주세요",
-                isPassword = true,
-                isPasswordVisible = isPasswordVisible,
-                onPasswordVisibilityChange = { isPasswordVisible = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                text = "비밀번호를 잊으셨나요?",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W500,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .clickable { },
-                fontFamily = pretendard
-            )
-
-            BallogButton(
-                onClick = { },
-                type = ButtonType.LABEL_ONLY,
-                buttonColor = ButtonColor.BLACK,
-                label = "회원가입 / 로그인",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 40.dp)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Filled State")
-@Composable
-fun LoginScreenFilledPreview() {
-    var email by remember { mutableStateOf("example@email.com") }
-    var password by remember { mutableStateOf("password123") }
-    var isPasswordVisible by remember { mutableStateOf(false) }
-    var hasEmailError by remember { mutableStateOf(false) }
-    var hasPasswordError by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(53.dp))
-
-            Text(
-                text = "풋살은 볼로그와 함께",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.W700,
-                lineHeight = 28.64.sp,
-                color = Color(0xFF1B1B1D),
-                fontFamily = pretendard
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Input(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "이메일",
-                hasError = hasEmailError,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Input(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "비밀번호",
-                hasError = hasPasswordError,
-                isPassword = true,
-                isPasswordVisible = isPasswordVisible,
-                onPasswordVisibilityChange = { isPasswordVisible = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                text = "비밀번호를 잊으셨나요?",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W500,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .clickable { },
-                fontFamily = pretendard
-            )
-
-            BallogButton(
-                onClick = { },
-                type = ButtonType.LABEL_ONLY,
-                buttonColor = ButtonColor.BLACK,
-                label = "회원가입 / 로그인",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 40.dp)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Password Visible State")
-@Composable
-fun LoginScreenPasswordVisiblePreview() {
-    var email by remember { mutableStateOf("example@email.com") }
-    var password by remember { mutableStateOf("mypassword123") }
-    var isPasswordVisible by remember { mutableStateOf(true) }
-    var hasEmailError by remember { mutableStateOf(false) }
-    var hasPasswordError by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(53.dp))
-
-            Text(
-                text = "풋살은 볼로그와 함께",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.W700,
-                lineHeight = 28.64.sp,
-                color = Color(0xFF1B1B1D),
-                fontFamily = pretendard
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Input(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = "이메일",
-                hasError = hasEmailError,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Input(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = "비밀번호",
-                hasError = hasPasswordError,
-                isPassword = true,
-                isPasswordVisible = isPasswordVisible,
-                onPasswordVisibilityChange = { isPasswordVisible = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                text = "비밀번호를 잊으셨나요?",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W500,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .clickable { },
-                fontFamily = pretendard
-            )
-
-            BallogButton(
-                onClick = { },
-                type = ButtonType.LABEL_ONLY,
-                buttonColor = ButtonColor.BLACK,
-                label = "회원가입 / 로그인",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 40.dp)

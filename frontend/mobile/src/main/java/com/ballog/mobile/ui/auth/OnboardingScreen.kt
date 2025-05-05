@@ -1,4 +1,4 @@
-package com.ballog.mobile.ui.screens.onboarding
+package com.ballog.mobile.ui.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -16,6 +16,7 @@ import com.ballog.mobile.R
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
+import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 
 @Composable
@@ -47,7 +48,7 @@ fun OnboardingScreen(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.W700,
                 lineHeight = 28.64.sp,
-                color = Color.White,
+                color = Gray.Gray100,
                 fontFamily = pretendard
             )
 
