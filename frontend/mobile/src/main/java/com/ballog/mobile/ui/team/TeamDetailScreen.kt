@@ -66,59 +66,68 @@ fun TeamDetailScreen(
 
 @Composable
 private fun TeamInfoTab() {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(vertical = 24.dp)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        item {
-            TeamInfoCard(
-                stats = TeamStats(
-                    attack = 65,
-                    defence = 60,
-                    speed = 45,
-                    recovery = 60,
-                    stamina = 70
-                )
-            )
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        
-        item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_profile),
-                    contentDescription = "멤버 수",
-                    tint = Gray.Gray800,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = "6",
-                    fontSize = 12.sp,
-                    fontFamily = pretendard,
-                    fontWeight = FontWeight.Normal,
-                    color = Gray.Gray800
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),  // 24dp에서 32dp로 패딩 증가
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 24.dp)
+        ) {
+            item {
+                TeamInfoCard(
+                    stats = TeamStats(
+                        attack = 65,
+                        defence = 60,
+                        speed = 45,
+                        recovery = 60,
+                        stamina = 70
+                    )
                 )
             }
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-        
-        items(samplePlayers) { player ->
-            PlayerCard(
-                name = player.name,
-                isManager = player.isManager
-            )
+            
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_profile),
+                        contentDescription = "멤버 수",
+                        tint = Gray.Gray800,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "6",
+                        fontSize = 12.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        color = Gray.Gray800
+                    )
+                }
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            items(samplePlayers) { player ->
+                PlayerCard(
+                    name = player.name,
+                    isManager = player.isManager,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

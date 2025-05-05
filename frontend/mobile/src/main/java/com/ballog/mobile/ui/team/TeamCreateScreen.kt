@@ -137,7 +137,7 @@ fun TeamCreateScreen(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
+                            .height(60.dp)
                             .background(Gray.Gray200, RoundedCornerShape(8.dp))
                     ) {
                         TextField(
@@ -196,7 +196,7 @@ fun TeamCreateScreen(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(60.dp)
                         .background(Gray.Gray200, RoundedCornerShape(8.dp))
                 ) {
                     TextField(
@@ -213,6 +213,7 @@ fun TeamCreateScreen(
                         ),
                         textStyle = LocalTextStyle.current.copy(
                             fontSize = 14.sp,
+                            fontFamily = pretendard,
                             textAlign = TextAlign.Start
                         ),
                         singleLine = true

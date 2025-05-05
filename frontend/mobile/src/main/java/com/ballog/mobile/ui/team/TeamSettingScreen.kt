@@ -89,16 +89,15 @@ private fun SettingMenuItem(
     Surface(
         onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(47.dp)
-                    .padding(horizontal = 16.dp)
+                    .height(48.dp)
+                    .padding(horizontal = 16.dp),
             ) {
                 Text(
                     text = text,
@@ -106,7 +105,7 @@ private fun SettingMenuItem(
                     fontFamily = pretendard,
                     fontWeight = FontWeight.Medium,
                     color = if (isWarning) System.Red else Gray.Gray800,
-                    modifier = Modifier.padding(vertical = 14.dp)
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
             }
             Divider(
