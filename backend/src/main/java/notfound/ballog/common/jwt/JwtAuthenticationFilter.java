@@ -1,6 +1,7 @@
 package notfound.ballog.common.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -81,11 +82,10 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             // 4. 요청 헤더에서 토큰 추출
             String token = resolveToken(httpRequest);
 
-            // 5. 토큰 유효성 검사
+            // 5. 토큰 파싱(=유효성 검사)
             jwtTokenProvider.validateToken(token);
 
-            // 6. 토큰이 정상이면 인증 정보 꺼내서 Spring Security Context에 저장
-            // -> Controller에서 인증된 사용자 정보 사용 가능
+            // 6. 토큰이 정상이면 인증 정보 꺼내서 Spring Security Context에 저장 -> Controller에서 인증된 사용자 정보 사용 가능
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 

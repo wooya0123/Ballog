@@ -1,5 +1,6 @@
 package notfound.ballog.domain.auth.service;
 
+import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import notfound.ballog.domain.user.dto.UserIdDto;
 import notfound.ballog.domain.user.entity.User;
 import notfound.ballog.domain.user.service.UserService;
 import notfound.ballog.exception.DuplicateDataException;
+import notfound.ballog.exception.NotFoundException;
 import notfound.ballog.exception.ValidationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -66,20 +69,25 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request){
-        // 1. 이메일로 auth 조회
-        CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getEmail());
-        Auth auth = userDetails.getAuth();
+        String email = request.getEmail();
+        String password = request.getPassword();
+
+        // 1. 이메일로 auth 조회 -> CustomUserDetails 생성
+        CustomUserDetails customUserDetails = customUserDetailsService.loadUserByEmail(email);
 
         // 2. 비밀번호 검증
-        if (!passwordEncoder.matches(request.getPassword(), userDetails.getPassword())) {
+        if (!passwordEncoder.matches(password, customUserDetails.getPassword())) {
             throw new ValidationException(BaseResponseStatus.PASSWORD_MISMATCH);
         }
 
-        // 3. JWT 토큰 생성
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails,null, userDetails.getAuthorities());
+        // 3. 기본 인증 토큰 생성 -> JWT 토큰 생성
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(null, null, customUserDetails.getAuthorities());
+        authentication.setDetails(customUserDetails);
         JwtTokenDto token = jwtTokenProvider.generateToken(authentication);
 
         // 4. refreshToken 저장
+        Auth auth = customUserDetails.getAuth();
         auth.changeRefreshToken(token.getRefreshToken());
         Auth savedAuth = authRepository.save(auth);
 
@@ -88,17 +96,17 @@ public class AuthService {
     }
 
     @Transactional
-    public void logOut(Integer authId) {
+    public void logOut(UUID userId) {
         // DB에 저장된 refresh 토큰 삭제
-        Auth auth = authRepository.findById(authId)
+        Auth auth = authRepository.findByUser_UserId(userId)
                         .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
         auth.changeRefreshToken(null);
         authRepository.save(auth);
     }
 
     @Transactional
-    public TokenRefreshResponse refreshToken(Integer authId, String refreshToken) {
-        Auth auth = authRepository.findById(authId)
+    public TokenRefreshResponse refreshToken(UUID userId, String refreshToken) {
+        Auth auth = authRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
 
         // 1. 토큰 만료 체크

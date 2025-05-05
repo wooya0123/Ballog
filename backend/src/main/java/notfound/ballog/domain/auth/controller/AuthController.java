@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.auth.request.LoginRequest;
 import notfound.ballog.domain.auth.request.SendEmailRequest;
@@ -13,15 +14,19 @@ import notfound.ballog.domain.auth.response.LoginResponse;
 import notfound.ballog.domain.auth.response.TokenRefreshResponse;
 import notfound.ballog.domain.auth.service.AuthService;
 import notfound.ballog.domain.auth.request.SignUpRequest;
+import notfound.ballog.domain.auth.service.CustomUserDetails;
 import notfound.ballog.domain.auth.service.EmailService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -41,18 +46,18 @@ public class AuthController {
 
     @PostMapping("/logout")
     public BaseResponse<Void> logout(
-            @AuthenticationPrincipal(expression="auth.authId") Integer authId){
-        authService.logOut(authId);
+            @AuthenticationPrincipal UUID userId){
+        authService.logOut(userId);
         return BaseResponse.ok();
     }
 
     @PostMapping("/refresh-token")
     public BaseResponse<TokenRefreshResponse> refreshToken(
-            @AuthenticationPrincipal(expression="auth.authId") Integer authId,
+            @AuthenticationPrincipal UUID userId,
             @RequestHeader("Authorization") String header) {
 
         String refreshToken = header.replace("Bearer ", "");
-        TokenRefreshResponse response = authService.refreshToken(authId, refreshToken);
+        TokenRefreshResponse response = authService.refreshToken(userId, refreshToken);
         return BaseResponse.ok(response);
     }
 

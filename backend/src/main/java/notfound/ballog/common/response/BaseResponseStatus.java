@@ -29,8 +29,11 @@ public enum BaseResponseStatus {
     EXPIRED_EMAIL_AUTH_CODE(false, 1008, "이메일 인증 코드가 없거나 만료되었습니다."),
     INVALID_EMAIL_AUTH_CODE(false, 1009, "유효하지 않은 이메일 인증 코드입니다."),
 
+    // 유저 관련 로직 에러 (2000번대)
     USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다."),
-    USER_INACTIVE(false, 2001, "탈퇴한 사용자입니다.");
+    PLAYERCARD_NOT_FOUND(false, 2001, "해당하는 사용자의 선수카드가 존재하지 않습니다."),
+    USER_INACTIVE(false, 2002, "탈퇴한 사용자입니다.");
+
     /*
         이후 자유롭게 에러 추가
      */

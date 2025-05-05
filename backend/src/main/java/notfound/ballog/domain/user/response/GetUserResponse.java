@@ -1,0 +1,25 @@
+package notfound.ballog.domain.user.response;
+
+import lombok.Builder;
+import lombok.Getter;
+import notfound.ballog.domain.user.entity.User;
+
+import java.time.LocalDate;
+
+@Getter
+@Builder
+public class GetUserResponse {
+    private String email;
+    private String gender;
+    private String nickname;
+    private LocalDate birthDate;
+
+    public static GetUserResponse of(User user, String email) {
+        return GetUserResponse.builder()
+                .email(email)
+                .gender(user.getGender())
+                .nickname(user.getNickname())
+                .birthDate(user.getBirthDate())
+                .build();
+    }
+}
