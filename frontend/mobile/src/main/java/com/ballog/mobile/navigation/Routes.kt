@@ -13,5 +13,10 @@ object Routes {
     const val MAIN = "main"
     const val HOME = "home"
     const val MYPAGE = "mypage"
+    const val TEAM_CREATE = "team/create"
+    const val TEAM_DETAIL = "team/detail/{teamName}"
+    const val TEAM_SETTINGS = "team/settings/{teamName}"
+    const val TEAM_DELEGATE = "team/delegate/{teamName}"
+    const val TEAM_KICK = "team/kick/{teamName}"
     // 그 외 다른 route 상수들도 여기에 추가 예정
 }

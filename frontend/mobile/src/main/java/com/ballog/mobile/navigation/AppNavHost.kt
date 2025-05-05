@@ -14,6 +14,11 @@ import com.ballog.mobile.ui.auth.SignupProfileScreen
 import com.ballog.mobile.ui.auth.SignupScreen
 import com.ballog.mobile.ui.auth.SignupVerificationScreen
 import com.ballog.mobile.ui.screens.signup.SignupBirthScreen
+import com.ballog.mobile.ui.team.TeamCreateScreen
+import com.ballog.mobile.ui.team.TeamDetailScreen
+import com.ballog.mobile.ui.team.TeamSettingScreen
+import com.ballog.mobile.ui.team.TeamDelegateScreen
+import com.ballog.mobile.ui.team.TeamKickScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
@@ -85,6 +90,121 @@ fun AppNavHost(navController: NavHostController) {
         // HOME(메인) 화면 추가
         composable(Routes.HOME) {
             HomeScreen()
+        }
+
+        // 팀 생성 화면 추가
+        composable(Routes.TEAM_CREATE) {
+            TeamCreateScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onClose = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // 팀 상세 화면 추가
+        composable(
+            route = Routes.TEAM_DETAIL,
+            arguments = listOf(
+                navArgument("teamName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
+            TeamDetailScreen(
+                navController = navController,
+                teamName = teamName,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSettingClick = {
+                    navController.navigate("team/settings/$teamName")
+                }
+            )
+        }
+
+        // 팀 설정 화면 추가
+        composable(
+            route = Routes.TEAM_SETTINGS,
+            arguments = listOf(
+                navArgument("teamName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
+            TeamSettingScreen(
+                navController = navController,
+                teamName = teamName,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCloseClick = {
+                    navController.popBackStack()
+                },
+                onDelegateClick = {
+                    navController.navigate("team/delegate/$teamName")
+                },
+                onKickMemberClick = {
+                    navController.navigate("team/kick/$teamName")
+                },
+                onInviteLinkClick = {
+                    // TODO: Show invite link dialog
+                },
+                onDeleteTeamClick = {
+                    // TODO: Show delete team confirmation dialog
+                },
+                onLeaveTeamClick = {
+                    // TODO: Show leave team confirmation dialog
+                }
+            )
+        }
+
+        // 팀 권한 위임 화면 추가
+        composable(
+            route = Routes.TEAM_DELEGATE,
+            arguments = listOf(
+                navArgument("teamName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
+            TeamDelegateScreen(
+                navController = navController,
+                teamName = teamName,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCloseClick = {
+                    navController.popBackStack()
+                },
+                onSaveClick = {
+                    // TODO: Implement save logic
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // 팀 멤버 강제 퇴장 화면 추가
+        composable(
+            route = Routes.TEAM_KICK,
+            arguments = listOf(
+                navArgument("teamName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
+            TeamKickScreen(
+                navController = navController,
+                teamName = teamName,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCloseClick = {
+                    navController.popBackStack()
+                },
+                onSaveClick = {
+                    // TODO: Implement save logic
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
