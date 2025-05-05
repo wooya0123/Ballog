@@ -13,7 +13,6 @@ fun BallogTheme(
 
     MaterialTheme(
         colorScheme = colors,
-        typography = AppTypography,
         content = content
     )
 }
