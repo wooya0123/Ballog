@@ -1,12 +1,16 @@
 package notfound.ballog.domain.user.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import notfound.ballog.domain.user.entity.User;
 
 import java.time.LocalDate;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class GetUserResponse {
     private String email;

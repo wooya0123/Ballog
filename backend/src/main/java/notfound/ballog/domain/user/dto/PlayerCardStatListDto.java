@@ -1,10 +1,14 @@
 package notfound.ballog.domain.user.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import notfound.ballog.domain.user.entity.PlayerCard;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class PlayerCardStatListDto {
     private Integer speed;
