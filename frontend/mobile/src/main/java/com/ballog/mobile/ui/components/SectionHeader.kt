@@ -35,18 +35,17 @@ fun SectionHeader(
     isExpanded: Boolean,
     onToggle: () -> Unit
 ) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .background(Color.White),
-        verticalAlignment = Alignment.CenterVertically
+            .height(48.dp + 2.dp) // 아래 경계선 높이만큼 추가
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(48.dp)
-                .clickable { onToggle() },
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(Color.White),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             val rotationAngle by animateFloatAsState(
                 targetValue = if (isExpanded) 90f else 0f,
@@ -54,26 +53,42 @@ fun SectionHeader(
                 label = "rotateSectionIcon"
             )
 
-            Icon(
-                painter = painterResource(id = R.drawable.ic_navigate_next),
-                contentDescription = "Toggle Section",
-                tint = Color.Unspecified,
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .rotate(rotationAngle)
-            )
+                    .size(48.dp)
+                    .clickable { onToggle() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_navigate_next),
+                    contentDescription = "Toggle Section",
+                    tint = Color.Unspecified,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .rotate(rotationAngle)
+                )
+            }
 
+            Text(
+                text = title,
+                color = Gray.Gray800,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = pretendard,
+                modifier = Modifier.padding(start = 0.dp)
+            )
         }
-        Text(
-            text = title,
-            color = Gray.Gray800,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            fontFamily = pretendard,
-            modifier = Modifier.padding(start = 0.dp)
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(Gray.Gray300)
         )
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
