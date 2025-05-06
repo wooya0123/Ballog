@@ -24,9 +24,6 @@ public class SignUpRequest {
     @NotBlank(message = "비밀번호를 입력하세요.")
     private String password;
 
-    @NotBlank(message = "성별을 선택하세요.")
-    private String gender;
-
     @NotBlank(message = "닉네임을 입력하세요.")
     private String nickname;
 
@@ -39,7 +36,6 @@ public class SignUpRequest {
     public User toUserEntity(SignUpRequest request) {
         return User.builder()
                 .nickname(request.getNickname())
-                .gender(request.getGender())
                 .birthDate(request.getBirthDate())
                 .profileImageUrl(request.getProfileImageUrl())
                 .build();

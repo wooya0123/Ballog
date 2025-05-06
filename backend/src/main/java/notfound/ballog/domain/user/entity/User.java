@@ -2,7 +2,6 @@ package notfound.ballog.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import notfound.ballog.domain.user.dto.UserDto;
 import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,7 +26,7 @@ public class User {
     @Column(nullable = false, length = 100)
     private String nickname;
 
-    @Column(nullable = false, length = 30)
+    @Column
     private String gender;
 
     private LocalDate birthDate;
@@ -41,13 +40,13 @@ public class User {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    public User updateUser(UpdateUserRequest request) {
+    public void updateUser(UpdateUserRequest request) {
         this.nickname = request.getNickname();
         this.gender = request.getGender();
         this.birthDate = request.getBirthDate();
     }
 
-    public User updateProfileImage(UpdateProfileImageRequest request) {
+    public void updateProfileImage(UpdateProfileImageRequest request) {
         this.profileImageUrl = request.getProfileImageUrl();
     }
 }
