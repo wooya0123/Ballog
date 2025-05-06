@@ -58,7 +58,7 @@ public class SecurityConfig {
                         "/v1/auth/check-email"
                 ).permitAll()
                 // 그 외 모든 요청 인증 필요
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 실행
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
