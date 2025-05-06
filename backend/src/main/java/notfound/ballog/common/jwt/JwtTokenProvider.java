@@ -12,6 +12,7 @@ import notfound.ballog.domain.auth.dto.JwtTokenDto;
 import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.auth.repository.AuthRepository;
 import notfound.ballog.domain.auth.service.CustomUserDetails;
+import notfound.ballog.domain.auth.service.CustomUserDetailsService;
 import notfound.ballog.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +25,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,6 +46,8 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-expire-ms}")
     private Long refreshExpireMs;
 
+    private final CustomUserDetailsService customUserDetailsService;
+
     /** 키 생성 */
     @PostConstruct
     public void init() {
@@ -54,10 +58,12 @@ public class JwtTokenProvider {
 
     /** JWT 토큰 생성 */
     public JwtTokenDto generateToken(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Integer authId = userDetails.getAuth().getAuthId();
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getDetails();
 
-        // 모두 ROLE_USER로 설정될 예정
+        // 토큰 subject에 담을 authId
+        Integer authId = customUserDetails.getAuthId();
+
+        // CustomUserDetails에서 권한 리스트 추출 -> 문자열로 변환
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
@@ -66,9 +72,9 @@ public class JwtTokenProvider {
 
         String accessToken = Jwts.builder()
                 .setSubject(String.valueOf(authId))
-                .claim("auth", authorities)
                 .setExpiration(new Date((now + accessExpireMs)))
                 .signWith(signingKey, SignatureAlgorithm.HS256) // HS256 알고리즘 서명
+                .claim("auth", authorities)
                 .compact();
 
         String refreshToken = Jwts.builder()
@@ -84,8 +90,8 @@ public class JwtTokenProvider {
                 .build();
     }
 
-    /** 토큰 파싱 및 claim 반환 */
-    private Claims parseToken(String token) {
+    /** 토큰 파싱(유효성 검사 포함) */
+    public Claims parseToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)
                 .build()
@@ -94,9 +100,9 @@ public class JwtTokenProvider {
     }
 
     /** 토큰 유효성 검사 */
-    public Claims validateToken(String token) {
+    public void validateToken(String token) {
         try {
-            return parseToken(token);
+            parseToken(token);
         } catch (ExpiredJwtException e) {
             throw new ValidationException(BaseResponseStatus.EXPIRED_TOKEN);
         } catch (JwtException e) {
@@ -111,27 +117,34 @@ public class JwtTokenProvider {
         }
 
         try {
-            // 토큰 파싱
+            // 1. 토큰 파싱(=유효성 검사)
             Claims claims = parseToken(token);
 
-            // Auth 조회
+            // 2. 토큰에서 authId 가져와서 CustomUserDetails 생성
             Integer authId = Integer.parseInt(claims.getSubject());
-            Auth auth = authRepository.findById(authId)
-                    .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
-            CustomUserDetails userDetails = new CustomUserDetails(auth);
+            CustomUserDetails customUserDetails = customUserDetailsService.loadUserByAuthId(authId);
 
+            // 3. Authorities 추출 -> Access 토큰은 claims안에, Refresh 토큰은 userDetails에서 가져오기
             Object authClaim = claims.get("auth");
             Collection<? extends GrantedAuthority> authorities;
-            // Access 토큰인 경우
+                // Access 토큰인 경우
             if (authClaim != null) {
                 authorities = Arrays.stream(authClaim.toString().split(","))
                                     .map(SimpleGrantedAuthority::new)
                                     .collect(Collectors.toList());
+
             } else {
-                // Refresh 토큰은 db에서 권한 조회
-                authorities = userDetails.getAuthorities();
+                // Refresh 토큰인 경우
+                authorities = customUserDetails.getAuthorities();
             }
-            return new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+
+            // 4. SecurityContext에 저장할 Authentication
+            UUID userId = customUserDetails.getUserId();
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            auth.setDetails(customUserDetails);
+            return auth;
         } catch (ExpiredJwtException e) {
             throw new ValidationException(BaseResponseStatus.EXPIRED_TOKEN);
         } catch (JwtException e) {

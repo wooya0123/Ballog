@@ -20,8 +20,8 @@ public class PlayerCard {
     )
     private Integer cardId;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(length = 50)
