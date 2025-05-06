@@ -6,19 +6,19 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.ballog.mobile.ui.auth.HomeScreen
 import com.ballog.mobile.ui.auth.LoginScreen
 import com.ballog.mobile.ui.auth.OnboardingScreen
 import com.ballog.mobile.ui.auth.SignupNicknameScreen
 import com.ballog.mobile.ui.auth.SignupProfileScreen
 import com.ballog.mobile.ui.auth.SignupScreen
 import com.ballog.mobile.ui.auth.SignupVerificationScreen
-import com.ballog.mobile.ui.screens.signup.SignupBirthScreen
+import com.ballog.mobile.ui.auth.SignupBirthScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
 import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
+import com.ballog.mobile.ui.team.TeamListScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
@@ -40,7 +40,9 @@ fun AppNavHost(navController: NavHostController) {
                     // TODO: 비밀번호 찾기 화면으로 이동
                 },
                 onSignUpNavigate = { email, password ->
-                    navController.navigate("${Routes.SIGNUP}/$email/$password")
+                    navController.navigate("${Routes.SIGNUP}/$email/$password") {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
                 }
             )
         }
@@ -74,22 +76,30 @@ fun AppNavHost(navController: NavHostController) {
             )
         }
 
-        composable(Routes.SIGNUP_NICKNAME) {
+        composable(
+            route = Routes.SIGNUP_NICKNAME,
+            // 키보드 상태 유지를 위한 옵션
+            arguments = listOf()
+        ) {
             SignupNicknameScreen(navController = navController)
         }
 
-        composable(Routes.SIGNUP_BIRTHDAY) {
+        composable(
+            route = Routes.SIGNUP_BIRTHDAY,
+            // 키보드 상태 유지를 위한 옵션
+            arguments = listOf()
+        ) {
             SignupBirthScreen(navController = navController)
         }
 
         // 프로필 이미지 등록 화면 추가
-        composable("signup/profile-image") {
+        composable(Routes.SIGNUP_PROFILE_IMAGE) {
             SignupProfileScreen(navController = navController)
         }
 
         // HOME(메인) 화면 추가
-        composable(Routes.HOME) {
-            HomeScreen()
+        composable(Routes.TEAM_LIST) {
+            TeamListScreen(navController = navController)
         }
 
         // 팀 생성 화면 추가

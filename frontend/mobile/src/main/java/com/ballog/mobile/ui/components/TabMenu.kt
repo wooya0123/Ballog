@@ -35,14 +35,14 @@ fun TabMenu(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(1.dp)
+                .height(2.dp)
                 .background(Gray.Gray200)
         )
         
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(50.dp)
         ) {
             // Left Tab
             Box(

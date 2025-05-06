@@ -20,6 +20,8 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Surface
 import com.ballog.mobile.ui.theme.pretendard
 import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.navigation.NavController
 
 private fun isValidEmail(email: String): Boolean {
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$"
@@ -57,6 +59,8 @@ fun LoginScreen(
     var emailErrorMessage by remember { mutableStateOf("") }
     var passwordErrorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(isLoading) {
         if (isLoading) {

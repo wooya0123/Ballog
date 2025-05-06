@@ -86,8 +86,7 @@ private fun MemberItem(
     Surface(
         onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         color = if (isSelected) Gray.Gray200 else Gray.Gray100
     ) {
@@ -95,7 +94,7 @@ private fun MemberItem(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(47.dp)
+                    .height(48.dp)
                     .padding(horizontal = 16.dp)
             ) {
                 Text(
@@ -104,7 +103,7 @@ private fun MemberItem(
                     fontFamily = pretendard,
                     fontWeight = FontWeight.Medium,
                     color = if (isSelected) Primary else Gray.Gray800,
-                    modifier = Modifier.padding(vertical = 14.dp)
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
             }
             Divider(

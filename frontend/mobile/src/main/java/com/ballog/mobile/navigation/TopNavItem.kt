@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.pretendard
 
 enum class TopNavType {
     MAIN_WITH_CREATE,        // 생성/추가 버튼이 있는 메인
@@ -53,6 +54,7 @@ fun TopNavItem(
                         text = title,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = pretendard,
                         color = Gray.Gray700,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
@@ -73,6 +75,7 @@ fun TopNavItem(
                     Text(
                         text = title,
                         fontSize = 24.sp,
+                        fontFamily = pretendard,
                         fontWeight = FontWeight.Bold,
                         color = Gray.Gray700,
                         modifier = Modifier
@@ -94,6 +97,7 @@ fun TopNavItem(
                     Text(
                         text = title,
                         fontSize = 24.sp,
+                        fontFamily = pretendard,
                         fontWeight = FontWeight.Bold,
                         color = Gray.Gray700,
                         modifier = Modifier
@@ -122,6 +126,7 @@ fun TopNavItem(
                         Text(
                             text = title,
                             fontSize = 20.sp,
+                            fontFamily = pretendard,
                             fontWeight = FontWeight.Bold,
                             color = Gray.Gray700,
                             textAlign = TextAlign.Center,

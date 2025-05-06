@@ -70,6 +70,11 @@ fun SignupVerificationScreen(
         ), label = "cursorAnim"
     )
 
+    // Request focus when the screen mounts
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
