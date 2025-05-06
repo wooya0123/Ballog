@@ -19,6 +19,9 @@ import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.navigation.Routes
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Surface
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 @Composable
 fun SignupNicknameScreen(
@@ -27,6 +30,14 @@ fun SignupNicknameScreen(
     var nickname by remember { mutableStateOf("") }
     var hasError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    
+    // Request focus when the screen mounts
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Box(
         modifier = Modifier
@@ -76,7 +87,9 @@ fun SignupNicknameScreen(
                 placeholder = "닉네임",
                 hasError = hasError,
                 errorMessage = errorMessage,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -87,7 +100,10 @@ fun SignupNicknameScreen(
                         hasError = true
                         errorMessage = "닉네임을 입력해주세요."
                     } else {
-                        navController.navigate(Routes.SIGNUP_BIRTHDAY)
+                        navController.navigate(Routes.SIGNUP_BIRTHDAY) {
+                            popUpTo(Routes.SIGNUP_NICKNAME) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 },
                 type = ButtonType.LABEL_ONLY,

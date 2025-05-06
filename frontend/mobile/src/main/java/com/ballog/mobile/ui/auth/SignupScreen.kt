@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -17,6 +19,7 @@ import androidx.navigation.NavController
 import com.ballog.mobile.navigation.Routes
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Surface
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 @Composable
 fun SignupScreen(
@@ -33,6 +36,15 @@ fun SignupScreen(
     var hasPasswordError by remember { mutableStateOf(false) }
     var hasConfirmPasswordError by remember { mutableStateOf(false) }
     var confirmPasswordErrorMessage by remember { mutableStateOf("") }
+
+    val passwordFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Request focus and show keyboard when the screen mounts
+    LaunchedEffect(Unit) {
+        passwordFocusRequester.requestFocus()
+        keyboardController?.show()
+    }
 
     Box(
         modifier = Modifier
@@ -98,7 +110,9 @@ fun SignupScreen(
                 isPassword = true,
                 isPasswordVisible = isPasswordVisible,
                 onPasswordVisibilityChange = { isPasswordVisible = it },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(passwordFocusRequester)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
