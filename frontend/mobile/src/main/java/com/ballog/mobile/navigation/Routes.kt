@@ -14,6 +14,8 @@ object Routes {
     const val MATCH = "match"
     const val TEAM = "team"
     const val MYPAGE = "mypage"
+    const val PROFILE_EDIT = "profile/edit"
+    const val PROFILE_LIKED = "profile/liked"
     const val TEAM_LIST = "team"
     const val TEAM_CREATE = "team/create"
     const val TEAM_DETAIL = "team/detail/{teamName}"

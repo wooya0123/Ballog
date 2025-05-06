@@ -24,7 +24,7 @@ import com.ballog.mobile.ui.team.TeamListScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
-    NavHost(navController, startDestination = Routes.ONBOARDING) {
+    NavHost(navController = navController, startDestination = Routes.ONBOARDING) {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onEmailLoginClick = {
