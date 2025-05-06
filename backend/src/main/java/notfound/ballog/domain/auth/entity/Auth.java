@@ -2,13 +2,11 @@ package notfound.ballog.domain.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import notfound.ballog.domain.auth.dto.AuthDto;
 import notfound.ballog.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Entity
 @Getter
