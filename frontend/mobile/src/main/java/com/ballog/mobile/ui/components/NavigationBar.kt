@@ -81,10 +81,10 @@ fun NavigationBar(
                 NavigationBarTab(
                     iconRes = R.drawable.ic_profile, // 실제 아이콘 리소스 사용
                     label = "마이페이지",
-                    selected = selectedTab == NavigationTab.PROFILE,
+                    selected = selectedTab == NavigationTab.MYPAGE,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
-                    onClick = { onTabSelected(NavigationTab.PROFILE) }
+                    onClick = { onTabSelected(NavigationTab.MYPAGE) }
                 )
             }
         }
@@ -111,7 +111,7 @@ fun NavigationBar(
     }
 }
 
-enum class NavigationTab { HOME, MATCH, TEAM, PROFILE }
+enum class NavigationTab { HOME, MATCH, TEAM, MYPAGE }
 
 @Composable
 fun NavigationBarTab(

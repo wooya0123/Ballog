@@ -12,6 +12,8 @@ object Routes {
     const val SIGNUP_PROFILE_IMAGE = "signup/profile-image"
     const val MAIN = "main"
     const val HOME = "home"
+    const val MATCH = "match"
+    const val TEAM = "team"
     const val MYPAGE = "mypage"
     // 그 외 다른 route 상수들도 여기에 추가 예정
 }
