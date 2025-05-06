@@ -13,7 +13,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,10 +20,10 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID userId;
 
     @Column(nullable = false, length = 100)
-    private String nickName;
+    private String nickname;
 
     @Column(nullable = false, length = 30)
     private String gender;
@@ -39,13 +38,4 @@ public class User {
     @UpdateTimestamp
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
-
-    public static User toEntity(UserDto userDto) {
-        return User.builder()
-                .nickName(userDto.getNickName())
-                .gender(userDto.getGender())
-                .birthDate(userDto.getBirthDate())
-                .profileImageUrl(userDto.getProfileImageUrl())
-                .build();
-    }
 }

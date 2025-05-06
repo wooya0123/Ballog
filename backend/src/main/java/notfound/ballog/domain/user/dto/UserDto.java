@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class UserDto {
-    private String nickName;
+    private String nickname;
     private String gender;
     private LocalDate birthDate;
     private String profileImageUrl;

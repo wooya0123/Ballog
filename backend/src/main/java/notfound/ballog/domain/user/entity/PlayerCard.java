@@ -6,7 +6,6 @@ import notfound.ballog.domain.user.dto.PlayerCardDto;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -19,7 +18,7 @@ public class PlayerCard {
             sequenceName = "player_card_seq",
             allocationSize = 1
     )
-    private Integer id;
+    private Integer cardId;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
