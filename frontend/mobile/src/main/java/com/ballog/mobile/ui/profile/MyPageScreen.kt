@@ -41,7 +41,7 @@ fun MyPageScreen(navController: NavController) {
         }
 
         MyPageMenuItem("좋아요한 영상") {
-            navController.navigate(Routes.PROFILE_LIKED)
+            navController.navigate(Routes.MYPAGE_LIKED_VIDEOS)
         }
 
         MyPageMenuItem("로그아웃") {
