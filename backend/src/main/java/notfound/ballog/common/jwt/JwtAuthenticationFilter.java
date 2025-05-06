@@ -32,8 +32,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         } else {
-//            throw new ValidationException(BaseResponseStatus.MISSING_TOKEN);  // 개발 단계에선 예외 안 던짐
-            return null;
+            throw new ValidationException(BaseResponseStatus.MISSING_TOKEN);
         }
     }
 
@@ -79,15 +78,10 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             return;
         }
 
-        // 4. 요청 헤더에서 토큰 추출
-        String token = resolveToken(httpRequest);
-        // 개발 단계에선 토큰 없으면 인증 없이 통과
-        if (!StringUtils.hasText(token)) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         try {
+            // 4. 요청 헤더에서 토큰 추출
+            String token = resolveToken(httpRequest);
+
             // 5. 토큰 파싱(=유효성 검사)
             jwtTokenProvider.validateToken(token);
 
@@ -99,7 +93,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             chain.doFilter(request, response);
 
         } catch (ValidationException e) {
-            SecurityContextHolder.clearContext();           // 개발 단계에서 토큰 인증 실패 시 context 비우기
             setErrorResponse(httpResponse, e.getStatus());
         }
     }
