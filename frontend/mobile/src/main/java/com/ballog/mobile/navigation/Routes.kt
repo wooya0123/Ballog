@@ -11,6 +11,8 @@ object Routes {
     const val SIGNUP_PROFILE_IMAGE = "signup/profile-image"
     const val MAIN = "main"
     const val HOME = "home"
+    const val MATCH = "match"
+    const val TEAM = "team"
     const val MYPAGE = "mypage"
     const val TEAM_LIST = "team"
     const val TEAM_CREATE = "team/create"

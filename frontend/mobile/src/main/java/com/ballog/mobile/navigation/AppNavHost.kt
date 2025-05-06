@@ -12,6 +12,7 @@ import com.ballog.mobile.ui.auth.SignupNicknameScreen
 import com.ballog.mobile.ui.auth.SignupProfileScreen
 import com.ballog.mobile.ui.auth.SignupScreen
 import com.ballog.mobile.ui.auth.SignupVerificationScreen
+import com.ballog.mobile.ui.main.MainScreen
 import com.ballog.mobile.ui.auth.SignupBirthScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
@@ -19,6 +20,7 @@ import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamListScreen
+
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
@@ -35,6 +37,9 @@ fun AppNavHost(navController: NavHostController) {
             LoginScreen(
                 onLoginClick = {
                     // TODO: 실제 로그인 성공 시 메인 화면으로 이동
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.LOGIN) { inclusive = true } // 로그인 화면을 백스택에서 제거
+                    }
                 },
                 onForgotPasswordClick = {
                     // TODO: 비밀번호 찾기 화면으로 이동
@@ -95,6 +100,11 @@ fun AppNavHost(navController: NavHostController) {
         // 프로필 이미지 등록 화면 추가
         composable(Routes.SIGNUP_PROFILE_IMAGE) {
             SignupProfileScreen(navController = navController)
+        }
+
+        // 메인 화면 추가
+        composable(Routes.MAIN) {
+            MainScreen(navController = navController)
         }
 
         // HOME(메인) 화면 추가
@@ -216,5 +226,6 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
+
     }
 }
