@@ -35,7 +35,7 @@ fun MainScreen(navController: NavHostController) {
             when (selectedTab) {
                 NavigationTab.HOME -> HomeScreen()
                 NavigationTab.MATCH -> MatchScreen()
-                NavigationTab.TEAM -> TeamListScreen()
+                NavigationTab.TEAM -> TeamListScreen(navController=navController)
                 NavigationTab.MYPAGE -> MyPageScreen()
             }
         }
