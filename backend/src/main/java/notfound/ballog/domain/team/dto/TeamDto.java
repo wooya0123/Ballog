@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.team.entity.Team;
 
+import java.time.LocalDate;
+
 @Getter
 @Builder
 @NoArgsConstructor
@@ -16,7 +18,7 @@ public class TeamDto {
 
     private String logoImageUrl;
 
-    private String foundationDate;
+    private LocalDate foundationDate;
 
     public static TeamDto of(Team team) {
         return TeamDto.builder()
