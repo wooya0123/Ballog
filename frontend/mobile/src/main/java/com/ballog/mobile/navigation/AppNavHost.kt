@@ -8,18 +8,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.ballog.mobile.ui.auth.LoginScreen
 import com.ballog.mobile.ui.auth.OnboardingScreen
+import com.ballog.mobile.ui.auth.SignupBirthScreen
 import com.ballog.mobile.ui.auth.SignupNicknameScreen
 import com.ballog.mobile.ui.auth.SignupProfileScreen
 import com.ballog.mobile.ui.auth.SignupScreen
 import com.ballog.mobile.ui.auth.SignupVerificationScreen
 import com.ballog.mobile.ui.main.MainScreen
-import com.ballog.mobile.ui.auth.SignupBirthScreen
+import com.ballog.mobile.ui.profile.LikedVideosScreen
+import com.ballog.mobile.ui.profile.MyPageScreen
+import com.ballog.mobile.ui.profile.ProfileEditScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
-import com.ballog.mobile.ui.team.TeamDetailScreen
-import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.ui.team.TeamDelegateScreen
+import com.ballog.mobile.ui.team.TeamDetailScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamListScreen
+import com.ballog.mobile.ui.team.TeamSettingScreen
 
 
 @Composable
@@ -106,6 +109,19 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.MAIN) {
             MainScreen(navController = navController)
         }
+
+        // 마이페이지 관련 화면 추가
+        composable(Routes.MYPAGE) {
+            MyPageScreen(navController = navController)
+        }
+
+        composable(Routes.PROFILE_EDIT) {
+            ProfileEditScreen(navController = navController)
+        }
+
+//        composable(Routes.MYPAGE_LIKED_VIDEO) {
+//            LikedVideosScreen(navController = navController)
+//        }
 
         // HOME(메인) 화면 추가
         composable(Routes.TEAM_LIST) {
