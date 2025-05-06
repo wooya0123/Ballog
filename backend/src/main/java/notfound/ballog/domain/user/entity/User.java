@@ -45,11 +45,9 @@ public class User {
         this.nickname = request.getNickname();
         this.gender = request.getGender();
         this.birthDate = request.getBirthDate();
-        return this;
     }
 
     public User updateProfileImage(UpdateProfileImageRequest request) {
         this.profileImageUrl = request.getProfileImageUrl();
-        return this;
     }
 }

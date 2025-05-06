@@ -47,15 +47,15 @@ public class UserService {
     public void updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
-        User updatedUser = user.updateUser(request);
-        userRepository.save(updatedUser);
+        user.updateUser(request);
+        userRepository.save(user);
     }
 
     public void updateProfileImage(UUID userId, UpdateProfileImageRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
-        User updatedUser = user.updateProfileImage(request);
-        userRepository.save(updatedUser);
+        user.updateProfileImage(request);
+        userRepository.save(user);
     }
 }
 
