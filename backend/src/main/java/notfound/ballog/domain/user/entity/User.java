@@ -51,8 +51,9 @@ public class User {
         this.profileImageUrl = request.getProfileImageUrl();
     }
 
-    public void reactivate(String nickname, LocalDate birthDate) {
+    public void reactivate(String nickname, LocalDate birthDate, String profileImageUrl) {
         this.nickname = nickname;
         this.birthDate = birthDate;
+        this.profileImageUrl = profileImageUrl;
     }
 }

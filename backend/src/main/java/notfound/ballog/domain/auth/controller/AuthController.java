@@ -91,6 +91,9 @@ public class AuthController {
         return BaseResponse.ok(response);
     }
 
+    @Operation(
+            summary = "회원탈퇴"
+    )
     @PostMapping("/signout")
     public BaseResponse<Void> signOut(@AuthenticationPrincipal UUID userId) {
         authService.signOut(userId);

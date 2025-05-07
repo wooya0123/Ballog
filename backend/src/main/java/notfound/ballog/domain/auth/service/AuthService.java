@@ -50,7 +50,7 @@ public class AuthService {
             // 탈퇴한 사용자라면 복구
             if (!auth.getIsActive()) {
                 User user = auth.getUser();
-                user.reactivate(request.getNickname(), request.getBirthDate());
+                user.reactivate(request.getNickname(), request.getBirthDate(), request.getProfileImageUrl());
                 User savedUser = userService.reactivateUser(user);
 
                 auth.reactivate(savedUser, email, password);
