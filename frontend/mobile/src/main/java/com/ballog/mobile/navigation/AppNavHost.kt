@@ -1,6 +1,7 @@
 package com.ballog.mobile.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,39 +23,78 @@ import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamListScreen
-import com.ballog.mobile.ui.team.TeamSettingScreen
+import com.ballog.mobile.viewmodel.AuthViewModel
 
 @Composable
-fun AppNavHost(navController: NavHostController) {
-    // 네비게이션 그래프 시작지점 설정
-    NavHost(navController = navController, startDestination = Routes.ONBOARDING) {
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: String = Routes.ONBOARDING
+) {
+    val authViewModel: AuthViewModel = viewModel()
 
-        // ─── 온보딩 및 로그인/회원가입 ───────────────────────
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP) {
+            SignupScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_EMAIL_VERIFICATION) {
+            SignupVerificationScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_NICKNAME) {
+            SignupNicknameScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_BIRTHDAY) {
+            SignupBirthScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_PROFILE_IMAGE) {
+            SignupProfileScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(
+            route = "${Routes.MAIN}?teamId={teamId}",
+            arguments = listOf(
+                navArgument("teamId") { 
+                    type = NavType.StringType 
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getString("teamId")
+            MainScreen(
+                navController = navController,
+                viewModel = authViewModel,
+                initialTeamId = teamId?.toIntOrNull()
+            )
+        }
         composable(Routes.ONBOARDING) {
             // 앱 첫 실행 시 보여지는 온보딩 화면
             OnboardingScreen(
                 onEmailLoginClick = {
-                    navController.navigate(Routes.LOGIN)
-                }
-            )
-        }
-
-        composable(Routes.LOGIN) {
-            // 이메일/비밀번호 로그인 화면
-            LoginScreen(
-                onLoginClick = {
-                    // 로그인 성공 시 메인화면으로 이동 (로그인 화면은 백스택에서 제거)
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                },
-                onForgotPasswordClick = {
-                    // TODO: 비밀번호 찾기 화면 구현 예정
-                },
-                onSignUpNavigate = { email, password ->
-                    // 회원가입 첫 화면으로 이동 (이메일, 비밀번호 전달)
-                    navController.navigate("${Routes.SIGNUP}/$email/$password") {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 }
             )
@@ -124,7 +164,6 @@ fun AppNavHost(navController: NavHostController) {
             // 팀 리스트 화면
             TeamListScreen(navController)
         }
-
         composable(Routes.TEAM_CREATE) {
             // 팀 생성 화면
             TeamCreateScreen(
@@ -132,23 +171,18 @@ fun AppNavHost(navController: NavHostController) {
                 onClose = { navController.popBackStack() }
             )
         }
-
         composable(
-            route = Routes.TEAM_DETAIL,
-            arguments = listOf(navArgument("teamName") { type = NavType.StringType })
+            route = "${Routes.TEAM_DETAIL}/{teamId}",
+            arguments = listOf(
+                navArgument("teamId") { type = NavType.IntType }
+            )
         ) { backStackEntry ->
-            // 팀 상세 정보 화면
-            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
+            val teamId = backStackEntry.arguments?.getInt("teamId") ?: 0
             TeamDetailScreen(
                 navController = navController,
-                teamName = teamName,
-                onBackClick = { navController.popBackStack() },
-                onSettingClick = {
-                    navController.navigate("team/settings/$teamName")
-                }
+                teamId = teamId
             )
         }
-
         composable(
             route = Routes.TEAM_SETTINGS,
             arguments = listOf(navArgument("teamName") { type = NavType.StringType })
@@ -158,10 +192,15 @@ fun AppNavHost(navController: NavHostController) {
             TeamSettingScreen(
                 navController = navController,
                 teamName = teamName,
-                onBackClick = { navController.popBackStack() },
-                onCloseClick = { navController.popBackStack() },
-                onDelegateClick = { navController.navigate("team/delegate/$teamName") },
-                onKickMemberClick = { navController.navigate("team/kick/$teamName") },
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onDelegateClick = {
+                    navController.navigate("team/delegate/$teamName")
+                },
+                onKickMemberClick = {
+                    navController.navigate("team/kick/$teamName")
+                },
                 onInviteLinkClick = {
                     // TODO: 팀 초대 링크 다이얼로그
                 },
@@ -173,7 +212,6 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-
         composable(
             route = Routes.TEAM_DELEGATE,
             arguments = listOf(navArgument("teamName") { type = NavType.StringType })
@@ -191,7 +229,6 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-
         composable(
             route = Routes.TEAM_KICK,
             arguments = listOf(navArgument("teamName") { type = NavType.StringType })

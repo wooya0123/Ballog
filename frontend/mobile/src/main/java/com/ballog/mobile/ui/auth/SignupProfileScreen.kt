@@ -32,10 +32,72 @@ import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.Surface
+import com.ballog.mobile.viewmodel.AuthViewModel
+import com.ballog.mobile.data.model.SignUpProgress
+import androidx.activity.compose.BackHandler
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import com.ballog.mobile.data.model.AuthResult
+import kotlinx.coroutines.launch
 
 @Composable
-fun SignupProfileScreen(navController: NavController) {
-    var profileImage by remember { mutableStateOf<Int?>(null) } // 실제 구현 시 Uri 등으로 대체
+fun SignupProfileScreen(
+    navController: NavController,
+    viewModel: AuthViewModel
+) {
+    val signUpProgress by viewModel.signUpProgress.collectAsState()
+    println("ProfileScreen - Current progress: $signUpProgress")
+
+    // 현재 진행 상태 확인
+    LaunchedEffect(signUpProgress) {
+        println("ProfileScreen - Progress changed to: $signUpProgress")
+        if (signUpProgress != SignUpProgress.PROFILE && signUpProgress != SignUpProgress.COMPLETED) {
+            println("ProfileScreen - Invalid progress state, popping back")
+            navController.popBackStack()
+        }
+    }
+
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val signUpData by viewModel.signUpData.collectAsState()
+
+    LaunchedEffect(signUpData) {
+        selectedImageUrl = signUpData.profileImageUrl
+    }
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            selectedImageUrl = it.toString()
+            viewModel.setSignUpProfileImageUrl(it.toString())
+        }
+    }
+
+    // 회원가입 상태 관찰
+    val signUpState by viewModel.signUpState.collectAsState()
+    LaunchedEffect(signUpState) {
+        when (signUpState) {
+            is AuthResult.Success -> {
+                println("ProfileScreen - SignUp successful, navigating to login")
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(Routes.SIGNUP_PROFILE_IMAGE) { inclusive = true }
+                }
+            }
+            is AuthResult.Error -> {
+                println("ProfileScreen - SignUp failed: ${(signUpState as AuthResult.Error).message}")
+                isLoading = false
+            }
+            else -> {}
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -92,6 +154,8 @@ fun SignupProfileScreen(navController: NavController) {
                     .clip(RoundedCornerShape(26.3.dp))
                     .background(Surface)
             ) {
+                // 전체 배경 이미지 제거
+                
                 Column(modifier = Modifier.fillMaxSize()) {
                     // 상단 이미지 영역
                     Box(
@@ -102,49 +166,98 @@ fun SignupProfileScreen(navController: NavController) {
                             .background(Gray.Gray600),
                         contentAlignment = Alignment.BottomCenter
                     ) {
+                        // 선택한 이미지가 있으면 상단 영역 전체를 채우도록 표시
+                        if (selectedImageUrl != null) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    ImageRequest.Builder(context)
+                                        .data(data = selectedImageUrl)
+                                        .build()
+                                ),
+                                contentDescription = "프로필 이미지",
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                            
+                            // 이미지 삭제 버튼 (오른쪽 상단에 위치)
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.6f))
+                                    .clickable {
+                                        // 이미지 선택 취소
+                                        selectedImageUrl = null
+                                        viewModel.setSignUpProfileImageUrl(null)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_close),
+                                    contentDescription = "이미지 삭제",
+                                    modifier = Modifier.size(16.dp),
+                                    colorFilter = ColorFilter.tint(Color.White)
+                                )
+                            }
+                        }
+                        
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(120.dp),
                             contentAlignment = Alignment.BottomCenter
                         ) {
-                            Image(
-                                painter = painterResource(id = profileImage ?: R.drawable.defaultimage),
-                                contentDescription = "프로필 이미지",
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .aspectRatio(1f)
-                            )
-                            // 업로드 버튼을 이미지 중앙에 겹치게
-                            Box(
-                                modifier = Modifier
-                                    .width(140.dp)
-                                    .height(36.dp)
-                                    .align(Alignment.Center)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF1B1B1D))
-                                    .clickable {
-                                        // TODO: 이미지 업로드 기능 구현
-                                        profileImage = R.drawable.defaultimage // 임시: 업로드 시 이미지로 대체
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.ic_camera),
-                                        contentDescription = "이미지 업로드",
-                                        modifier = Modifier.size(20.dp),
-                                        colorFilter = ColorFilter.tint(Primary)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "이미지 업로드",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Primary,
-                                        fontFamily = pretendard
-                                    )
+                            if (selectedImageUrl == null) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.defaultimage),
+                                    contentDescription = "프로필 이미지",
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .aspectRatio(1f)
+                                )
+                                
+                                // 업로드 버튼을 이미지 중앙에 겹치게 (이미지가 없을 때만 표시)
+                                Box(
+                                    modifier = Modifier
+                                        .width(140.dp)
+                                        .height(36.dp)
+                                        .align(Alignment.Center)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF1B1B1D))
+                                        .clickable {
+                                            imagePicker.launch("image/*")
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.ic_camera),
+                                            contentDescription = "이미지 업로드",
+                                            modifier = Modifier.size(20.dp),
+                                            colorFilter = ColorFilter.tint(Primary)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "이미지 업로드",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Primary,
+                                            fontFamily = pretendard
+                                        )
+                                    }
                                 }
+                            } else {
+                                // 이미지 있을 때는 사용자가 이미지를 탭하면 재선택할 수 있도록 함
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable {
+                                            imagePicker.launch("image/*")
+                                        }
+                                )
                             }
                         }
                     }
@@ -183,16 +296,20 @@ fun SignupProfileScreen(navController: NavController) {
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
+
             BallogButton(
                 onClick = {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(0) { inclusive = true }
+                    coroutineScope.launch {
+                        isLoading = true
+                        println("ProfileScreen - Starting signup process (skip)")
+                        viewModel.signUp()
                     }
                 },
                 type = ButtonType.BOTH,
                 buttonColor = ButtonColor.GRAY,
                 icon = painterResource(id = R.drawable.ic_trash),
-                label = "건너뛰기",
+                label = if (isLoading) "처리 중..." else "건너뛰기",
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
@@ -202,13 +319,16 @@ fun SignupProfileScreen(navController: NavController) {
 
             BallogButton(
                 onClick = {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(0) { inclusive = true }
+                    coroutineScope.launch {
+                        isLoading = true
+                        println("ProfileScreen - Starting signup process")
+                        viewModel.signUp()
                     }
                 },
                 type = ButtonType.LABEL_ONLY,
                 buttonColor = ButtonColor.BLACK,
-                label = "볼로그 시작하기",
+                label = if (isLoading) "처리 중..." else "볼로그 시작하기",
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 40.dp)
@@ -260,5 +380,5 @@ private fun StatBarCard(label: String, value: Int) {
 @Preview(showBackground = true)
 @Composable
 fun SignupProfileScreenPreview() {
-    SignupProfileScreen(navController = rememberNavController())
+    SignupProfileScreen(navController = rememberNavController(), viewModel = AuthViewModel())
 }
