@@ -12,4 +12,6 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Integer>
     @Query("SELECT tm.userId FROM TeamMember tm WHERE tm.teamMemberId IN :teamMemberIds")
     List<UUID> findUserIdsByTeamMemberIds(List<Integer> teamMemberIds);
 
+    @Query("select tm.role from TeamMember tm where tm.userId = :userId and tm.teamId = :teamId")
+    String findByUserIdAndTeamId(UUID userId, Integer teamId);
 }

@@ -14,6 +14,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class TeamDto {
 
+    private Integer teamId;
+
     private String teamName;
 
     private String logoImageUrl;
@@ -22,6 +24,7 @@ public class TeamDto {
 
     public static TeamDto of(Team team) {
         return TeamDto.builder()
+                .teamId(team.getTeamId())
                 .teamName(team.getTeamName())
                 .logoImageUrl(team.getLogoImageUrl())
                 .foundationDate(team.getFoundationDate())
