@@ -55,13 +55,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // (디버깅용) 에러 디스패치라면 토큰 검증 없이 바로 다음 필터로
-        if (httpRequest.getDispatcherType() == DispatcherType.ERROR ||
-        httpRequest.getDispatcherType() == DispatcherType.FORWARD) {
-        chain.doFilter(request, response);
-        return;
-        }
-
         // 2. 요청된 URI 경로와 Http 메서드 추출
         String path = httpRequest.getServletPath();
         String method = httpRequest.getMethod();
