@@ -11,5 +11,5 @@ public interface AuthRepository extends JpaRepository<Auth, Integer> {
     Optional<Auth> findByEmail(String email);
     Optional<Auth> findByEmailAndIsActiveTrue(String email);
     Optional<Auth> findByAuthIdAndIsActiveTrue(Integer authId);
-    Optional<Auth> findByUser_UserId(UUID userId);
+    Optional<Auth> findByUser_UserIdAndIsActiveTrue(UUID userId);
 }

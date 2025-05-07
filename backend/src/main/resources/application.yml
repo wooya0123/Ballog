@@ -34,13 +34,16 @@ spring:
     password: ${MAIL_PASSWORD}
     properties:
       mail:
+        debug: true
         smtp:
-          auth: true                # 인증 필요
+          auth: true                  # 인증 필요
           starttls:
-            enable: true            # TLS 방식 사용
-          connectiontimeout: 5000   # 연결 타임아웃
-          timeout: 5000             # I/O 타임아웃
-    auth-code-expiration-ms: 300000 # 5분간 유효
+            enable: true              # TLS 방식 사용
+            required: true
+          connectiontimeout: 10000    # 10초
+          timeout: 10000              # 읽기 타임아웃 10초
+          writetimeout: 10000         # 쓰기 타임아웃 10초
+    auth-code-expiration-ms: 300000   # 5분간 유효
 
 jwt:
   secret: ${JWT_SECRET}

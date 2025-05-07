@@ -27,7 +27,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${spring.mail.auth-code-expiration-ms}")
+    @Value("${spring.mail.auth-code-expiration-ms:300000}")
     private Integer timeOutMs;
 
     @Transactional
@@ -61,6 +61,7 @@ public class EmailService {
             javaMailSender.send(mime);
 
         } catch (MessagingException | MailException e) {
+            log.error("이메일 인증 코드 전송 실패", e);
             throw new ValidationException(BaseResponseStatus.EMAIL_AUTH_CODE_SEND_FAIL);
         }
     }
