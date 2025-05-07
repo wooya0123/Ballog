@@ -23,6 +23,7 @@ import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
 import com.ballog.mobile.ui.profile.MyPageScreen
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
@@ -55,6 +56,9 @@ fun MainScreen(
     }
 
     Scaffold(
+//        bottomBar = {
+//            Text("네비게이션 바") // NavigationBar 임시 제거
+//        }
         bottomBar = {
             NavigationBar(
                 selectedTab = selectedTab,
