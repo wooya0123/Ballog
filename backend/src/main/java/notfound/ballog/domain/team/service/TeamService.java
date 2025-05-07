@@ -92,6 +92,10 @@ public class TeamService {
             throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
         }
 
+        teamMemberRepository.deleteAllByTeamId(req.getTeamId());
+
+        teamCardRepository.deleteByTeamId(req.getTeamId());
+
         teamRepository.deleteById(req.getTeamId());
     }
 
@@ -108,6 +112,11 @@ public class TeamService {
     private boolean checkTeamMemberRole(UUID userId, Integer teamId){
         String role = teamMemberRepository.findByUserIdAndTeamId(userId, teamId);
         return !role.equals("운영진");
+    }
+
+    @Transactional
+    public void leaveTeam(UUID userId, LeaveTeanRequest req){
+        teamMemberRepository.deleteByUserIdAndTeamId(userId, req.getTeamId());
     }
 
 }
