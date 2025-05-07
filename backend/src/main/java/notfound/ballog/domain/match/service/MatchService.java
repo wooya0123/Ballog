@@ -1,6 +1,7 @@
 package notfound.ballog.domain.match.service;
 
 import lombok.RequiredArgsConstructor;
+import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.match.dto.MatchDto;
 import notfound.ballog.domain.match.entity.Match;
 import notfound.ballog.domain.match.entity.Participant;
@@ -9,8 +10,11 @@ import notfound.ballog.domain.match.repository.ParticipantRepository;
 import notfound.ballog.domain.match.repository.StadiumRepository;
 import notfound.ballog.domain.match.request.PersonalMatchAddRequest;
 import notfound.ballog.domain.match.request.TeamMatchAddRequest;
+import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
+import notfound.ballog.domain.match.request.UpdateTeamMatchRequest;
 import notfound.ballog.domain.match.response.MatchDetailResponse;
 import notfound.ballog.domain.team.repository.TeamMemberRepository;
+import notfound.ballog.exception.InternalServerException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +72,41 @@ public class MatchService {
 
     public List<String> getStadiums(){
         return stadiumRepository.findAllStadiumNames();
+    }
+
+    @Transactional
+    public void updatePersonalMatch(UpdatePersonalMatchRequest req){
+        Match match = matchRepository.findById(req.getMatchId())
+                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.DATABASE_ERROR));
+
+        match.setMatchDate(req.getMatchDate());
+        match.setStartTime(req.getStartTime());
+        match.setEndTime(req.getEndTime());
+        match.setStadiumId(req.getStadiumId());
+    }
+
+    @Transactional
+    public void updateTeamMatch(UpdateTeamMatchRequest req){
+        Match match = matchRepository.findById(req.getMatchId())
+                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.DATABASE_ERROR));
+
+
+        match.setMatchDate(req.getMatchDate());
+        match.setStartTime(req.getStartTime());
+        match.setEndTime(req.getEndTime());
+        match.setStadiumId(req.getStadiumId());
+
+        Integer matchId = match.getMatchId();
+
+        participantRepository.deleteAllByMatchId(matchId);
+
+        List<UUID> userIds = teamMemberRepository.findUserIdsByTeamMemberIds(req.getParticipantList());
+
+        List<Participant> participants = userIds.stream()
+                .map(userId -> new Participant(userId, matchId, "팀원"))
+                .collect(Collectors.toList());
+
+        participantRepository.saveAll(participants);
     }
 
 }

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.match.request.PersonalMatchAddRequest;
 import notfound.ballog.domain.match.request.TeamMatchAddRequest;
+import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
+import notfound.ballog.domain.match.request.UpdateTeamMatchRequest;
 import notfound.ballog.domain.match.response.MatchDetailResponse;
 import notfound.ballog.domain.match.response.PersonalMatchListResponse;
 import notfound.ballog.domain.match.response.StadiumListResponse;
@@ -63,6 +65,20 @@ public class MatchController {
     public BaseResponse<StadiumListResponse> getStadiums(){
         StadiumListResponse resp = new StadiumListResponse(matchService.getStadiums());
         return BaseResponse.ok(resp);
+    }
+
+    @PatchMapping("/me")
+    @Operation(summary = "경기 일정 수정")
+    public BaseResponse<Void> updatePersonalMatch(@RequestBody UpdatePersonalMatchRequest updatePersonalMatchRequest){
+        matchService.updatePersonalMatch(updatePersonalMatchRequest);
+        return BaseResponse.ok();
+    }
+
+    @PatchMapping("/teams")
+    @Operation(summary = "경기 일정 수정")
+    public BaseResponse<Void> updatePersonalMatch(@RequestBody UpdateTeamMatchRequest updateTeamMatchRequest){
+        matchService.updateTeamMatch(updateTeamMatchRequest);
+        return BaseResponse.ok();
     }
 
 }
