@@ -23,6 +23,7 @@ import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamListScreen
+import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.viewmodel.AuthViewModel
 
 @Composable
@@ -98,49 +99,6 @@ fun AppNavHost(
                     }
                 }
             )
-        }
-
-        composable(
-            route = "${Routes.SIGNUP}/{email}/{password}",
-            arguments = listOf(
-                navArgument("email") { type = NavType.StringType },
-                navArgument("password") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            // 이메일, 비밀번호를 받아 회원가입 시작
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            val password = backStackEntry.arguments?.getString("password") ?: ""
-            SignupScreen(email, password, navController)
-        }
-
-        composable(
-            route = Routes.SIGNUP_EMAIL_VERIFICATION,
-            arguments = listOf(navArgument("email") { type = NavType.StringType })
-        ) { backStackEntry ->
-            // 이메일 인증 화면
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            SignupVerificationScreen(navController, email)
-        }
-
-        composable(Routes.SIGNUP_NICKNAME) {
-            // 닉네임 설정 화면
-            SignupNicknameScreen(navController)
-        }
-
-        composable(Routes.SIGNUP_BIRTHDAY) {
-            // 생년월일 입력 화면
-            SignupBirthScreen(navController)
-        }
-
-        composable(Routes.SIGNUP_PROFILE_IMAGE) {
-            // 프로필 이미지 선택 화면
-            SignupProfileScreen(navController)
-        }
-
-        // ─── 메인 홈 화면 ─────────────────────────────────────
-        composable(Routes.MAIN) {
-            // 하단 탭이 포함된 메인 화면
-            MainScreen(navController)
         }
 
         // ─── 마이페이지 관련 화면 ─────────────────────────────

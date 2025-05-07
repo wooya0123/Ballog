@@ -11,7 +11,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.ballog.mobile.navigation.Routes
 import com.ballog.mobile.ui.components.NavigationBar
 import com.ballog.mobile.ui.auth.HomeScreen
 import com.ballog.mobile.ui.match.MatchScreen
@@ -23,11 +22,10 @@ import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
 import com.ballog.mobile.ui.profile.MyPageScreen
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
-import com.ballog.mobile.viewmodel.TeamViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.TeamViewModel
 
 private const val TAG = "MainScreen"
 
@@ -76,7 +74,7 @@ fun MainScreen(
                 NavigationTab.HOME -> HomeScreen(navController = navController, viewModel = viewModel)
                 NavigationTab.MATCH -> MatchScreen()
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
-                NavigationTab.MYPAGE -> MyPageScreen()
+                NavigationTab.MYPAGE -> MyPageScreen(navController)
             }
         }
     }
