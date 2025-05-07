@@ -38,6 +38,7 @@ spring:
     properties:
       mail:
         smtp:
+          auth: true                # 인증 필요
           starttls:
             enable: true            # TLS 방식 사용
           connectiontimeout: 5000   # 연결 타임아웃
