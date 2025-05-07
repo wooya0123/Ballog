@@ -12,6 +12,7 @@ import com.ballog.mobile.ui.match.MatchScreen
 import com.ballog.mobile.ui.team.TeamListScreen
 import com.ballog.mobile.ui.profile.MyPageScreen
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import com.ballog.mobile.ui.components.NavigationTab
 
 @Composable
@@ -19,6 +20,9 @@ fun MainScreen(navController: NavHostController) {
     var selectedTab by remember { mutableStateOf(NavigationTab.HOME) }
 
     Scaffold(
+//        bottomBar = {
+//            Text("네비게이션 바") // NavigationBar 임시 제거
+//        }
         bottomBar = {
             NavigationBar(
                 selectedTab = selectedTab,

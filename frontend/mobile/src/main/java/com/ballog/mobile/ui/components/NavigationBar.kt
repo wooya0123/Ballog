@@ -15,13 +15,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.R
-import androidx.compose.ui.tooling.preview.Preview
+import com.ballog.mobile.ui.theme.pretendard
 
-@Preview(showBackground = true)
+enum class NavigationTab { HOME, MATCH, TEAM, MYPAGE }
+
 @Composable
 fun NavigationBar(
     selectedTab: NavigationTab = NavigationTab.HOME,
@@ -44,8 +46,8 @@ fun NavigationBar(
                 .height(56.dp)
                 .align(Alignment.BottomCenter)
                 .background(backgroundColor)
-                .border(BorderStroke(1.dp, borderColor)) // 위쪽 테두리만 보이도록
-        ){
+                .border(BorderStroke(1.dp, borderColor))
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -62,16 +64,16 @@ fun NavigationBar(
                     onClick = { onTabSelected(NavigationTab.HOME) }
                 )
                 NavigationBarTab(
-                    iconRes = R.drawable.ic_calendar, // 실제 아이콘 리소스 사용
+                    iconRes = R.drawable.ic_calendar,
                     label = "매치",
                     selected = selectedTab == NavigationTab.MATCH,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
                     onClick = { onTabSelected(NavigationTab.MATCH) }
                 )
-                Spacer(modifier = Modifier.width(48.dp)) // ← 중앙 버튼 자리 비워두기
+                Spacer(modifier = Modifier.width(48.dp))
                 NavigationBarTab(
-                    iconRes = R.drawable.ic_team, // 실제 아이콘 리소스 사용
+                    iconRes = R.drawable.ic_team,
                     label = "팀",
                     selected = selectedTab == NavigationTab.TEAM,
                     activeColor = activeColor,
@@ -79,7 +81,7 @@ fun NavigationBar(
                     onClick = { onTabSelected(NavigationTab.TEAM) }
                 )
                 NavigationBarTab(
-                    iconRes = R.drawable.ic_profile, // 실제 아이콘 리소스 사용
+                    iconRes = R.drawable.ic_profile,
                     label = "마이페이지",
                     selected = selectedTab == NavigationTab.MYPAGE,
                     activeColor = activeColor,
@@ -89,8 +91,6 @@ fun NavigationBar(
             }
         }
 
-
-        // 중앙 액션 버튼 (위로 띄워서 겹치게 배치)
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -110,8 +110,6 @@ fun NavigationBar(
         }
     }
 }
-
-enum class NavigationTab { HOME, MATCH, TEAM, MYPAGE }
 
 @Composable
 fun NavigationBarTab(
@@ -141,8 +139,18 @@ fun NavigationBarTab(
             text = label,
             color = color,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Normal
+            fontWeight = FontWeight.Normal,
+            fontFamily = pretendard
         )
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun PreviewNavigationBar() {
+    NavigationBar(
+        selectedTab = NavigationTab.HOME,
+        onTabSelected = {},
+        onActionClick = {}
+    )
+}
