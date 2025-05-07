@@ -68,11 +68,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
                 path.equals("/v1/auth/send-email") ||       // 이메일 인증코드 전송
                 path.equals("/v1/auth/verify-email") ||     // 이메일 인증코드 확인
                 path.equals("/v1/auth/check-email") ||      // 이메일 중복 확인
-                path.equals("/api/v1/auth/signup") ||
-                path.equals("/api/v1/auth/login") ||
-                path.equals("/api/v1/auth/send-email") ||
-                path.equals("/api/v1/auth/verify-email") ||
-                path.equals("/api/v1/auth/check-email") ||
                 path.equals(("/swagger-ui.html")) ||        // swagger
                 path.startsWith("/swagger-ui") ||           // swagger
                 path.startsWith("/v2/api-docs") ||          // swagger
