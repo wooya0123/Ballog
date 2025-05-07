@@ -61,7 +61,7 @@ fun Greeting(greetingName: String) {
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
         color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
+        text = "Ballog Watch"
     )
 }
 

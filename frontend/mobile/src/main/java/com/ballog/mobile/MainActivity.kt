@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             BallogTheme {
-                AppNavHost(navController)
+                AppNavHost(navController = navController)
             }
         }
     }

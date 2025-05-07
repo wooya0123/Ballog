@@ -2,6 +2,7 @@ package com.ballog.mobile.navigation
 
 // 각 화면의 route 이름을 관리할 sealed class 또는 객체 정의 예정
 object Routes {
+    // 온보딩 & 인증
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
     const val SIGNUP = "signup"
@@ -9,16 +10,25 @@ object Routes {
     const val SIGNUP_NICKNAME = "signup/nickname"
     const val SIGNUP_BIRTHDAY = "signup/birthday"
     const val SIGNUP_PROFILE_IMAGE = "signup/profile-image"
+
+    // 메인 탭
     const val MAIN = "main"
     const val HOME = "home"
     const val MATCH = "match"
     const val TEAM = "team"
+
+    // 마이페이지
     const val MYPAGE = "mypage"
+    const val PROFILE_EDIT = "profile/edit"
+    const val MYPAGE_LIKED_VIDEOS = "mypage/liked-videos"
+
+    // 팀 관련
     const val TEAM_LIST = "team"
     const val TEAM_CREATE = "team/create"
     const val TEAM_DETAIL = "team/detail/{teamName}"
     const val TEAM_SETTINGS = "team/settings/{teamName}"
     const val TEAM_DELEGATE = "team/delegate/{teamName}"
     const val TEAM_KICK = "team/kick/{teamName}"
+
     // 그 외 다른 route 상수들도 여기에 추가 예정
 }
