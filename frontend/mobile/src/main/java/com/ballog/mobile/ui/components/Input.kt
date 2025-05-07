@@ -146,7 +146,7 @@ fun Input(
             }
         )
 
-        if (hasError && errorMessage != null) {
+        if (hasError && !errorMessage.isNullOrEmpty()) {
             Text(
                 text = errorMessage,
                 style = TextStyle(

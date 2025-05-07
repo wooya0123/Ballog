@@ -1,6 +1,7 @@
 package com.ballog.mobile.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,99 +21,84 @@ import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamListScreen
-
+import com.ballog.mobile.viewmodel.AuthViewModel
 
 @Composable
-fun AppNavHost(navController: NavHostController) {
-    NavHost(navController, startDestination = Routes.ONBOARDING) {
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: String = Routes.ONBOARDING
+) {
+    val authViewModel: AuthViewModel = viewModel()
+
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP) {
+            SignupScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_EMAIL_VERIFICATION) {
+            SignupVerificationScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_NICKNAME) {
+            SignupNicknameScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_BIRTHDAY) {
+            SignupBirthScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(Routes.SIGNUP_PROFILE_IMAGE) {
+            SignupProfileScreen(
+                navController = navController,
+                viewModel = authViewModel
+            )
+        }
+        composable(
+            route = "${Routes.MAIN}?teamId={teamId}",
+            arguments = listOf(
+                navArgument("teamId") { 
+                    type = NavType.StringType 
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getString("teamId")
+            MainScreen(
+                navController = navController,
+                viewModel = authViewModel,
+                initialTeamId = teamId?.toIntOrNull()
+            )
+        }
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onEmailLoginClick = {
-                    navController.navigate(Routes.LOGIN)
-                }
-            )
-        }
-
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginClick = {
-                    // TODO: 실제 로그인 성공 시 메인 화면으로 이동
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true } // 로그인 화면을 백스택에서 제거
-                    }
-                },
-                onForgotPasswordClick = {
-                    // TODO: 비밀번호 찾기 화면으로 이동
-                },
-                onSignUpNavigate = { email, password ->
-                    navController.navigate("${Routes.SIGNUP}/$email/$password") {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 }
             )
         }
-
-        composable(
-            route = "${Routes.SIGNUP}/{email}/{password}",
-            arguments = listOf(
-                navArgument("email") { type = NavType.StringType },
-                navArgument("password") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            val password = backStackEntry.arguments?.getString("password") ?: ""
-            SignupScreen(
-                initialEmail = email,
-                initialPassword = password,
-                navController = navController
-            )
-        }
-
-        composable(
-            route = Routes.SIGNUP_EMAIL_VERIFICATION,
-            arguments = listOf(
-                navArgument("email") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            SignupVerificationScreen(
-                navController = navController,
-                email = email
-            )
-        }
-
-        composable(
-            route = Routes.SIGNUP_NICKNAME,
-            // 키보드 상태 유지를 위한 옵션
-            arguments = listOf()
-        ) {
-            SignupNicknameScreen(navController = navController)
-        }
-
-        composable(
-            route = Routes.SIGNUP_BIRTHDAY,
-            // 키보드 상태 유지를 위한 옵션
-            arguments = listOf()
-        ) {
-            SignupBirthScreen(navController = navController)
-        }
-
-        // 프로필 이미지 등록 화면 추가
-        composable(Routes.SIGNUP_PROFILE_IMAGE) {
-            SignupProfileScreen(navController = navController)
-        }
-
-        // 메인 화면 추가
-        composable(Routes.MAIN) {
-            MainScreen(navController = navController)
-        }
-
-        // HOME(메인) 화면 추가
         composable(Routes.TEAM_LIST) {
             TeamListScreen(navController = navController)
         }
-
-        // 팀 생성 화면 추가
         composable(Routes.TEAM_CREATE) {
             TeamCreateScreen(
                 onNavigateBack = {
@@ -123,28 +109,18 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-
-        // 팀 상세 화면 추가
         composable(
-            route = Routes.TEAM_DETAIL,
+            route = "${Routes.TEAM_DETAIL}/{teamId}",
             arguments = listOf(
-                navArgument("teamName") { type = NavType.StringType }
+                navArgument("teamId") { type = NavType.IntType }
             )
         ) { backStackEntry ->
-            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
+            val teamId = backStackEntry.arguments?.getInt("teamId") ?: 0
             TeamDetailScreen(
                 navController = navController,
-                teamName = teamName,
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onSettingClick = {
-                    navController.navigate("team/settings/$teamName")
-                }
+                teamId = teamId
             )
         }
-
-        // 팀 설정 화면 추가
         composable(
             route = Routes.TEAM_SETTINGS,
             arguments = listOf(
@@ -156,9 +132,6 @@ fun AppNavHost(navController: NavHostController) {
                 navController = navController,
                 teamName = teamName,
                 onBackClick = {
-                    navController.popBackStack()
-                },
-                onCloseClick = {
                     navController.popBackStack()
                 },
                 onDelegateClick = {
@@ -178,8 +151,6 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-
-        // 팀 권한 위임 화면 추가
         composable(
             route = Routes.TEAM_DELEGATE,
             arguments = listOf(
@@ -202,8 +173,6 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-
-        // 팀 멤버 강제 퇴장 화면 추가
         composable(
             route = Routes.TEAM_KICK,
             arguments = listOf(
@@ -226,6 +195,5 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-
     }
 }
