@@ -3,6 +3,9 @@ spring:
     import: classpath:/env.yml
   application:
     name: ballog
+  security:
+    filter:
+      dispatcher-types: request
 
   datasource:
       url: ${DB_URL}
