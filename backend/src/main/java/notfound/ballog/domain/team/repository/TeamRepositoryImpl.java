@@ -37,7 +37,8 @@ public class TeamRepositoryImpl implements TeamRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(TeamMemberDto.class,
                         teamMember.teamMemberId,
-                        user.nickname))
+                        user.nickname,
+                        teamMember.role))
                 .from(teamMember)
                 .join(user).on(user.userId.eq(teamMember.userId).and(teamMember.teamId.eq(teamId)))
                 .fetch();

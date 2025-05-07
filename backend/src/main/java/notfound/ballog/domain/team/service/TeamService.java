@@ -11,8 +11,7 @@ import notfound.ballog.domain.team.entity.TeamMember;
 import notfound.ballog.domain.team.repository.TeamCardRepository;
 import notfound.ballog.domain.team.repository.TeamMemberRepository;
 import notfound.ballog.domain.team.repository.TeamRepository;
-import notfound.ballog.domain.team.request.TeamAddRequest;
-import notfound.ballog.domain.team.request.TeamMemberAddRequest;
+import notfound.ballog.domain.team.request.*;
 import notfound.ballog.domain.team.response.TeamDetailResponse;
 import notfound.ballog.domain.team.response.TeamMemberListResponse;
 import notfound.ballog.domain.team.response.UserTeamListResponse;
@@ -70,6 +69,54 @@ public class TeamService {
     @Transactional
     public void addTeamMember(UUID userId, TeamMemberAddRequest req){
         teamMemberRepository.save(TeamMember.of(userId, req));
+    }
+
+    @Transactional
+    public void updateTeamInfo(UUID userId, TeamInfoUpdateRequest req){
+        if(checkTeamMemberRole(userId, req.getTeamId())){
+            throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
+        }
+
+        Team team = teamRepository.findById(req.getTeamId())
+                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.DATABASE_ERROR));
+
+        team.setTeamName(req.getTeamName());
+        team.setFoundationDate(req.getFoundationDate());
+        team.setLogoImageUrl(req.getLogoImage());
+    }
+
+    // cascade 처리 필요, 매니저가 삭제한다고해서 다른 팀원의 팀들이 사라지는게 맞는가?
+    @Transactional
+    public void deleteTeam(UUID userId, TeamDeleteRequest req){
+        if(checkTeamMemberRole(userId, req.getTeamId())){
+            throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
+        }
+
+        teamMemberRepository.deleteAllByTeamId(req.getTeamId());
+
+        teamCardRepository.deleteByTeamId(req.getTeamId());
+
+        teamRepository.deleteById(req.getTeamId());
+    }
+
+
+    @Transactional
+    public void deleteTeamMember(UUID userId, TeamMemberDeleteRequest req){
+        if(checkTeamMemberRole(userId, req.getTeamId())){
+            throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
+        }
+
+        teamMemberRepository.deleteById(req.getTeamMemberId());
+    }
+
+    private boolean checkTeamMemberRole(UUID userId, Integer teamId){
+        String role = teamMemberRepository.findByUserIdAndTeamId(userId, teamId);
+        return !role.equals("운영진");
+    }
+
+    @Transactional
+    public void leaveTeam(UUID userId, LeaveTeanRequest req){
+        teamMemberRepository.deleteByUserIdAndTeamId(userId, req.getTeamId());
     }
 
 }
