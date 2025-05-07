@@ -2,10 +2,7 @@ package notfound.ballog.common.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +54,13 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         // 1. ServletRequest/Response를 Http 전용 객체로 캐스팅
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+        // (디버깅용) 에러 디스패치라면 토큰 검증 없이 바로 다음 필터로
+        if (httpRequest.getDispatcherType() == DispatcherType.ERROR ||
+        httpRequest.getDispatcherType() == DispatcherType.FORWARD) {
+        chain.doFilter(request, response);
+        return;
+        }
 
         // 2. 요청된 URI 경로와 Http 메서드 추출
         String path = httpRequest.getServletPath();

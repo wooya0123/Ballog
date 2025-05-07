@@ -62,6 +62,7 @@ public class SecurityConfig {
                 // 그 외 모든 요청 인증 필요
                 .anyRequest().authenticated()
             )
+
             // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 실행
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
