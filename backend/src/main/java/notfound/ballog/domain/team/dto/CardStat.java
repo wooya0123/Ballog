@@ -15,7 +15,7 @@ public class CardStat {
 
     private int stamina;
 
-    private int power;
+    private int attack;
 
     private int defense;
 

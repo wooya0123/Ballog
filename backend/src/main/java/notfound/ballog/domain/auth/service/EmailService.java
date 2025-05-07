@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.request.SendEmailRequest;
 import notfound.ballog.domain.auth.request.VerifyEmailRequest;
+import notfound.ballog.exception.InternalServerException;
 import notfound.ballog.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -61,8 +62,11 @@ public class EmailService {
             javaMailSender.send(mime);
 
         } catch (MessagingException | MailException e) {
-            log.error("이메일 인증 코드 전송 실패", e);
+            log.error("메일 전송/생성 실패", e);
             throw new ValidationException(BaseResponseStatus.EMAIL_AUTH_CODE_SEND_FAIL);
+        } catch (Exception e) {
+            log.error("sendEmailCode 실패, key={}, timeoutMs={}", key, timeOutMs, e);
+            throw new InternalServerException(BaseResponseStatus.EMAIL_AUTH_CODE_SEND_FAIL);
         }
     }
 

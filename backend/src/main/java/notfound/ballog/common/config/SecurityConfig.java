@@ -1,5 +1,6 @@
 package notfound.ballog.common.config;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.jwt.JwtAuthenticationFilter;
 import notfound.ballog.domain.auth.service.CustomUserDetailsService;
@@ -49,6 +50,7 @@ public class SecurityConfig {
                     m -> m.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 필터 적용 시킬 url과 아닌 url 구분(초기엔 다 허용)
             .authorizeHttpRequests(authorize -> authorize
+                .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
                 // 로그인 없이 허용할 url
                 .requestMatchers(
                         "/v1/auth/signup",
@@ -58,8 +60,9 @@ public class SecurityConfig {
                         "/v1/auth/check-email"
                 ).permitAll()
                 // 그 외 모든 요청 인증 필요
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
+
             // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 실행
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -4,8 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
-import notfound.ballog.domain.team.request.TeamAddRequest;
-import notfound.ballog.domain.team.request.TeamMemberAddRequest;
+import notfound.ballog.domain.team.request.*;
 import notfound.ballog.domain.team.response.TeamDetailResponse;
 import notfound.ballog.domain.team.response.TeamMemberListResponse;
 import notfound.ballog.domain.team.response.UserTeamListResponse;
@@ -52,6 +51,34 @@ public class TeamController {
     @Operation(summary = "팀 멤버 추가", description = "팀에 새로운 멤버를 초대합니다.")
     public BaseResponse<Void> addTeamMember(@AuthenticationPrincipal UUID userId, @RequestBody TeamMemberAddRequest teamMemberAddRequest){
         teamService.addTeamMember(userId, teamMemberAddRequest);
+        return BaseResponse.ok();
+    }
+
+    @PatchMapping
+    @Operation(summary = "팀 정보 수정", description = "팀 정보를 수정합니다 (팀명, 팀로고, 팀 창단일자")
+    public BaseResponse<Void> updateTeamInfo(@AuthenticationPrincipal UUID userId, @RequestBody TeamInfoUpdateRequest teamInfoUpdateRequest){
+        teamService.updateTeamInfo(userId, teamInfoUpdateRequest);
+        return BaseResponse.ok();
+    }
+
+    @DeleteMapping
+    @Operation(summary = "팀 삭제")
+    public BaseResponse<Void> deleteTeam(@AuthenticationPrincipal UUID userId, @RequestBody TeamDeleteRequest teamDeleteRequest){
+        teamService.deleteTeam(userId, teamDeleteRequest);
+        return BaseResponse.ok();
+    }
+
+    @DeleteMapping("/members")
+    @Operation(summary = "팀원 강퇴")
+    public BaseResponse<Void> deleteTeamMember(@AuthenticationPrincipal UUID userId, @RequestBody TeamMemberDeleteRequest teamMemberDeleteRequest){
+        teamService.deleteTeamMember(userId, teamMemberDeleteRequest);
+        return BaseResponse.ok();
+    }
+
+    @DeleteMapping("/leave")
+    @Operation(summary = "팀 탈퇴")
+    public BaseResponse<Void> leaveTeam(@AuthenticationPrincipal UUID userId, @RequestBody LeaveTeanRequest leaveTeanRequest){
+        teamService.leaveTeam(userId, leaveTeanRequest);
         return BaseResponse.ok();
     }
 
