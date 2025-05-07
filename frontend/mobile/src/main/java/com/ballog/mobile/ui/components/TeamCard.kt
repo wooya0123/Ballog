@@ -1,5 +1,6 @@
 package com.ballog.mobile.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -19,9 +20,9 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 
 data class TeamInfo(
-    val name: String,
-    val foundingDate: String,
-    val imageUrl: String
+    val name: String? = null,
+    val foundingDate: String? = null,
+    val imageUrl: String? = null
 )
 
 @Composable
@@ -46,35 +47,52 @@ fun TeamCard(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SubcomposeAsyncImage(
-                model = team.imageUrl,
-                contentDescription = "팀 이미지",
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop,
-                loading = {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.Center),
-                        color = Gray.Gray400
-                    )
-                },
-                error = {
+            if (team.imageUrl.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Gray.Gray600),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_team),
                         contentDescription = "팀 이미지",
-                        tint = Gray.Gray400
+                        tint = Gray.Gray400,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
-            )
+            } else {
+                SubcomposeAsyncImage(
+                    model = team.imageUrl,
+                    contentDescription = "팀 이미지",
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .align(Alignment.Center),
+                            color = Gray.Gray400
+                        )
+                    },
+                    error = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_team),
+                            contentDescription = "팀 이미지",
+                            tint = Gray.Gray400
+                        )
+                    }
+                )
+            }
             
             Spacer(modifier = Modifier.width(12.dp))
             
             Column {
                 Text(
-                    text = team.name,
+                    text = team.name?.takeIf { it.isNotBlank() } ?: "이름 없음",
                     color = Gray.Gray100,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
@@ -93,7 +111,7 @@ fun TeamCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = team.foundingDate,
+                        text = team.foundingDate?.takeIf { it.isNotBlank() } ?: "정보 없음",
                         color = Gray.Gray100,
                         fontSize = 12.sp,
                         fontFamily = pretendard
