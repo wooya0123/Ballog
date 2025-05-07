@@ -55,4 +55,11 @@ public class Auth {
     public void changeIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
+
+    public void reactivate(User user, String email, String password) {
+        this.user = user;
+        this.email = email;
+        this.password = password;
+        this.isActive = true;
+    }
 }

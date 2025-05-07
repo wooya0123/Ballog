@@ -92,6 +92,15 @@ public class AuthController {
     }
 
     @Operation(
+            summary = "회원탈퇴"
+    )
+    @PostMapping("/signout")
+    public BaseResponse<Void> signOut(@AuthenticationPrincipal UUID userId) {
+        authService.signOut(userId);
+        return BaseResponse.ok();
+    }
+
+    @Operation(
             summary = "이메일 인증 코드 요청"
     )
     @PostMapping("/send-email")
@@ -108,4 +117,6 @@ public class AuthController {
         emailService.verifyEmailCode(request);
         return BaseResponse.ok();
     }
+
+
 }

@@ -46,25 +46,27 @@ public class AuthService {
 
         Optional<Auth> existingAuth = authRepository.findByEmail(email);
         if (existingAuth.isPresent()) {
-            User user  = existingAuth.get().getUser();
-            Auth auth = request.toAuthEntity(user, email, password);
+            Auth auth = existingAuth.get();
             // 탈퇴한 사용자라면 복구
             if (!auth.getIsActive()) {
-                auth.changeIsActive(true);
+                User user = auth.getUser();
+                user.reactivate(request.getNickname(), request.getBirthDate(), request.getProfileImageUrl());
+                User savedUser = userService.reactivateUser(user);
+
+                auth.reactivate(savedUser, email, password);
                 authRepository.save(auth);
-                return;
             } else {
                 throw new DuplicateDataException(BaseResponseStatus.DUPLICATE_EMAIL);
             }
+        } else {
+            // 1. 신규 유저 생성
+            User newUser = request.toUserEntity(request);
+            User savedUser = userService.signUp(newUser);
+
+            // 2. 신규 Auth 생성
+            Auth newAuth = request.toAuthEntity(savedUser, email, password);
+            authRepository.save(newAuth);
         }
-
-        // 1. 신규 유저 생성
-        User newUser = request.toUserEntity(request);
-        User savedUser = userService.signUp(newUser);
-
-        // 2. 신규 Auth 생성
-        Auth newAuth = request.toAuthEntity(savedUser, email, password);
-        authRepository.save(newAuth);
     }
 
     @Transactional
@@ -98,7 +100,7 @@ public class AuthService {
     @Transactional
     public void logOut(UUID userId) {
         // DB에 저장된 refresh 토큰 삭제
-        Auth auth = authRepository.findByUser_UserId(userId)
+        Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
                         .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
         auth.changeRefreshToken(null);
         authRepository.save(auth);
@@ -106,7 +108,7 @@ public class AuthService {
 
     @Transactional
     public TokenRefreshResponse refreshToken(UUID userId, String refreshToken) {
-        Auth auth = authRepository.findByUser_UserId(userId)
+        Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
 
         // 1. 토큰 만료 체크
@@ -131,8 +133,18 @@ public class AuthService {
         return TokenRefreshResponse.of(token);
     }
 
+    @Transactional
     public CheckEmailResponse checkEmail(String email) {
         boolean isExist = authRepository.existsByEmailAndIsActiveTrue(email);
         return CheckEmailResponse.of(!isExist);
+    }
+
+    @Transactional
+    public void signOut(UUID userId) {
+        Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
+                .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
+        auth.changeIsActive(false);
+        auth.changeRefreshToken(null);
+        authRepository.save(auth);
     }
 }
