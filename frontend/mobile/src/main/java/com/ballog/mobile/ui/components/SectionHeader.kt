@@ -44,7 +44,7 @@ fun SectionHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
-                .background(Color.White),
+                .background(Gray.Gray100),
             verticalAlignment = Alignment.CenterVertically
         ) {
             val rotationAngle by animateFloatAsState(
