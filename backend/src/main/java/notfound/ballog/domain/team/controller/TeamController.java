@@ -68,14 +68,14 @@ public class TeamController {
         return BaseResponse.ok();
     }
 
-    @DeleteMapping
+    @DeleteMapping("/members")
     @Operation(summary = "팀원 강퇴")
     public BaseResponse<Void> deleteTeamMember(@AuthenticationPrincipal UUID userId, @RequestBody TeamMemberDeleteRequest teamMemberDeleteRequest){
         teamService.deleteTeamMember(userId, teamMemberDeleteRequest);
         return BaseResponse.ok();
     }
 
-    @DeleteMapping
+    @DeleteMapping("/leave")
     @Operation(summary = "팀 탈퇴")
     public BaseResponse<Void> leaveTeam(@AuthenticationPrincipal UUID userId, @RequestBody LeaveTeanRequest leaveTeanRequest){
         teamService.leaveTeam(userId, leaveTeanRequest);
