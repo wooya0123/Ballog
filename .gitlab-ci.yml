@@ -39,6 +39,7 @@ deploy:
         echo "REDIS_PORT: $REDIS_PORT" >> backend/src/main/resources/env.yml &&
 
         echo "JWT_SECRET: $JWT_SECRET" >> backend/src/main/resources/env.yml &&
+        echo "JPA_DDL_AUTO: $JPA_DDL_AUTO" >> backend/src/main/resources/env.yml &&
 
         # SMTP 환경변수 추가
         echo "MAIL_HOST: $MAIL_HOST" >> backend/src/main/resources/env.yml &&
