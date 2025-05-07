@@ -2,7 +2,6 @@ package notfound.ballog.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import notfound.ballog.domain.user.dto.PlayerCardDto;
 
 @Entity
 @Getter

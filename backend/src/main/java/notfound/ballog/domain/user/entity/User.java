@@ -2,6 +2,7 @@ package notfound.ballog.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
 import org.hibernate.annotations.CreationTimestamp;
@@ -48,5 +49,11 @@ public class User {
 
     public void updateProfileImage(UpdateProfileImageRequest request) {
         this.profileImageUrl = request.getProfileImageUrl();
+    }
+
+    public void reactivate(String nickname, LocalDate birthDate, String profileImageUrl) {
+        this.nickname = nickname;
+        this.birthDate = birthDate;
+        this.profileImageUrl = profileImageUrl;
     }
 }

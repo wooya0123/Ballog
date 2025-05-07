@@ -43,8 +43,8 @@ public class JwtTokenProvider {
     @Value("${jwt.access-expire-ms}")
     private Long accessExpireMs;
 
-    @Value("${jwt.refresh-expire-ms}")
-    private Long refreshExpireMs;
+//    @Value("${jwt.refresh-expire-ms}")        // 리프레쉬 토큰 만료 없음
+//    private Long refreshExpireMs;
 
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -72,15 +72,16 @@ public class JwtTokenProvider {
 
         String accessToken = Jwts.builder()
                 .setSubject(String.valueOf(authId))
-                .setExpiration(new Date((now + accessExpireMs)))
-                .signWith(signingKey, SignatureAlgorithm.HS256) // HS256 알고리즘 서명
+                .setExpiration(new Date((now + accessExpireMs)))    // Access 토큰 만료 시간 설정
+                .signWith(signingKey, SignatureAlgorithm.HS256)     // HS256 알고리즘 서명
                 .claim("auth", authorities)
+                .claim("type", "ACCESS")
                 .compact();
 
         String refreshToken = Jwts.builder()
                 .setSubject(String.valueOf(authId))
-                .setExpiration(new Date((now + refreshExpireMs)))
                 .signWith(signingKey, SignatureAlgorithm.HS256)
+                .claim("type", "REFRESH")
                 .compact();
 
         return JwtTokenDto.builder()
@@ -104,8 +105,17 @@ public class JwtTokenProvider {
         try {
             parseToken(token);
         } catch (ExpiredJwtException e) {
+            Claims claims = e.getClaims();
+            String type = claims.get("type").toString();
+
+            // Refresh 토큰이면 만료 무시
+            if (type.equals("REFRESH")) {
+                return;
+            }
+            // Access 토큰이면 만료 예외 처리
             throw new ValidationException(BaseResponseStatus.EXPIRED_TOKEN);
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
+            // 서명 위조, 포맷 오류, 기타 jwt 오류
             throw new ValidationException(BaseResponseStatus.INVALID_TOKEN);
         }
     }

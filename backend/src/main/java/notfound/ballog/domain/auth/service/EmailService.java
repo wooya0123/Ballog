@@ -28,7 +28,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${spring.mail.auth-code-expiration-ms}")
+    @Value("${spring.mail.auth-code-expiration-ms:300000}")
     private Integer timeOutMs;
 
     @Transactional

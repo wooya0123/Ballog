@@ -38,7 +38,7 @@ public class UserService {
     public GetUserResponse getUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
-        Auth auth = authRepository.findByUser_UserId(userId)
+        Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
         String email = auth.getEmail();
         return GetUserResponse.of(user, email);
@@ -56,6 +56,11 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
         user.updateProfileImage(request);
         userRepository.save(user);
+    }
+
+    public User reactivateUser(User user) {
+        User savedUser = userRepository.save(user);
+        return savedUser;
     }
 }
 
