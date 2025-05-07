@@ -1,8 +1,11 @@
 package notfound.ballog.domain.team.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
@@ -11,7 +14,8 @@ public class TeamAddRequest {
 
     private String teamName;
 
-    private String foundationDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate foundationDate;
 
     private String logoImage;
 

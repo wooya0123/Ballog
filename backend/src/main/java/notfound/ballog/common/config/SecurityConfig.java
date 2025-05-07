@@ -58,20 +58,24 @@ public class SecurityConfig {
                         "/v1/auth/check-email"
                 ).permitAll()
                 // 그 외 모든 요청 인증 필요
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 실행
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    /** 인증 요청을 위임 받고 provider에게 전달 */
+    /** passwordEncoder 설정 */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    /** 실제 인증 로직 구현 */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -80,9 +84,5 @@ public class SecurityConfig {
         return provider;
     }
 
-    /** passwordEncoder 설정 */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
+
 }

@@ -5,26 +5,27 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.user.entity.User;
 
 import java.time.LocalDate;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignUpRequest {
-    @Email @NotBlank(message = "이메일은 필수입니다.")
+    @Email @NotBlank(message = "이메일을 입력하세요.")
     private String email;
 
     @Size
-    @NotBlank(message = "비밀번호는 필수입니다.")
+    @NotBlank(message = "비밀번호를 입력하세요.")
     private String password;
 
-    @NotBlank(message = "성별은 필수입니다.")
-    private String gender;
-
-    @NotBlank(message = "닉네임은 필수입니다.")
-    private String nickName;
+    @NotBlank(message = "닉네임을 입력하세요.")
+    private String nickname;
 
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -34,8 +35,7 @@ public class SignUpRequest {
 
     public User toUserEntity(SignUpRequest request) {
         return User.builder()
-                .nickName(request.getNickName())
-                .gender(request.getGender())
+                .nickname(request.getNickname())
                 .birthDate(request.getBirthDate())
                 .profileImageUrl(request.getProfileImageUrl())
                 .build();

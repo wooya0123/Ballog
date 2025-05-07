@@ -19,7 +19,7 @@ public class LoginResponse {
     private String refreshToken;
     private UserIdDto user;
 
-    public static LoginResponse fromAuth(JwtTokenDto token, UserIdDto userIdDto) {
+    public static LoginResponse of(JwtTokenDto token, UserIdDto userIdDto) {
         return LoginResponse.builder()
                 .accessToken(token.getAccessToken())
                 .refreshToken(token.getRefreshToken())

@@ -2,6 +2,7 @@ package notfound.ballog.domain.team.service;
 
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponseStatus;
+import notfound.ballog.domain.team.dto.PlayerCardDto;
 import notfound.ballog.domain.team.dto.TeamCardDto;
 import notfound.ballog.domain.team.dto.TeamDto;
 import notfound.ballog.domain.team.entity.Team;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TeamService {
 
     private final TeamRepository teamRepository;
@@ -31,11 +33,13 @@ public class TeamService {
     private final TeamMemberRepository teamMemberRepository;
 
     @Transactional
-    public void addTeam(TeamAddRequest teamAddRequest) {
+    public void addTeam(UUID userId, TeamAddRequest teamAddRequest) {
         Team team = Team.of(teamAddRequest);
         teamRepository.save(team);
 
         teamCardRepository.save(TeamCard.of(team.getTeamId()));
+
+        teamMemberRepository.save(TeamMember.of(userId, new TeamMemberAddRequest(team.getTeamId(), "운영진")));
     }
 
     public UserTeamListResponse getUserTeamList(UUID userId){
@@ -54,13 +58,13 @@ public class TeamService {
             throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
         }
 
-        // List<PlayerCard> playerCardList = ?
+        List<PlayerCardDto> playerCardDtoList = teamRepository.findPlayerCardByTeamId(teamId);
 
-        return TeamDetailResponse.of(TeamDto.of(team), TeamCardDto.of(teamCard));
+        return TeamDetailResponse.of(TeamDto.of(team), TeamCardDto.of(teamCard), playerCardDtoList);
     }
 
     public TeamMemberListResponse getTeamMemberList(Integer teamId){
-        return null;
+        return new TeamMemberListResponse(teamRepository.findAllByTeamId(teamId));
     }
 
     @Transactional

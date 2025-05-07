@@ -2,7 +2,6 @@ package notfound.ballog.domain.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import notfound.ballog.domain.auth.dto.AuthDto;
 import notfound.ballog.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,7 +10,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -24,7 +22,7 @@ public class Auth {
             sequenceName = "auth_seq",
             allocationSize = 1
     )
-    private Integer id;
+    private Integer authId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -50,12 +48,11 @@ public class Auth {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    public static Auth toEntity(AuthDto authDto) {
-        return Auth.builder()
-                .user(authDto.getUser())
-                .email(authDto.getEmail())
-                .password(authDto.getPassword())
-                .isActive(authDto.getIsActive())
-                .build();
+    public void changeRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void changeIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

@@ -1,8 +1,11 @@
 package notfound.ballog.domain.team.repository;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import notfound.ballog.domain.team.dto.CardStat;
+import notfound.ballog.domain.team.dto.PlayerCardDto;
+import notfound.ballog.domain.team.dto.TeamMemberDto;
 import notfound.ballog.domain.team.entity.Team;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +14,9 @@ import java.util.UUID;
 
 import static notfound.ballog.domain.team.entity.QTeam.team;
 import static notfound.ballog.domain.team.entity.QTeamMember.teamMember;
+import static notfound.ballog.domain.user.entity.QPlayerCard.playerCard;
+import static notfound.ballog.domain.user.entity.QUser.user;
 
-@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class TeamRepositoryImpl implements TeamRepositoryCustom {
@@ -22,9 +26,41 @@ public class TeamRepositoryImpl implements TeamRepositoryCustom {
     @Override
     public List<Team> findAllByUserId(UUID userId) {
         return queryFactory
-                .select(team)
-                .from(team, teamMember)
-                .where(teamMember.userId.eq(userId), teamMember.teamId.eq(team.teamId))
+                .selectFrom(team)
+                .join(teamMember)
+                .on(team.teamId.eq(teamMember.teamId).and(teamMember.userId.eq(userId)))
+                .fetch();
+    }
+
+    @Override
+    public List<TeamMemberDto> findAllByTeamId(Integer teamId) {
+        return queryFactory
+                .select(Projections.constructor(TeamMemberDto.class,
+                        teamMember.teamMemberId,
+                        user.nickname))
+                .from(teamMember)
+                .join(user).on(user.userId.eq(teamMember.userId).and(teamMember.teamId.eq(teamId)))
+                .fetch();
+    }
+
+    @Override
+    public List<PlayerCardDto> findPlayerCardByTeamId(Integer teamId) {
+        return queryFactory
+                .select(Projections.constructor(PlayerCardDto.class,
+                        user.nickname,
+                        playerCard.playStyle,
+                        playerCard.rank,
+                        user.profileImageUrl,
+                        Projections.constructor(CardStat.class,
+                                playerCard.speed,
+                                playerCard.stamina,
+                                playerCard.attack,
+                                playerCard.defense,
+                                playerCard.recovery)))
+                .from(teamMember)
+                .where(teamMember.teamId.eq(teamId))
+                .join(user).on(teamMember.userId.eq(user.userId))
+                .join(playerCard).on(playerCard.user.userId.eq(user.userId))
                 .fetch();
     }
 

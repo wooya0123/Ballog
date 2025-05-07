@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -19,9 +20,18 @@ public class CustomUserDetails implements UserDetails {
         return this.auth;
     }
 
+    public Integer getAuthId() {
+        return this.auth.getAuthId();
+    }
+
+    public UUID getUserId() {
+        return auth.getUser().getUserId();
+    }
+
+    // 추후 권한 추가되면 설정
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(() -> "ROLE_USER");    // 모든 유저에게 동일한 권한(ADMIN 없음)
+        return Collections.singleton(() -> "ROLE_USER");
     }
 
     @Override
