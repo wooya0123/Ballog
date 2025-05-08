@@ -42,7 +42,7 @@ fun DropDown(
     onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.width(312.dp)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .height(48.dp)
