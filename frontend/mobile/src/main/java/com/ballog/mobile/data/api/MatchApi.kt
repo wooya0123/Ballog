@@ -1,6 +1,26 @@
 package com.ballog.mobile.data.api
 
-// 매치 관련 API 인터페이스
+import com.ballog.mobile.data.dto.MatchListResponse
+import com.ballog.mobile.data.model.ApiResponse
+import retrofit2.Response
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.Path
+import retrofit2.http.Query
+
 interface MatchApi {
-    // 매치 API 정의 예정
+    // 내 매치 리스트 조회
+    @GET("v1/matches/me")
+    suspend fun getMyMatches(
+        @Header("Authorization") token: String,
+        @Query("month") month: String
+    ): Response<ApiResponse<MatchListResponse>>
+
+    // 특정 팀의 매치 리스트 조회
+    @GET("v1/matches/teams/{teamId}")
+    suspend fun getTeamMatches(
+        @Header("Authorization") token: String,
+        @Path("teamId") teamId: Long,
+        @Query("month") month: String
+    ): Response<ApiResponse<MatchListResponse>>
 }

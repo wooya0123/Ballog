@@ -24,7 +24,7 @@ fun MatchCard(
 ) {
     Column(
         modifier = modifier
-            .width(312.dp)
+            .fillMaxWidth()
             .height(92.dp)
             .background(Gray.Gray200, RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 20.dp),

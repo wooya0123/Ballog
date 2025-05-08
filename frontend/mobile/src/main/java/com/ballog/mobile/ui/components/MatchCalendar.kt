@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.theme.*
+import java.time.LocalDate
 
 private val daysOfWeek = listOf("S", "M", "T", "W", "T", "F", "S")
 
@@ -26,8 +27,12 @@ fun MatchCalendar(
     dates: List<List<DateMarkerState>>,
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val year = month.substring(0, 4).toIntOrNull() ?: LocalDate.now().year
+    val monthNum = month.substring(5, 7).toIntOrNull() ?: LocalDate.now().monthValue
+
     Surface(
         modifier = modifier
             .width(312.dp)
@@ -35,10 +40,7 @@ fun MatchCalendar(
         shape = RoundedCornerShape(16.dp),
         color = Gray.Gray700
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            // Month Header
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -73,7 +75,6 @@ fun MatchCalendar(
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            // Days of the week
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -91,18 +92,23 @@ fun MatchCalendar(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            // Dates
             dates.forEach { week ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     week.forEach { dateMarkerState ->
+                        val dayInt = dateMarkerState.date.toIntOrNull()
+                        val dayDate = if (dayInt != null && dateMarkerState.thisMonth) {
+                            LocalDate.of(year, monthNum, dayInt)
+                        } else null
+
                         MatchDateMarker(
                             date = dateMarkerState.date,
                             marked = dateMarkerState.marked,
                             selected = dateMarkerState.selected,
-                            thisMonth = dateMarkerState.thisMonth
+                            thisMonth = dateMarkerState.thisMonth,
+                            modifier = if (dayDate != null) Modifier.clickable { onDateClick(dayDate) } else Modifier
                         )
                     }
                 }
@@ -143,10 +149,11 @@ fun PreviewMatchCalendar() {
             )
         )
         MatchCalendar(
-            month = "2025년 4월",
+            month = "2025-04",
             dates = sampleDates,
             onPrevMonth = {},
-            onNextMonth = {}
+            onNextMonth = {},
+            onDateClick = {}
         )
     }
 }
