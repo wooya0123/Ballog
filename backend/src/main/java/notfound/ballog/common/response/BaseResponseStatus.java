@@ -32,7 +32,10 @@ public enum BaseResponseStatus {
     // 유저 관련 로직 에러 (2000번대)
     USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다."),
     PLAYERCARD_NOT_FOUND(false, 2001, "해당하는 사용자의 선수카드가 존재하지 않습니다."),
-    USER_INACTIVE(false, 2002, "탈퇴한 사용자입니다.");
+    USER_INACTIVE(false, 2002, "탈퇴한 사용자입니다."),
+
+    // 매치 관련 로직 에러(3000번대)
+    MATCH_NOT_FOUND(false, 3001, "해당하는 매치가 존재하지 않습니다.");
 
     // 팀 관련 로직 에러 (3000)
 

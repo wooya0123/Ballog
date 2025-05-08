@@ -1,0 +1,60 @@
+package notfound.ballog.domain.video.service;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import notfound.ballog.common.response.BaseResponseStatus;
+import notfound.ballog.domain.match.entity.Match;
+import notfound.ballog.domain.match.repository.MatchRepository;
+import notfound.ballog.domain.video.dto.HighlightDto;
+import notfound.ballog.domain.video.dto.HighlightListDto;
+import notfound.ballog.domain.video.entity.Video;
+import notfound.ballog.domain.video.repository.VideoRepository;
+import notfound.ballog.domain.video.request.UploadVideoRequest;
+import notfound.ballog.exception.NotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class VideoService {
+
+    private final VideoRepository videoRepository;
+    private final MatchRepository matchRepository;
+
+    @Transactional
+    public void uploadVideo(UploadVideoRequest request) {
+        String videoUrl = request.getVideoUrl();
+
+        // 1. Video 저장
+        Match match = matchRepository.findById(request.getMatchId())
+                        .orElseThrow(() -> new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND));
+
+        String[] part = request.getDuration().split(":");
+        long hours = Long.parseLong(part[0]);
+        long minutes = Long.parseLong(part[1]);
+        long seconds = Long.parseLong(part[2]);
+        Duration videoDuration = Duration.ofHours(hours)
+                                        .plusMinutes(minutes)
+                                        .plusSeconds(seconds);
+
+        Video video = Video.of(match, request.getQuaterNumber(), request.getVideoUrl(), videoDuration);
+        videoRepository.save(video);
+
+        // 2. fastapi 호출(하이라이트 추출)
+
+
+        // 3. 하이라이트 저장
+        HighlightListDto highlightListDto = new HighlightListDto();     // 응답 받은 하이라이트 리스트
+
+        List<HighlightDto> highlightList = highlightListDto.getHighlightList();
+        for (HighlightDto highlightDto : highlightList) {
+
+        }
+
+
+
+
+    }
+}

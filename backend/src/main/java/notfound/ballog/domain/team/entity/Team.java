@@ -33,7 +33,6 @@ public class Team {
     @Column(nullable = false)
     private LocalDate foundationDate;
 
-    @Column(columnDefinition = "TEXT")
     private String logoImageUrl;
 
     @Column(nullable = false)
@@ -48,7 +47,7 @@ public class Team {
         return Team.builder()
                 .teamName(req.getTeamName())
                 .foundationDate(req.getFoundationDate())
-                .logoImageUrl(req.getLogoImageUrl())
+                .logoImageUrl(req.getLogoImage())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

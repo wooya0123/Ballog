@@ -1,10 +1,8 @@
 package notfound.ballog.domain.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,8 +31,6 @@ public class User {
     private String gender;
 
     private LocalDate birthDate;
-
-    @Column(columnDefinition = "TEXT")
     private String profileImageUrl;
 
     @CreationTimestamp
