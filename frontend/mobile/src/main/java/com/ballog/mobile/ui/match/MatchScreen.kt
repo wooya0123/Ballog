@@ -7,8 +7,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ballog.mobile.R
 import com.ballog.mobile.data.model.Match
@@ -18,6 +20,7 @@ import com.ballog.mobile.navigation.TopNavType
 import com.ballog.mobile.ui.components.*
 import com.ballog.mobile.ui.theme.BallogTheme
 import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.buildCalendar
 import java.time.LocalDate
@@ -47,10 +50,22 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
 
         when (matchState) {
             is MatchState.Loading -> {
-                Text("불러오는 중...", modifier = Modifier.padding(16.dp))
+                Text(
+                    text = "불러오는 중...",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
             is MatchState.Error -> {
-                Text("에러: ${(matchState as MatchState.Error).message}", modifier = Modifier.padding(16.dp))
+                Text(
+                    text = "에러: ${(matchState as MatchState.Error).message}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
             is MatchState.Success -> {
                 val matches = (matchState as MatchState.Success).matches
@@ -77,7 +92,12 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     if (filteredMatches.isEmpty()) {
-                        Text("경기 일정이 없습니다")
+                        Text(
+                            text = "경기 일정이 없습니다",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = pretendard
+                        )
                     } else {
                         filteredMatches.forEach { match ->
                             MatchCard(

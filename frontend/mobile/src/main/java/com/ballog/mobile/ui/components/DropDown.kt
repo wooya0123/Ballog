@@ -31,6 +31,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.animateContentSize
+import com.ballog.mobile.ui.theme.pretendard
 
 @Composable
 fun DropDown(
@@ -57,7 +58,9 @@ fun DropDown(
                 text = selectedItem,
                 color = Primary,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                fontFamily = pretendard
+
             )
             val rotationAngle by animateFloatAsState(
                 targetValue = if (expanded) 180f else 0f,
@@ -97,7 +100,9 @@ fun DropDown(
                             }
                             .padding(vertical = 12.dp, horizontal = 16.dp),
                         color = if (item == selectedItem) Primary else Gray.Gray800,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = pretendard
                     )
                 }
             }
