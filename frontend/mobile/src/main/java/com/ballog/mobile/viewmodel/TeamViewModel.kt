@@ -253,7 +253,7 @@ class TeamViewModel : ViewModel() {
     }
 
     // 초대 링크 생성
-    suspend fun generateInviteLink(teamId: Int): Result<String> {
+    fun generateInviteLink(teamId: Int): Result<String> {
         return try {
             _isLoading.value = true
             _error.value = null
