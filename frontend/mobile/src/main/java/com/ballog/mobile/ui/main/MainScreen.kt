@@ -12,7 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ballog.mobile.ui.components.NavigationBar
-import com.ballog.mobile.ui.auth.HomeScreen
+import com.ballog.mobile.ui.home.HomeScreen
 import com.ballog.mobile.ui.match.MatchScreen
 import com.ballog.mobile.ui.team.TeamListScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
@@ -71,7 +71,7 @@ fun MainScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                NavigationTab.HOME -> HomeScreen(navController = navController, viewModel = viewModel)
+                NavigationTab.HOME -> HomeScreen()
                 NavigationTab.MATCH -> MatchScreen()
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
                 NavigationTab.MYPAGE -> MyPageScreen(navController)

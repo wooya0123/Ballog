@@ -21,7 +21,6 @@ import com.ballog.mobile.ui.theme.Primary
 fun HeatMap(
     heatData: List<List<Int>>,
     modifier: Modifier = Modifier,
-    title: String = "Heat Map"
 ) {
     Column(
         modifier = modifier
@@ -30,13 +29,6 @@ fun HeatMap(
             .width(312.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = title,
-            color = Gray.Gray700,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
