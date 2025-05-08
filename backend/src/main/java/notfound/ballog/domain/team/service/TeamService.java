@@ -38,7 +38,7 @@ public class TeamService {
 
         teamCardRepository.save(TeamCard.of(team.getTeamId()));
 
-        teamMemberRepository.save(TeamMember.of(userId, new TeamMemberAddRequest(team.getTeamId(), "운영진")));
+        teamMemberRepository.save(TeamMember.of(userId, new TeamMemberAddRequest(team.getTeamId(), "MANAGER")));
     }
 
     public UserTeamListResponse getUserTeamList(UUID userId){
@@ -111,7 +111,7 @@ public class TeamService {
 
     private boolean checkTeamMemberRole(UUID userId, Integer teamId){
         String role = teamMemberRepository.findByUserIdAndTeamId(userId, teamId);
-        return !role.equals("운영진");
+        return !role.equals("MANAGER");
     }
 
     @Transactional

@@ -72,4 +72,36 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
                 .fetch();
     }
 
+//    //자동 등록 버전
+//    @Override
+//    public Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate) {
+//        List<Integer> userMatchIds = queryFactory
+//                .select(participant.matchId)
+//                .from(participant)
+//                .where(participant.userId.eq(userId))
+//                .orderBy(participant.participantId.desc())
+//                .limit(5)
+//                .fetch();
+//
+//
+//        return queryFactory
+//                .select(match.matchId)
+//                .from(match)
+//                .where(
+//                        match.matchDate.eq(matchDate),
+//                        match.matchId.in(userMatchIds)
+//                )
+//                .fetchOne();
+//    }
+
+    @Override
+    public Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate) {
+        return queryFactory
+                .select(match.matchId)
+                .from(match)
+                .join(participant).on(match.matchId.eq(participant.matchId).and(participant.userId.eq(userId)))
+                .where(match.matchDate.eq(matchDate))
+                .fetchOne();
+    }
+
 }
