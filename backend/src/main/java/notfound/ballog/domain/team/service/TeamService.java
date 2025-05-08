@@ -1,6 +1,7 @@
 package notfound.ballog.domain.team.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.team.dto.PlayerCardDto;
 import notfound.ballog.domain.team.dto.TeamCardDto;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TeamService {
@@ -33,7 +35,10 @@ public class TeamService {
 
     @Transactional
     public void addTeam(UUID userId, TeamAddRequest teamAddRequest) {
+        log.info("team logo image {}", teamAddRequest.getLogoImage());
         Team team = Team.of(teamAddRequest);
+        log.info("saved team logo image {}", team.getLogoImageUrl());
+
         teamRepository.save(team);
 
         teamCardRepository.save(TeamCard.of(team.getTeamId()));
