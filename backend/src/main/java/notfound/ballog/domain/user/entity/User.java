@@ -31,6 +31,8 @@ public class User {
     private String gender;
 
     private LocalDate birthDate;
+
+    @Lob
     private String profileImageUrl;
 
     @CreationTimestamp

@@ -33,6 +33,7 @@ public class Team {
     @Column(nullable = false)
     private LocalDate foundationDate;
 
+    @Lob
     private String logoImageUrl;
 
     @Column(nullable = false)
