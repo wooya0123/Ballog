@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
+// AWS 자격 증명은 안드로이드 앱에서 직접 로드하도록 설정
+// assets/aws.properties에서 로드됨
+
 android {
     namespace = "com.ballog.mobile"
     compileSdk = 34
@@ -16,11 +19,15 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // 빈 AWS 키 설정 - 실제 키는 S3Utils에서 assets/aws.properties에서 로드
+        buildConfigField("String", "AWS_ACCESS_KEY", "\"\"")
+        buildConfigField("String", "AWS_SECRET_KEY", "\"\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -30,6 +37,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true  // BuildConfig 클래스 생성 활성화
     }
 
     // ✅ composeOptions는 생략 가능하나 명시하려면 최신 버전으로 맞춤
@@ -74,6 +82,12 @@ dependencies {
     // retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+
+    // AWS S3
+    implementation("com.amazonaws:aws-android-sdk-s3:2.71.0")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.71.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
