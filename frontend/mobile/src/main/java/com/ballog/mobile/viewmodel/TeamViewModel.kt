@@ -1,16 +1,23 @@
 package com.ballog.mobile.viewmodel
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
 import com.ballog.mobile.data.dto.*
 import com.ballog.mobile.data.model.*
+import com.ballog.mobile.util.ImageUtils
+import com.ballog.mobile.util.S3Utils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.UUID
 
 class TeamViewModel : ViewModel() {
@@ -36,6 +43,15 @@ class TeamViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // 이미지 업로드 관련 상태
+    private val _logoImageUri = MutableStateFlow<Uri?>(null)
+    val logoImageUri: StateFlow<Uri?> = _logoImageUri.asStateFlow()
+
+    private val _logoImageUrl = MutableStateFlow<String?>(null)
+    val logoImageUrl: StateFlow<String?> = _logoImageUrl.asStateFlow()
+
+    private var isS3Initialized = false
+
     fun setError(message: String?) {
         _error.value = message
     }
@@ -46,6 +62,110 @@ class TeamViewModel : ViewModel() {
 
     fun setInviteLink(link: String?) {
         _inviteLink.value = link
+    }
+
+    /**
+     * S3 초기화 (처음 한 번만 호출)
+     */
+    fun initS3(context: Context) {
+        if (!isS3Initialized) {
+            S3Utils.init(context)
+            isS3Initialized = true
+        }
+    }
+
+    /**
+     * 로고 이미지 URI 설정 (갤러리에서 선택한 이미지)
+     */
+    fun setLogoImageUri(uri: Uri?) {
+        _logoImageUri.value = uri
+    }
+
+    /**
+     * 인터넷 연결 상태 확인
+     * @return 인터넷 연결 여부
+     */
+    private fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    /**
+     * 팀 로고 이미지 업로드
+     * 1. 인터넷 연결 확인
+     * 2. Uri를 File로 변환
+     * 3. 이미지 리사이징
+     * 4. AWS S3에 직접 업로드
+     */
+    suspend fun uploadLogoImage(context: Context, imageUri: Uri?): Result<String> {
+        try {
+            if (imageUri == null) {
+                _error.value = "이미지가 선택되지 않았습니다"
+                return Result.failure(Exception("이미지가 선택되지 않았습니다"))
+            }
+            
+            // 인터넷 연결 확인
+            if (!isInternetAvailable(context)) {
+                _error.value = "인터넷 연결을 확인해주세요"
+                println("TeamViewModel: 인터넷 연결이 없습니다")
+                return Result.failure(Exception("인터넷 연결을 확인해주세요"))
+            }
+            
+            // S3 초기화 확인
+            if (!isS3Initialized) {
+                initS3(context)
+            }
+            
+            _isLoading.value = true
+            
+            // Uri를 File로 변환
+            val imageFile = ImageUtils.uriToFile(context, imageUri)
+            if (imageFile == null) {
+                _error.value = "이미지 파일 변환에 실패했습니다"
+                return Result.failure(Exception("이미지 파일 변환에 실패했습니다"))
+            }
+            
+            // 이미지 리사이징
+            val resizedFile = ImageUtils.resizeImage(imageFile) ?: imageFile
+            
+            try {
+                // S3에 직접 업로드 (team-logo 폴더에 저장)
+                val imageUrl = S3Utils.uploadImageToS3(resizedFile, "team-logo")
+                
+                // 디버깅: 얻은 URL 확인
+                println("TeamViewModel: S3 업로드 결과 URL: $imageUrl")
+                
+                // 업로드된 URL 저장
+                _logoImageUrl.value = imageUrl
+                return Result.success(imageUrl)
+            } catch (e: Exception) {
+                _error.value = "S3 업로드 중 오류 발생: ${e.message}"
+                println("TeamViewModel: S3 업로드 오류: ${e.message}")
+                return Result.failure(e)
+            } finally {
+                // 임시 파일 삭제
+                resizedFile.delete()
+                if (resizedFile != imageFile) {
+                    imageFile.delete()
+                }
+            }
+            
+        } catch (e: Exception) {
+            val errorMessage = when (e) {
+                is java.net.UnknownHostException -> "인터넷 연결을 확인해주세요"
+                is java.net.SocketTimeoutException -> "서버 응답이 지연되고 있습니다"
+                else -> e.message ?: "이미지 업로드 중 오류가 발생했습니다"
+            }
+            _error.value = errorMessage
+            println("TeamViewModel: 이미지 업로드 실패: $errorMessage")
+            return Result.failure(Exception(errorMessage))
+        } finally {
+            _isLoading.value = false
+        }
     }
 
     // 팀 목록 조회
@@ -63,6 +183,7 @@ class TeamViewModel : ViewModel() {
                 val response = teamApi.getUserTeamList("Bearer $token")
                 if (response.isSuccessful) {
                     val apiResponse = response.body()
+                    println(apiResponse)
                     if (apiResponse?.isSuccess == true && apiResponse.result != null) {
                         _teamList.value = apiResponse.result.teamList.map { it.toTeam() }
                     } else {
@@ -79,6 +200,15 @@ class TeamViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 팀 생성 관련 상태 초기화
+     */
+    fun resetTeamCreationState() {
+        _logoImageUri.value = null
+        _logoImageUrl.value = null
+        _error.value = null
+    }
+
     // 팀 생성
     suspend fun addTeam(teamName: String, logoImageUrl: String, foundationDate: String): Result<Unit> {
         return try {
@@ -90,18 +220,31 @@ class TeamViewModel : ViewModel() {
                 return Result.failure(Exception("로그인이 필요합니다"))
             }
 
+            // 요청 객체 생성 및 로깅
             val request = TeamAddRequest(teamName, logoImageUrl, foundationDate)
+            println("TeamViewModel: 팀 생성 요청 - 팀명: $teamName")
+            println("TeamViewModel: 팀 생성 요청 - 로고URL: $logoImageUrl")
+            println("TeamViewModel: 팀 생성 요청 - 창단일: $foundationDate")
+            
             val response = teamApi.addTeam("Bearer $token", request)
+            println("TeamViewModel: 팀 생성 응답 - 코드: ${response.code()}")
             
             if (response.isSuccessful && response.body()?.isSuccess == true) {
+                println("TeamViewModel: 팀 생성 성공 - ${response.body()?.message}")
                 getUserTeamList() // 팀 목록 갱신
+                
+                // 팀 생성 후 상태 초기화
+                resetTeamCreationState()
+                
                 Result.success(Unit)
             } else {
                 val errorMessage = response.body()?.message ?: "팀 생성에 실패했습니다"
+                println("TeamViewModel: 팀 생성 실패 - $errorMessage")
                 _error.value = errorMessage
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
+            println("TeamViewModel: 팀 생성 예외 - ${e.message}")
             _error.value = e.message
             Result.failure(e)
         } finally {
