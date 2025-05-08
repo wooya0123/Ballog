@@ -54,6 +54,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.tv.material)
     val composeBom = platform("androidx.compose:compose-bom:2024.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom) // ✅ 추가
@@ -69,6 +70,8 @@ dependencies {
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    implementation("androidx.activity:activity-ktx:1.8.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
