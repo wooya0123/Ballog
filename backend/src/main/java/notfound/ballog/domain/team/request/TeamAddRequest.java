@@ -17,6 +17,6 @@ public class TeamAddRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate foundationDate;
 
-    private String logoImage;
+    private String logoImageUrl;
 
 }

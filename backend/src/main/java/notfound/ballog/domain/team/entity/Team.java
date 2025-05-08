@@ -48,7 +48,7 @@ public class Team {
         return Team.builder()
                 .teamName(req.getTeamName())
                 .foundationDate(req.getFoundationDate())
-                .logoImageUrl(req.getLogoImage())
+                .logoImageUrl(req.getLogoImageUrl())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

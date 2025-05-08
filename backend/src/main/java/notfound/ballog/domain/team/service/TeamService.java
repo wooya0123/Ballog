@@ -35,10 +35,7 @@ public class TeamService {
 
     @Transactional
     public void addTeam(UUID userId, TeamAddRequest teamAddRequest) {
-        log.info("team logo image {}", teamAddRequest.getLogoImage());
         Team team = Team.of(teamAddRequest);
-        log.info("saved team logo image {}", team.getLogoImageUrl());
-
         teamRepository.save(team);
 
         teamCardRepository.save(TeamCard.of(team.getTeamId()));
