@@ -78,7 +78,7 @@ fun TeamSettingScreen(
     ) {
         TopNavItem(
             title = "팀 설정",
-            type = TopNavType.DETAIL_WITH_BACK_CLOSE,
+            type = TopNavType.DETAIL_WITH_BACK,
             onBackClick = onBackClick
         )
 

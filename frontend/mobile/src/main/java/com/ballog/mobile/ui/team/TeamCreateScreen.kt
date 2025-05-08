@@ -1,15 +1,22 @@
 package com.ballog.mobile.ui.team
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -20,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Primary
@@ -38,6 +46,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun TeamCreateScreen(
@@ -50,12 +59,42 @@ fun TeamCreateScreen(
     var month by remember { mutableStateOf("") }
     var day by remember { mutableStateOf("") }
     
+    // 로고 이미지 관련 상태
+    val logoImageUri by teamViewModel.logoImageUri.collectAsState()
+    val logoImageUrl by teamViewModel.logoImageUrl.collectAsState()
+    
     val isLoading by teamViewModel.isLoading.collectAsState()
     val error by teamViewModel.error.collectAsState()
     
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    
+    // 화면 종료 시 상태 초기화
+    LaunchedEffect(Unit) {
+        // 화면 진입 시 상태 초기화
+        teamViewModel.resetTeamCreationState()
+    }
+    
+    // 화면 나가기/닫기 함수
+    val handleNavigateBack = {
+        teamViewModel.resetTeamCreationState()
+        onNavigateBack()
+    }
+    
+    val handleClose = {
+        teamViewModel.resetTeamCreationState()
+        onClose()
+    }
+    
+    // 갤러리에서 이미지 선택을 위한 런처
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            teamViewModel.setLogoImageUri(it)
+        }
+    }
 
     fun validateForm(): Boolean {
         if (teamName.isBlank()) {
@@ -66,6 +105,11 @@ fun TeamCreateScreen(
             teamViewModel.setError("창단일자를 모두 입력해주세요")
             return false
         }
+        // 로고 이미지 필수 추가
+        if (logoImageUri == null) {
+            teamViewModel.setError("로고 이미지를 선택해주세요")
+            return false
+        }
         return true
     }
 
@@ -73,13 +117,62 @@ fun TeamCreateScreen(
         if (!validateForm()) return
         
         coroutineScope.launch {
-            val foundationDate = "$year-${month.padStart(2, '0')}-${day.padStart(2, '0')}"
-            val logoImageUrl = "" // TODO: Implement image upload
-            
-            teamViewModel.addTeam(teamName, logoImageUrl, foundationDate)
-                .onSuccess {
-                    onNavigateBack()
+            try {
+                // 로딩 상태 설정
+                teamViewModel.setLoading(true)
+                
+                val foundationDate = "$year-${month.padStart(2, '0')}-${day.padStart(2, '0')}"
+                
+                // 디버깅: 초기 이미지 URL 상태 확인
+                println("TeamCreateScreen: 팀 생성 시작 - 초기 이미지 URL: $logoImageUrl")
+                
+                // 이미지 업로드 (필수)
+                if (logoImageUri != null) {
+                    println("TeamCreateScreen: 이미지 선택됨, 업로드 시작")
+                    
+                    // 이미지 업로드 시도
+                    try {
+                        val result = teamViewModel.uploadLogoImage(context, logoImageUri)
+                        
+                        result.fold(
+                            onSuccess = { url ->
+                                println("TeamCreateScreen: 이미지 업로드 성공, URL: $url")
+                                
+                                // 팀 생성 API 호출
+                                val safeUrl = url.trim()
+                                println("TeamCreateScreen: 이미지 업로드 성공, 팀 생성 진행 with URL: $safeUrl")
+                                
+                                val teamResult = teamViewModel.addTeam(teamName, safeUrl, foundationDate)
+                                teamResult.fold(
+                                    onSuccess = {
+                                        println("TeamCreateScreen: 팀 생성 성공")
+                                        // 성공 시 화면 이동 전에 상태 초기화 필요 없음 (ViewModel에서 처리)
+                                        onNavigateBack()
+                                    },
+                                    onFailure = { e ->
+                                        println("TeamCreateScreen: 팀 생성 실패: ${e.message}")
+                                        teamViewModel.setError("팀 생성에 실패했습니다: ${e.message}")
+                                    }
+                                )
+                            },
+                            onFailure = { e ->
+                                println("TeamCreateScreen: 이미지 업로드 실패: ${e.message}")
+                                teamViewModel.setError("로고 이미지 업로드에 실패했습니다. 다시 시도해주세요. 오류: ${e.message}")
+                            }
+                        )
+                    } catch (e: Exception) {
+                        println("TeamCreateScreen: 이미지 업로드 예외: ${e.message}")
+                        teamViewModel.setError("로고 이미지 업로드에 실패했습니다. 다시 시도해주세요.")
+                    }
+                } else {
+                    teamViewModel.setError("로고 이미지를 선택해주세요")
                 }
+            } catch (e: Exception) {
+                println("TeamCreateScreen: 전체 프로세스 예외: ${e.message}")
+                teamViewModel.setError("처리 중 오류가 발생했습니다: ${e.message}")
+            } finally {
+                teamViewModel.setLoading(false)
+            }
         }
     }
 
@@ -93,8 +186,8 @@ fun TeamCreateScreen(
         TopNavItem(
             type = TopNavType.DETAIL_WITH_BACK,
             title = "팀 생성",
-            onBackClick = onNavigateBack,
-            onActionClick = onClose
+            onBackClick = handleNavigateBack,
+            onActionClick = handleClose
         )
 
         // Error Message
@@ -127,6 +220,8 @@ fun TeamCreateScreen(
                 modifier = Modifier
                     .size(146.dp)
                     .background(Gray.Gray200, RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(enabled = !isLoading) { galleryLauncher.launch("image/*") }
                     .align(Alignment.CenterHorizontally),
                 contentAlignment = Alignment.Center
             ) {
@@ -135,7 +230,34 @@ fun TeamCreateScreen(
                         color = Gray.Gray500,
                         modifier = Modifier.size(24.dp)
                     )
+                } else if (logoImageUri != null) {
+                    // 선택된 이미지 표시
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        AsyncImage(
+                            model = logoImageUri,
+                            contentDescription = "Team Logo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        
+                        // 닫기 버튼 (오른쪽 위)
+                        IconButton(
+                            onClick = { teamViewModel.setLogoImageUri(null) },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .size(28.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_close),
+                                contentDescription = "Remove Image",
+                                tint = Gray.Gray800,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 } else {
+                    // 기본 추가 UI
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center

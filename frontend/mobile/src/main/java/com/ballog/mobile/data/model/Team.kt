@@ -7,13 +7,13 @@ import com.ballog.mobile.data.dto.TeamMember
 data class Team(
     val teamId: Int,
     val name: String? = null,
-    val logoUrl: String? = null,
+    val logoImageUrl: String? = null,
     val foundationDate: String? = null
 )
 
 data class TeamDetail(
     val name: String = "",
-    val logoUrl: String = "",
+    val logoImageUrl: String = "",
     val foundationDate: String = "",
     val stats: TeamStats = TeamStats(0, 0, 0, 0, 0),
     val players: List<Player> = emptyList()
@@ -53,13 +53,13 @@ data class TeamMemberModel(
 fun com.ballog.mobile.data.dto.TeamInfo.toTeam() = Team(
     teamId = teamId,
     name = teamName,
-    logoUrl = logoImageUrl,
+    logoImageUrl = logoImageUrl,
     foundationDate = foundationDate
 )
 
 fun com.ballog.mobile.data.dto.TeamDetailResponse.toTeamDetail() = TeamDetail(
     name = teamName ?: "",
-    logoUrl = logoImageUrl ?: "",
+    logoImageUrl = logoImageUrl ?: "",
     foundationDate = foundationDate ?: "",
     stats = TeamStats(
         speed = averageCardStats?.avgSpeed ?: 0,

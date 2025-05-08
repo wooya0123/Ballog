@@ -22,7 +22,7 @@ import com.ballog.mobile.ui.theme.pretendard
 data class TeamInfo(
     val name: String? = null,
     val foundingDate: String? = null,
-    val imageUrl: String? = null
+    val logoImageUrl: String? = null
 )
 
 @Composable
@@ -47,7 +47,7 @@ fun TeamCard(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (team.imageUrl.isNullOrBlank()) {
+            if (team.logoImageUrl.isNullOrBlank()) {
                 Box(
                     modifier = Modifier
                         .size(52.dp)
@@ -64,7 +64,7 @@ fun TeamCard(
                 }
             } else {
                 SubcomposeAsyncImage(
-                    model = team.imageUrl,
+                    model = team.logoImageUrl,
                     contentDescription = "팀 이미지",
                     modifier = Modifier
                         .size(52.dp)
@@ -129,7 +129,7 @@ fun TeamCardPreview() {
         team = TeamInfo(
             name = "FS 핑크팬서",
             foundingDate = "2023.08.14",
-            imageUrl = "https://picsum.photos/200"  // 실제 URL 사용
+            logoImageUrl = "https://picsum.photos/200"  // 실제 URL 사용
         ),
         onClick = {}
     )

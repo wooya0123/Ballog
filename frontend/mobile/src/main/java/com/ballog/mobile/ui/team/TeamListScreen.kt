@@ -132,7 +132,7 @@ fun TeamListScreen(
                             team = TeamInfo(
                                 name = team.name.orEmpty(),
                                 foundingDate = team.foundationDate.orEmpty(),
-                                imageUrl = team.logoUrl.orEmpty()
+                                logoImageUrl = team.logoImageUrl.orEmpty()
                             ),
                             onClick = {
                                 Log.d(TAG, "팀 카드 클릭: teamId=${team.teamId}, 이름=${team.name}")

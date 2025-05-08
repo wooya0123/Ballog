@@ -1,5 +1,7 @@
 package com.ballog.mobile.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
@@ -9,6 +11,8 @@ import com.ballog.mobile.data.dto.EmailVerifyRequest
 import com.ballog.mobile.data.dto.LoginRequest
 import com.ballog.mobile.data.dto.SignUpRequest
 import com.ballog.mobile.data.model.*
+import com.ballog.mobile.util.ImageUtils
+import com.ballog.mobile.util.S3Utils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +27,13 @@ class AuthViewModel : ViewModel() {
     // 인증 상태 관리
     private val _authState = MutableStateFlow<AuthResult<Auth>>(AuthResult.Error(""))
     val authState: StateFlow<AuthResult<Auth>> = _authState.asStateFlow()
+
+    // 이미지 업로드 상태 관리
+    private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Initial)
+    val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
+
+    // S3 초기화 여부
+    private var isS3Initialized = false
 
     // 인증 상태 초기화
     fun resetAuthState() {
@@ -61,6 +72,79 @@ class AuthViewModel : ViewModel() {
     private val _isEmailVerified = MutableStateFlow(false)
     val isEmailVerified: StateFlow<Boolean> = _isEmailVerified.asStateFlow()
 
+    // 프로필 이미지 원본 Uri
+    private var _profileImageUri: Uri? = null
+
+    /**
+     * S3 초기화 (처음 한 번만 호출)
+     */
+    fun initS3(context: Context) {
+        if (!isS3Initialized) {
+            // 암호화 옵션을 활성화하여 S3Utils 초기화
+            S3Utils.init(context)
+            isS3Initialized = true
+        }
+    }
+
+    /**
+     * 프로필 이미지 업로드
+     * 1. Uri를 File로 변환
+     * 2. 이미지 리사이징
+     * 3. AWS S3에 직접 업로드
+     * 4. 업로드된 URL을 회원가입 데이터에 설정
+     */
+    suspend fun uploadProfileImage(context: Context, imageUri: Uri?) {
+        try {
+            if (imageUri == null) {
+                _imageUploadState.value = ImageUploadState.Error("이미지가 선택되지 않았습니다")
+                return
+            }
+            
+            // S3 초기화 확인
+            if (!isS3Initialized) {
+                initS3(context)
+            }
+            
+            _profileImageUri = imageUri
+            _imageUploadState.value = ImageUploadState.Loading
+            
+            // Uri를 File로 변환
+            val imageFile = ImageUtils.uriToFile(context, imageUri)
+            if (imageFile == null) {
+                _imageUploadState.value = ImageUploadState.Error("이미지 파일 변환에 실패했습니다")
+                return
+            }
+            
+            // 이미지 리사이징
+            val resizedFile = ImageUtils.resizeImage(imageFile) ?: imageFile
+            
+            try {
+                // S3에 직접 업로드
+                val imageUrl = S3Utils.uploadImageToS3(resizedFile, "profile")
+                
+                // 업로드된 URL을 회원가입 데이터에 설정
+                setSignUpProfileImageUrl(imageUrl)
+                _imageUploadState.value = ImageUploadState.Success(imageUrl)
+            } catch (e: Exception) {
+                _imageUploadState.value = ImageUploadState.Error("S3 업로드 중 오류 발생: ${e.message}")
+            } finally {
+                // 임시 파일 삭제
+                resizedFile.delete()
+                if (resizedFile != imageFile) {
+                    imageFile.delete()
+                }
+            }
+            
+        } catch (e: Exception) {
+            val errorMessage = when (e) {
+                is java.net.UnknownHostException -> "인터넷 연결을 확인해주세요"
+                is java.net.SocketTimeoutException -> "서버 응답이 지연되고 있습니다"
+                else -> e.message ?: "이미지 업로드 중 오류가 발생했습니다"
+            }
+            _imageUploadState.value = ImageUploadState.Error(errorMessage)
+        }
+    }
+    
     // 회원가입 데이터 유효성 검사
     private fun validateSignUpData(): String? {
         return when {
