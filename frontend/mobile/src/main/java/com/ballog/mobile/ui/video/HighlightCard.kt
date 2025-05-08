@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,6 +29,8 @@ fun HighlightCard(
     onEdit: () -> Unit,
     onLike: () -> Unit
 ) {
+    var isLiked by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,7 +40,15 @@ fun HighlightCard(
         Column {
             TitleRow(title = title, onEdit = onEdit)
             Spacer(modifier = Modifier.height(8.dp))
-            TimeLikeRow(startTime = startTime, endTime = endTime, onLike = onLike)
+            TimeLikeRow(
+                startTime = startTime,
+                endTime = endTime,
+                isLiked = isLiked,
+                onLike = {
+                    isLiked = !isLiked
+                    onLike()
+                }
+            )
         }
     }
 }
@@ -73,6 +84,7 @@ private fun TitleRow(title: String, onEdit: () -> Unit) {
 private fun TimeLikeRow(
     startTime: String,
     endTime: String,
+    isLiked: Boolean,
     onLike: () -> Unit
 ) {
     Row(
@@ -84,12 +96,12 @@ private fun TimeLikeRow(
         Spacer(modifier = Modifier.weight(1f))
 
         Icon(
-            painter = painterResource(id = R.drawable.ic_heart),
-            contentDescription = "좋아요",
+            painter = painterResource(id = if (isLiked) R.drawable.ic_heart_fill else R.drawable.ic_heart),
+            contentDescription = if (isLiked) "좋아요 취소" else "좋아요",
             modifier = Modifier
                 .size(20.dp)
                 .clickable { onLike() },
-            tint = Gray.Gray700
+            tint = Color.Red // ❤️ 항상 빨간색으로 표시
         )
     }
 }
