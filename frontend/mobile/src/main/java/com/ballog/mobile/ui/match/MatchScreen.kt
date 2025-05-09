@@ -2,6 +2,8 @@ package com.ballog.mobile.ui.match
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.ballog.mobile.R
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
@@ -27,12 +30,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
+fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewModel()) {
     val today = remember { LocalDate.now() }
     var currentMonth by remember { mutableStateOf(today.withDayOfMonth(1)) }
     var selectedDate by remember { mutableStateOf(today) }
     val matchState by viewModel.matchState.collectAsState()
     val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월"))
+    val selectedDateStr = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
     LaunchedEffect(currentMonth) {
         android.util.Log.d("MatchScreen", "📡 fetchMyMatches 요청: ${currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))}")
@@ -42,10 +46,11 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(Gray.Gray100),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopNavItem(title = "팀", type = TopNavType.MAIN_BASIC)
+        TopNavItem(title = "매치", type = TopNavType.MAIN_BASIC)
         Spacer(modifier = Modifier.height(24.dp))
 
         when (matchState) {
@@ -102,13 +107,16 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
                         filteredMatches.forEach { match ->
                             MatchCard(
                                 timeLabel = "경기 시작시간",
-                                time = match.startTime,
+                                startTime = match.startTime,
+                                endTime = match.endTime,
                                 place = match.location
                             )
                         }
                     }
                     BallogButton(
-                        onClick = { /* TODO: navigate to match creation */ },
+                        onClick = {
+                            navController.navigate("match/register/$selectedDateStr")
+                        },
                         type = ButtonType.BOTH,
                         buttonColor = ButtonColor.GRAY,
                         icon = painterResource(id = R.drawable.ic_add),
@@ -165,8 +173,9 @@ fun MatchScreenPreview() {
                 } else {
                     filteredMatches.forEach { match ->
                         MatchCard(
-                            timeLabel = "경기 시작시간",
-                            time = match.startTime,
+                            timeLabel = "경기 시간",
+                            startTime = match.startTime,
+                            endTime = match.endTime,
                             place = match.location
                         )
                     }
