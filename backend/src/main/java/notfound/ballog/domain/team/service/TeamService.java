@@ -93,9 +93,12 @@ public class TeamService {
     @Transactional
     public void deleteTeam(UUID userId, Integer teamId){
         if(checkTeamMemberRole(userId, teamId)){
+            log.error("팀 삭제 에러 발생 {} {}", teamId, userId);
             throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
         }
 
+
+        log.info("팀 삭제 로직 진행");
         teamMemberRepository.deleteAllByTeamId(teamId);
 
         teamCardRepository.deleteByTeamId(teamId);
@@ -107,9 +110,11 @@ public class TeamService {
     @Transactional
     public void deleteTeamMember(UUID userId, Integer teamId, Integer teamMemberId){
         if(checkTeamMemberRole(userId, teamId)){
+            log.error("팀 멤버 삭제 에러 발생 {} {}", teamId, teamMemberId);
             throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
         }
-
+        
+        log.info("팀 멤버 삭제 로직 진행");
         teamMemberRepository.deleteById(teamMemberId);
     }
 
