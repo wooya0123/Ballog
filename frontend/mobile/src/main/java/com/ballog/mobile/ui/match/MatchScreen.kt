@@ -106,10 +106,10 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
                     } else {
                         filteredMatches.forEach { match ->
                             MatchCard(
-                                timeLabel = "경기 시작시간",
+                                timeLabel = "경기 시간",
                                 startTime = match.startTime,
                                 endTime = match.endTime,
-                                place = match.location
+                                matchName = match.matchName
                             )
                         }
                     }
@@ -176,7 +176,7 @@ fun MatchScreenPreview() {
                             timeLabel = "경기 시간",
                             startTime = match.startTime,
                             endTime = match.endTime,
-                            place = match.location
+                            matchName = match.matchName
                         )
                     }
                 }

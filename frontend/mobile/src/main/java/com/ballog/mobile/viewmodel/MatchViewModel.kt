@@ -51,28 +51,6 @@ class MatchViewModel : ViewModel() {
         }
     }
 
-    // 경기장 리스트 상태
-    private val _stadiumList = MutableStateFlow<List<String>>(emptyList())
-    val stadiumList: StateFlow<List<String>> = _stadiumList
-
-    /**
-     * 서버로부터 경기장 리스트를 조회하는 함수
-     */
-    fun fetchStadiumList() {
-        viewModelScope.launch {
-            val token = tokenManager.getAccessToken().firstOrNull()
-            if (token == null) return@launch
-
-            val response = RetrofitInstance.matchApi.getStadiumList("Bearer $token")
-            if (response.isSuccessful && response.body()?.isSuccess == true) {
-                val list = response.body()?.result?.stadiumList ?: emptyList()
-                _stadiumList.value = list
-            } else {
-                // TODO: 에러 처리 필요
-            }
-        }
-    }
-
     /**
      * 서버에 개인 신규 매치 등록하는 함수
      */
@@ -80,7 +58,7 @@ class MatchViewModel : ViewModel() {
         date: String,
         startTime: String,
         endTime: String,
-        stadiumId: String,
+        matchName: String,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -95,14 +73,19 @@ class MatchViewModel : ViewModel() {
                 matchDate = date,
                 startTime = startTime,
                 endTime = endTime,
-                stadiumId = stadiumId
+                matchName = matchName
             )
 
             val response = matchApi.registerMyMatch("Bearer $token", request)
+            android.util.Log.d("MatchViewModel", "📤 요청 내용: $request")
+
+
             if (response.isSuccessful && response.body()?.isSuccess == true) {
                 onSuccess()
             } else {
-                onError(response.body()?.message ?: "매치 등록 실패")
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("MatchViewModel", "❌ 매치 등록 실패: code=${response.code()}, body=$errorBody")
+                onError(response.body()?.message ?: "매치 등록 실패 (${response.code()})")
             }
         }
     }
@@ -118,7 +101,7 @@ fun MatchItemDto.toDomain(): Match {
         date = matchDate,
         startTime = startTime,
         endTime = endTime,
-        location = location
+        matchName = matchName,
     )
 }
 

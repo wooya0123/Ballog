@@ -2,7 +2,6 @@ package com.ballog.mobile.data.api
 
 import com.ballog.mobile.data.dto.MatchListResponse
 import com.ballog.mobile.data.dto.MatchRegisterRequest
-import com.ballog.mobile.data.dto.StadiumListResult
 import com.ballog.mobile.data.model.ApiResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -27,12 +26,6 @@ interface MatchApi {
         @Path("teamId") teamId: Long,
         @Query("month") month: String
     ): Response<ApiResponse<MatchListResponse>>
-
-    // 경기장 조회
-    @GET("v1/matches/stadiums")
-    suspend fun getStadiumList(
-        @Header("Authorization") token: String
-    ): Response<ApiResponse<StadiumListResult>>
 
     // 매치 등록
     @POST("v1/matches/me")

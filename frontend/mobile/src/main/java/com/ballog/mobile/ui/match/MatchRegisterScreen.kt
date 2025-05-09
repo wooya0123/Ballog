@@ -34,10 +34,8 @@ fun MatchRegisterScreen(
     viewModel: MatchViewModel = viewModel()
 ) {
     val isTeam = mode == MatchRegisterMode.TEAM
-    val stadiumList by viewModel.stadiumList.collectAsState()
-    var selectedLocation by remember { mutableStateOf("") }
-    var locationDropdownExpanded by remember { mutableStateOf(false) }
 
+    var matchName by remember { mutableStateOf("") }
     val hourFocus = remember { FocusRequester() }
     val minuteFocus = remember { FocusRequester() }
     val endHourFocus = remember { FocusRequester() }
@@ -51,13 +49,6 @@ fun MatchRegisterScreen(
     val players = listOf("김가희", "이철수", "박영희", "최민수", "홍길동")
     var selectedPlayers by remember { mutableStateOf(setOf<String>()) }
 
-    LaunchedEffect(Unit) { viewModel.fetchStadiumList() }
-    LaunchedEffect(stadiumList) {
-        if (stadiumList.isNotEmpty() && selectedLocation.isBlank()) {
-            selectedLocation = stadiumList.first()
-        }
-    }
-
     Column(
         modifier = Modifier.fillMaxSize().background(Color.White)
     ) {
@@ -70,21 +61,22 @@ fun MatchRegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "어디서 매치 예정이신가요?",
+            text = "매치 이름을 정해주세요 !",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = pretendard,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
-        DropDown(
-            items = stadiumList,
-            selectedItem = selectedLocation,
-            onItemSelected = { selectedLocation = it },
-            expanded = locationDropdownExpanded,
-            onExpandedChange = { locationDropdownExpanded = it },
-            modifier = Modifier.padding(horizontal = 24.dp)
+        Input(
+            value = matchName,
+            onValueChange = { matchName = it },
+            placeholder = "매치 이름",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 4.dp)
         )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -237,7 +229,8 @@ fun MatchRegisterScreen(
                     // TODO: 팀 매치 등록 로직
                 } else {
                     if (
-                        selectedLocation.isBlank() || hour.isBlank() || minute.isBlank() ||
+                        matchName.isBlank() ||
+                        hour.isBlank() || minute.isBlank() ||
                         endHour.isBlank() || endMinute.isBlank()
                     ) {
                         println("⚠️ 입력값이 부족합니다.")
@@ -247,13 +240,12 @@ fun MatchRegisterScreen(
                     val date = selectedDate
                     val startTime = "${hour.padStart(2, '0')}:${minute.padStart(2, '0')}"
                     val endTime = "${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}"
-                    val stadiumId = "1" // TODO: stadiumName → stadiumId 매핑 필요
 
                     viewModel.registerMyMatch(
                         date = date,
                         startTime = startTime,
                         endTime = endTime,
-                        stadiumId = stadiumId,
+                        matchName = matchName,
                         onSuccess = {
                             println("✅ 매치 등록 성공")
                             navController.popBackStack()

@@ -9,19 +9,10 @@ data class MatchListResponse(
 
 data class MatchItemDto(
     val matchId: Int,
-    val location: String,
+    val matchName: String,
     val matchDate: String,   // e.g., "2025-04-22"
     val startTime: String,   // e.g., "20:00"
     val endTime: String      // e.g., "22:00"
-)
-
-// 경기장 리스트 응답
-data class Stadium(
-    val stadiumName: String
-)
-
-data class StadiumListResult(
-    val stadiumList: List<String>
 )
 
 // 개인 매치 등록 요청
@@ -29,6 +20,6 @@ data class MatchRegisterRequest(
     val matchDate: String,   // yyyy-MM-dd
     val startTime: String,   // HH:mm
     val endTime: String,     // HH:mm
-    val stadiumId: String
+    val matchName: String
 )
 

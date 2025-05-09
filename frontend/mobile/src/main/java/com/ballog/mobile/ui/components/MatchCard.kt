@@ -21,7 +21,7 @@ fun MatchCard(
     timeLabel: String,
     startTime: String,
     endTime: String,
-    place: String
+    matchName: String
 ) {
     fun formatTime(time: String): String {
         return time.split(":").let { parts ->
@@ -61,7 +61,7 @@ fun MatchCard(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = place,
+            text = matchName,
             color = Gray.Gray800,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
@@ -79,7 +79,7 @@ fun MatchCardPreview() {
             timeLabel = "경기 시작시간",
             startTime = "15:00:00",
             endTime = "16:30:00",
-            place = "잠실 올림픽 공식 풋살 경기장"
+            matchName = "잠실 올림픽 공식 풋살 경기장"
         )
     }
 }
