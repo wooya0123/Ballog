@@ -22,7 +22,7 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.theme.pretendard
 
-enum class NavigationTab { HOME, MATCH, TEAM, MYPAGE }
+enum class NavigationTab { HOME, MATCH, TEAM, MYPAGE, DATA }
 
 @Composable
 fun NavigationBar(
@@ -98,7 +98,7 @@ fun NavigationBar(
                 .offset(y = 8.dp)
                 .clip(CircleShape)
                 .background(activeColor)
-                .clickable { onActionClick() },
+                .clickable { onTabSelected(NavigationTab.DATA) },
             contentAlignment = Alignment.Center
         ) {
             Icon(

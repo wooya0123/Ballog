@@ -1,15 +1,14 @@
 package com.ballog.mobile.ui.auth
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ballog.mobile.ui.components.BallogButton
@@ -19,38 +18,38 @@ import com.ballog.mobile.ui.components.Input
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Surface
 import com.ballog.mobile.ui.theme.pretendard
-import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.AuthViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import com.ballog.mobile.data.model.AuthResult
+import com.ballog.mobile.navigation.Routes
+import kotlinx.coroutines.launch
 
 private fun isValidEmail(email: String): Boolean {
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$"
     return email.matches(emailRegex.toRegex())
 }
 
-sealed class LoginResult {
-    object Success : LoginResult()
-    object WrongPassword : LoginResult()
-    object EmailNotFound : LoginResult()
-}
-
-// 임시 로그인 API 요청 함수
-private suspend fun requestLogin(email: String, password: String): LoginResult {
-    // TODO: 실제 API 요청으로 대체
-    delay(1000) // API 요청 시뮬레이션
-    return when {
-        email == "test@ballog.com" && password == "password123" -> LoginResult.Success
-        email == "test@ballog.com" -> LoginResult.WrongPassword
-        else -> LoginResult.EmailNotFound
-    }
-}
-
 @Composable
 fun LoginScreen(
-    onLoginClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {},
-    onSignUpNavigate: (String, String) -> Unit = { _, _ -> }
+    navController: NavController,
+    viewModel: AuthViewModel
 ) {
+    // 화면이 처음 표시될 때 authState 초기화
+    LaunchedEffect(Unit) {
+        viewModel.resetAuthState()
+    }
+
+    // 뒤로가기 핸들러 추가
+    BackHandler {
+        navController.navigate(Routes.ONBOARDING) {
+            popUpTo(Routes.LOGIN) { inclusive = true }
+        }
+    }
+
+    val lastCredentials by viewModel.lastSignUpCredentials.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -58,24 +57,53 @@ fun LoginScreen(
     var hasPasswordError by remember { mutableStateOf(false) }
     var emailErrorMessage by remember { mutableStateOf("") }
     var passwordErrorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+
+    // 만약 회원가입 후 이동했다면 이메일과 비밀번호 채우기
+    LaunchedEffect(lastCredentials) {
+        lastCredentials?.let { (savedEmail, savedPassword) ->
+            println("LoginScreen - Filling in credentials from signup: $savedEmail")
+            email = savedEmail
+            password = savedPassword
+        }
+    }
 
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(isLoading) {
-        if (isLoading) {
-            when (requestLogin(email, password)) {
-                LoginResult.Success -> onLoginClick()
-                LoginResult.WrongPassword -> {
-                    hasPasswordError = true
-                    passwordErrorMessage = "비밀번호가 틀렸습니다"
-                    isLoading = false
-                }
-                LoginResult.EmailNotFound -> {
-                    onSignUpNavigate(email, password)
+    val authState by viewModel.authState.collectAsState()
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthResult.Success -> {
+                navController.navigate(Routes.MAIN) {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
                 }
             }
-            isLoading = false
+            is AuthResult.Error -> {
+                when ((authState as AuthResult.Error).message) {
+                    "회원가입이 필요합니다" -> {
+                        println("LoginScreen - Before setting signup data: email=$email, password=$password")
+                        viewModel.resetSignUpProgress()  // 회원가입 진행 상태 초기화
+                        viewModel.setSignUpEmailAndPassword(email, password)
+                        println("LoginScreen - After setting signup data")
+                        navController.navigate(Routes.SIGNUP) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    }
+                    "비밀번호가 일치하지 않습니다" -> {
+                        hasPasswordError = true
+                        passwordErrorMessage = (authState as AuthResult.Error).message
+                    }
+                    else -> {
+                        hasEmailError = true
+                        emailErrorMessage = (authState as AuthResult.Error).message
+                    }
+                }
+            }
+            is AuthResult.Loading -> {
+                // 로딩 상태는 isLoading 변수로 처리
+            }
         }
     }
 
@@ -142,7 +170,9 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
-                    .clickable { onForgotPasswordClick() },
+                    .clickable {
+                        // 비밀번호 찾기 기능 구현 예정
+                    },
                 fontFamily = pretendard
             )
 
@@ -159,9 +189,15 @@ fun LoginScreen(
                         }
                         password.isEmpty() -> {
                             hasPasswordError = true
+                            passwordErrorMessage = "비밀번호를 입력해주세요"
                         }
                         else -> {
-                            isLoading = true
+                            keyboardController?.hide()
+                            coroutineScope.launch {
+                                isLoading = true
+                                viewModel.login(email, password)
+                                isLoading = false
+                            }
                         }
                     }
                 },

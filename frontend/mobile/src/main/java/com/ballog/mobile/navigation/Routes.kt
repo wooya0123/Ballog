@@ -6,7 +6,7 @@ object Routes {
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
     const val SIGNUP = "signup"
-    const val SIGNUP_EMAIL_VERIFICATION = "signup/email-verification/{email}"
+    const val SIGNUP_EMAIL_VERIFICATION = "signup/email-verification"
     const val SIGNUP_NICKNAME = "signup/nickname"
     const val SIGNUP_BIRTHDAY = "signup/birthday"
     const val SIGNUP_PROFILE_IMAGE = "signup/profile-image"
@@ -14,21 +14,14 @@ object Routes {
     // 메인 탭
     const val MAIN = "main"
     const val HOME = "home"
-    const val MATCH = "match"
-    const val TEAM = "team"
 
     // 마이페이지
     const val MYPAGE = "mypage"
     const val PROFILE_EDIT = "profile/edit"
     const val MYPAGE_LIKED_VIDEOS = "mypage/liked-videos"
 
-    // 팀 관련
-    const val TEAM_LIST = "team"
-    const val TEAM_CREATE = "team/create"
-    const val TEAM_DETAIL = "team/detail/{teamName}"
-    const val TEAM_SETTINGS = "team/settings/{teamName}"
-    const val TEAM_DELEGATE = "team/delegate/{teamName}"
-    const val TEAM_KICK = "team/kick/{teamName}"
+    // 매치 데이터
+    const val MATCH_DATA = "match_data"
 
     // 그 외 다른 route 상수들도 여기에 추가 예정
 }

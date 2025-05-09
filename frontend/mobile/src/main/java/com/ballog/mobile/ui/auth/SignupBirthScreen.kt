@@ -23,24 +23,44 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Surface
 import com.ballog.mobile.ui.theme.System
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import com.ballog.mobile.viewmodel.AuthViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import com.ballog.mobile.data.model.SignUpProgress
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignupBirthScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: AuthViewModel
 ) {
+    val signUpProgress by viewModel.signUpProgress.collectAsState()
+    println("BirthScreen - Current progress: $signUpProgress")
+
+    // 현재 진행 상태 확인
+    LaunchedEffect(signUpProgress) {
+        println("BirthScreen - Progress changed to: $signUpProgress")
+        if (signUpProgress != SignUpProgress.BIRTH_DATE && signUpProgress != SignUpProgress.PROFILE) {
+            println("BirthScreen - Invalid progress state, popping back")
+            navController.popBackStack()
+        }
+    }
+
     var year by remember { mutableStateOf("") }
     var month by remember { mutableStateOf("") }
     var day by remember { mutableStateOf("") }
     var hasError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val yearFocusRequester = remember { FocusRequester() }
     val monthFocusRequester = remember { FocusRequester() }
     val dayFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Request focus and show keyboard when the screen mounts
     LaunchedEffect(Unit) {
+        println("BirthScreen - Requesting focus and showing keyboard")
         yearFocusRequester.requestFocus()
         keyboardController?.show()
     }
@@ -186,23 +206,39 @@ fun SignupBirthScreen(
 
             BallogButton(
                 onClick = {
+                    println("BirthScreen - Next button clicked")
                     when {
                         year.length != 4 || month.isEmpty() || day.isEmpty() -> {
+                            println("BirthScreen - Validation failed: Empty fields")
                             hasError = true
                             errorMessage = "생년월일을 모두 입력해주세요."
                         }
                         !isValidDate(year.toInt(), month.toInt(), day.toInt()) -> {
+                            println("BirthScreen - Validation failed: Invalid date")
                             hasError = true
                             errorMessage = "올바른 생년월일을 입력해주세요."
                         }
                         else -> {
-                            navController.navigate(Routes.SIGNUP_PROFILE_IMAGE)
+                            println("BirthScreen - Starting navigation process")
+                            coroutineScope.launch {
+                                isLoading = true
+                                println("BirthScreen - Setting birth date: $year-$month-$day")
+                                viewModel.setSignUpBirthDate("$year-$month-$day")
+                                isLoading = false
+                                println("BirthScreen - Navigating to profile image screen")
+                                navController.navigate(Routes.SIGNUP_PROFILE_IMAGE) {
+                                    popUpTo(Routes.SIGNUP_BIRTHDAY) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
                         }
                     }
                 },
                 type = ButtonType.LABEL_ONLY,
                 buttonColor = ButtonColor.BLACK,
-                label = "다음",
+                label = if (isLoading) "처리 중..." else "다음",
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 40.dp)
