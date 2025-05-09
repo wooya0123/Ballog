@@ -12,6 +12,7 @@ data class Team(
 )
 
 data class TeamDetail(
+    val teamId: Int = 0,
     val name: String = "",
     val logoImageUrl: String = "",
     val foundationDate: String = "",
@@ -58,6 +59,7 @@ fun com.ballog.mobile.data.dto.TeamInfo.toTeam() = Team(
 )
 
 fun com.ballog.mobile.data.dto.TeamDetailResponse.toTeamDetail() = TeamDetail(
+    teamId = teamId,
     name = teamName ?: "",
     logoImageUrl = logoImageUrl ?: "",
     foundationDate = foundationDate ?: "",

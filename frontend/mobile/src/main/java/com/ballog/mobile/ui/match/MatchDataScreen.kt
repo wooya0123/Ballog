@@ -18,13 +18,10 @@ import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.runtime.Immutable
 import com.ballog.mobile.ui.components.Input
-import com.ballog.mobile.ui.match.HeatMap
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.ButtonColor
@@ -204,7 +201,7 @@ fun MatchDataModal(
                                     Box(
                                         Modifier
                                             .fillMaxSize()
-                                            .background(Gray.Gray700.copy(alpha = 0.98f))
+                                            .background(Gray.Gray700.copy(alpha = 0.85f))
                                     )
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_team),
