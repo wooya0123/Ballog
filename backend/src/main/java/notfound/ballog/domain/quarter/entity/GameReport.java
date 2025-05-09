@@ -1,9 +1,9 @@
 package notfound.ballog.domain.quarter.entity;
 
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class GameReport {
     private Integer quarterId;
 
     @Column(columnDefinition = "jsonb")
-    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> jsonData;
 
     private LocalDateTime createdAt;
