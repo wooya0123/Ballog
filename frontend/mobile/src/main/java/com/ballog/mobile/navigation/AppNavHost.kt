@@ -18,13 +18,9 @@ import com.ballog.mobile.ui.main.MainScreen
 import com.ballog.mobile.ui.profile.LikedVideosScreen
 import com.ballog.mobile.ui.profile.MyPageScreen
 import com.ballog.mobile.ui.profile.ProfileEditScreen
-import com.ballog.mobile.ui.team.TeamCreateScreen
-import com.ballog.mobile.ui.team.TeamDelegateScreen
-import com.ballog.mobile.ui.team.TeamDetailScreen
-import com.ballog.mobile.ui.team.TeamKickScreen
-import com.ballog.mobile.ui.team.TeamListScreen
-import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.viewmodel.AuthViewModel
+import com.ballog.mobile.navigation.Routes.MATCH_DATA
+import com.ballog.mobile.ui.match.MatchDataScreen
 
 @Composable
 fun AppNavHost(
@@ -37,6 +33,15 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(
+                onEmailLoginClick = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Routes.LOGIN) {
             LoginScreen(
                 navController = navController,
@@ -90,119 +95,6 @@ fun AppNavHost(
                 initialTeamId = teamId?.toIntOrNull()
             )
         }
-        composable(Routes.ONBOARDING) {
-            // 앱 첫 실행 시 보여지는 온보딩 화면
-            OnboardingScreen(
-                onEmailLoginClick = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.ONBOARDING) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        // ─── 마이페이지 관련 화면 ─────────────────────────────
-        composable(Routes.MYPAGE) {
-            // 마이페이지 진입 화면
-            MyPageScreen(navController)
-        }
-
-        composable(Routes.PROFILE_EDIT) {
-            // 프로필 정보 수정 화면
-            ProfileEditScreen(navController)
-        }
-
-        composable(Routes.MYPAGE_LIKED_VIDEOS) {
-            // 좋아요한 영상 목록 화면
-            LikedVideosScreen()
-        }
-
-        // ─── 팀 관련 화면 ───────────────────────────────────
-        composable(Routes.TEAM_LIST) {
-            // 팀 리스트 화면
-            TeamListScreen(navController)
-        }
-        composable(Routes.TEAM_CREATE) {
-            // 팀 생성 화면
-            TeamCreateScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onClose = { navController.popBackStack() }
-            )
-        }
-        composable(
-            route = "${Routes.TEAM_DETAIL}/{teamId}",
-            arguments = listOf(
-                navArgument("teamId") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val teamId = backStackEntry.arguments?.getInt("teamId") ?: 0
-            TeamDetailScreen(
-                navController = navController,
-                teamId = teamId
-            )
-        }
-        composable(
-            route = Routes.TEAM_SETTINGS,
-            arguments = listOf(navArgument("teamName") { type = NavType.StringType })
-        ) { backStackEntry ->
-            // 팀 설정 화면
-            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
-            TeamSettingScreen(
-                navController = navController,
-                teamName = teamName,
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onDelegateClick = {
-                    navController.navigate("team/delegate/$teamName")
-                },
-                onKickMemberClick = {
-                    navController.navigate("team/kick/$teamName")
-                },
-                onInviteLinkClick = {
-                    // TODO: 팀 초대 링크 다이얼로그
-                },
-                onDeleteTeamClick = {
-                    // TODO: 팀 삭제 확인 다이얼로그
-                },
-                onLeaveTeamClick = {
-                    // TODO: 팀 탈퇴 확인 다이얼로그
-                }
-            )
-        }
-        composable(
-            route = Routes.TEAM_DELEGATE,
-            arguments = listOf(navArgument("teamName") { type = NavType.StringType })
-        ) { backStackEntry ->
-            // 팀 권한 위임 화면
-            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
-            TeamDelegateScreen(
-                navController = navController,
-                teamName = teamName,
-                onBackClick = { navController.popBackStack() },
-                onCloseClick = { navController.popBackStack() },
-                onSaveClick = {
-                    // TODO: 위임 저장 처리
-                    navController.popBackStack()
-                }
-            )
-        }
-        composable(
-            route = Routes.TEAM_KICK,
-            arguments = listOf(navArgument("teamName") { type = NavType.StringType })
-        ) { backStackEntry ->
-            // 팀 멤버 강제퇴장 화면
-            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
-            TeamKickScreen(
-                navController = navController,
-                teamName = teamName,
-                onBackClick = { navController.popBackStack() },
-                onCloseClick = { navController.popBackStack() },
-                onSaveClick = {
-                    // TODO: 강퇴 저장 처리
-                    navController.popBackStack()
-                }
-            )
-        }
+        // (메인 밖에서 접근 가능한 화면만 남김)
     }
 }

@@ -25,7 +25,9 @@ import androidx.compose.material3.Scaffold
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.ui.match.MatchDataScreen
 import com.ballog.mobile.viewmodel.TeamViewModel
+import com.ballog.mobile.navigation.Routes
 
 private const val TAG = "MainScreen"
 
@@ -38,6 +40,13 @@ fun MainScreen(
     var selectedTab by remember { mutableStateOf(if (initialTeamId != null) NavigationTab.TEAM else NavigationTab.HOME) }
     val teamNavController = rememberNavController()
     val teamViewModel: TeamViewModel = viewModel()
+    val tabRoutes = mapOf(
+        NavigationTab.HOME to "home",
+        NavigationTab.MATCH to "match",
+        NavigationTab.TEAM to "team",
+        NavigationTab.MYPAGE to "mypage"
+        // DATA는 실제 화면 route가 아님
+    )
     
     // 초기 팀 ID가 있으면 팀 상세 화면으로 자동 이동
     LaunchedEffect(initialTeamId) {
@@ -75,6 +84,7 @@ fun MainScreen(
                 NavigationTab.MATCH -> MatchScreen()
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
                 NavigationTab.MYPAGE -> MyPageScreen(navController)
+                NavigationTab.DATA -> MatchDataScreen()
             }
         }
     }
