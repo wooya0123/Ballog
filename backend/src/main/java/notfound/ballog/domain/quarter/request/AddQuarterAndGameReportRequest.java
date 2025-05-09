@@ -1,27 +1,22 @@
-package notfound.ballog.domain.match.request;
+package notfound.ballog.domain.quarter.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import notfound.ballog.domain.quarter.dto.ReportData;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PersonalMatchAddRequest {
+public class AddQuarterAndGameReportRequest {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate matchDate;
 
-    @JsonFormat(pattern = "HH:mm")
-    private LocalTime startTime;
-
-    @JsonFormat(pattern = "HH:mm")
-    private LocalTime endTime;
-
-    private String matchName;
+    private List<ReportData> reportDataList;
 
 }

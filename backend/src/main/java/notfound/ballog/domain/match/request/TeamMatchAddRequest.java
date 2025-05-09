@@ -25,7 +25,7 @@ public class TeamMatchAddRequest {
     @JsonFormat(pattern = "HH:mm")
     private LocalTime endTime;
 
-    private Integer stadiumId;
+    private String matchName;
 
     private List<Integer> participantList;
 

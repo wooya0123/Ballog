@@ -7,7 +7,6 @@ import notfound.ballog.domain.match.entity.Match;
 import notfound.ballog.domain.match.entity.Participant;
 import notfound.ballog.domain.match.repository.MatchRepository;
 import notfound.ballog.domain.match.repository.ParticipantRepository;
-import notfound.ballog.domain.match.repository.StadiumRepository;
 import notfound.ballog.domain.match.request.PersonalMatchAddRequest;
 import notfound.ballog.domain.match.request.TeamMatchAddRequest;
 import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
 public class MatchService {
 
     private final MatchRepository matchRepository;
-    private final StadiumRepository stadiumRepository;
     private final ParticipantRepository participantRepository;
     private final TeamMemberRepository teamMemberRepository;
 
@@ -70,10 +68,6 @@ public class MatchService {
         return null;
     }
 
-    public List<String> getStadiums(){
-        return stadiumRepository.findAllStadiumNames();
-    }
-
     @Transactional
     public void updatePersonalMatch(UpdatePersonalMatchRequest req){
         Match match = matchRepository.findById(req.getMatchId())
@@ -82,7 +76,7 @@ public class MatchService {
         match.setMatchDate(req.getMatchDate());
         match.setStartTime(req.getStartTime());
         match.setEndTime(req.getEndTime());
-        match.setStadiumId(req.getStadiumId());
+        match.setMatchName(req.getMatchName());
     }
 
     @Transactional
@@ -94,7 +88,7 @@ public class MatchService {
         match.setMatchDate(req.getMatchDate());
         match.setStartTime(req.getStartTime());
         match.setEndTime(req.getEndTime());
-        match.setStadiumId(req.getStadiumId());
+        match.setMatchName(req.getMatchName());
 
         Integer matchId = match.getMatchId();
 

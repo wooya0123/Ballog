@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import static notfound.ballog.domain.match.entity.QMatch.match;
 import static notfound.ballog.domain.match.entity.QParticipant.participant;
-import static notfound.ballog.domain.match.entity.QStadium.stadium;
 
 @Repository
 @RequiredArgsConstructor
@@ -35,13 +34,12 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(MatchDto.class,
                     match.matchId,
-                    stadium.stadiumName,
+                    match.matchName,
                     match.matchDate,
                     match.startTime,
                     match.endTime))
                 .from(match)
                 .join(participant).on(match.matchId.eq(participant.matchId).and(participant.userId.eq(userId)))
-                .join(stadium).on(match.stadiumId.eq(stadium.stadiumId))
                 .where(match.matchDate.between(startOfMonth, endOfMonth))
                 .orderBy(match.matchDate.asc())
                 .fetch();
@@ -59,17 +57,48 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(MatchDto.class,
                         match.matchId,
-                        stadium.stadiumName,
+                        match.matchName,
                         match.matchDate,
                         match.startTime,
                         match.endTime))
                 .distinct()
                 .from(match)
                 .join(participant).on(match.matchId.eq(participant.matchId))
-                .join(stadium).on(match.stadiumId.eq(stadium.stadiumId))
                 .where(match.teamId.eq(teamId), match.matchDate.between(startOfMonth, endOfMonth))
                 .orderBy(match.matchDate.asc())
                 .fetch();
+    }
+
+//    //자동 등록 버전
+//    @Override
+//    public Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate) {
+//        List<Integer> userMatchIds = queryFactory
+//                .select(participant.matchId)
+//                .from(participant)
+//                .where(participant.userId.eq(userId))
+//                .orderBy(participant.participantId.desc())
+//                .limit(5)
+//                .fetch();
+//
+//
+//        return queryFactory
+//                .select(match.matchId)
+//                .from(match)
+//                .where(
+//                        match.matchDate.eq(matchDate),
+//                        match.matchId.in(userMatchIds)
+//                )
+//                .fetchOne();
+//    }
+
+    @Override
+    public Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate) {
+        return queryFactory
+                .select(match.matchId)
+                .from(match)
+                .join(participant).on(match.matchId.eq(participant.matchId).and(participant.userId.eq(userId)))
+                .where(match.matchDate.eq(matchDate))
+                .fetchOne();
     }
 
 }

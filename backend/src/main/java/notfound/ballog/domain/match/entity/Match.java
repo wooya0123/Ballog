@@ -32,7 +32,7 @@ public class Match {
     private Integer teamId;
 
     @Column(nullable = false)
-    private Integer stadiumId;
+    private String matchName;
 
     @Column(nullable = false)
     //상태 ('예정', '진행중', '종료', '취소')
@@ -54,7 +54,7 @@ public class Match {
     private LocalDateTime updatedAt;
 
     public Match(PersonalMatchAddRequest req) {
-        this.stadiumId = req.getStadiumId();
+        this.matchName = req.getMatchName();
         this.matchStatus = "예정";
         this.matchDate = req.getMatchDate();
         this.startTime = req.getStartTime();
@@ -65,7 +65,7 @@ public class Match {
 
     public Match(TeamMatchAddRequest req) {
         this.teamId = req.getTeamId();
-        this.stadiumId = req.getStadiumId();
+        this.matchName = req.getMatchName();
         this.matchStatus = "예정";
         this.matchDate = req.getMatchDate();
         this.startTime = req.getStartTime();
