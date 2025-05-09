@@ -22,6 +22,6 @@ public class PersonalMatchAddRequest {
     @JsonFormat(pattern = "HH:mm")
     private LocalTime endTime;
 
-    private Integer stadiumId;
+    private String matchName;
 
 }

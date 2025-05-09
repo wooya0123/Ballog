@@ -51,6 +51,7 @@ public class TeamRepositoryImpl implements TeamRepositoryCustom {
                         user.nickname,
                         playerCard.playStyle,
                         playerCard.rank,
+                        teamMember.role,
                         user.profileImageUrl,
                         Projections.constructor(CardStat.class,
                                 playerCard.speed,

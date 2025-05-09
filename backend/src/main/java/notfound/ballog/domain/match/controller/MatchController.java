@@ -10,7 +10,6 @@ import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
 import notfound.ballog.domain.match.request.UpdateTeamMatchRequest;
 import notfound.ballog.domain.match.response.MatchDetailResponse;
 import notfound.ballog.domain.match.response.PersonalMatchListResponse;
-import notfound.ballog.domain.match.response.StadiumListResponse;
 import notfound.ballog.domain.match.response.TeamMatchListResponse;
 import notfound.ballog.domain.match.service.MatchService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -58,13 +57,6 @@ public class MatchController {
     @Operation(summary = "경기 상세 조회", description = "경기 ID로 경기 상세 정보를 조회합니다.")
     public BaseResponse<MatchDetailResponse> getMatchDetail(@PathVariable Integer matchId){
         return BaseResponse.ok(matchService.getMatchDetail(matchId));
-    }
-
-    @GetMapping("/stadiums")
-    @Operation(summary = "경기장 목록 조회", description = "모든 경기장 목록을 조회합니다.")
-    public BaseResponse<StadiumListResponse> getStadiums(){
-        StadiumListResponse resp = new StadiumListResponse(matchService.getStadiums());
-        return BaseResponse.ok(resp);
     }
 
     @PatchMapping("/me")

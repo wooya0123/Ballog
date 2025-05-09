@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import static notfound.ballog.domain.match.entity.QMatch.match;
 import static notfound.ballog.domain.match.entity.QParticipant.participant;
-import static notfound.ballog.domain.match.entity.QStadium.stadium;
 
 @Repository
 @RequiredArgsConstructor
@@ -35,13 +34,12 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(MatchDto.class,
                     match.matchId,
-                    stadium.stadiumName,
+                    match.matchName,
                     match.matchDate,
                     match.startTime,
                     match.endTime))
                 .from(match)
                 .join(participant).on(match.matchId.eq(participant.matchId).and(participant.userId.eq(userId)))
-                .join(stadium).on(match.stadiumId.eq(stadium.stadiumId))
                 .where(match.matchDate.between(startOfMonth, endOfMonth))
                 .orderBy(match.matchDate.asc())
                 .fetch();
@@ -59,14 +57,13 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(MatchDto.class,
                         match.matchId,
-                        stadium.stadiumName,
+                        match.matchName,
                         match.matchDate,
                         match.startTime,
                         match.endTime))
                 .distinct()
                 .from(match)
                 .join(participant).on(match.matchId.eq(participant.matchId))
-                .join(stadium).on(match.stadiumId.eq(stadium.stadiumId))
                 .where(match.teamId.eq(teamId), match.matchDate.between(startOfMonth, endOfMonth))
                 .orderBy(match.matchDate.asc())
                 .fetch();

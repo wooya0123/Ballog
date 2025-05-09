@@ -37,6 +37,13 @@ public class GameReport {
     @Type(JsonBinaryType.class)
     private Map<String, Object> jsonData;
 
-
     private LocalDateTime createdAt;
+
+    public GameReport(UUID userId, Integer quarterId, Map<String, Object> jsonData) {
+        this.userId = userId;
+        this.quarterId = quarterId;
+        this.jsonData = jsonData;
+        this.createdAt = LocalDateTime.now();
+    }
+
 }

@@ -17,6 +17,8 @@ public class PlayerCardDto {
 
     private String rank;
 
+    private String role;
+
     private String cardImageUrl;
 
     private CardStat cardStats;
