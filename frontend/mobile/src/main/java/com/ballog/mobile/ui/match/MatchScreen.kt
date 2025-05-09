@@ -2,14 +2,19 @@ package com.ballog.mobile.ui.match
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.ballog.mobile.R
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
@@ -18,18 +23,20 @@ import com.ballog.mobile.navigation.TopNavType
 import com.ballog.mobile.ui.components.*
 import com.ballog.mobile.ui.theme.BallogTheme
 import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.buildCalendar
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
+fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewModel()) {
     val today = remember { LocalDate.now() }
     var currentMonth by remember { mutableStateOf(today.withDayOfMonth(1)) }
     var selectedDate by remember { mutableStateOf(today) }
     val matchState by viewModel.matchState.collectAsState()
     val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월"))
+    val selectedDateStr = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
     LaunchedEffect(currentMonth) {
         android.util.Log.d("MatchScreen", "📡 fetchMyMatches 요청: ${currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))}")
@@ -39,6 +46,7 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(Gray.Gray100),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -47,10 +55,22 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
 
         when (matchState) {
             is MatchState.Loading -> {
-                Text("불러오는 중...", modifier = Modifier.padding(16.dp))
+                Text(
+                    text = "불러오는 중...",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
             is MatchState.Error -> {
-                Text("에러: ${(matchState as MatchState.Error).message}", modifier = Modifier.padding(16.dp))
+                Text(
+                    text = "에러: ${(matchState as MatchState.Error).message}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
             is MatchState.Success -> {
                 val matches = (matchState as MatchState.Success).matches
@@ -77,18 +97,26 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     if (filteredMatches.isEmpty()) {
-                        Text("경기 일정이 없습니다")
+                        Text(
+                            text = "경기 일정이 없습니다",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = pretendard
+                        )
                     } else {
                         filteredMatches.forEach { match ->
                             MatchCard(
                                 timeLabel = "경기 시작시간",
-                                time = match.startTime,
+                                startTime = match.startTime,
+                                endTime = match.endTime,
                                 place = match.location
                             )
                         }
                     }
                     BallogButton(
-                        onClick = { /* TODO: navigate to match creation */ },
+                        onClick = {
+                            navController.navigate("match/register/$selectedDateStr")
+                        },
                         type = ButtonType.BOTH,
                         buttonColor = ButtonColor.GRAY,
                         icon = painterResource(id = R.drawable.ic_add),
@@ -145,8 +173,9 @@ fun MatchScreenPreview() {
                 } else {
                     filteredMatches.forEach { match ->
                         MatchCard(
-                            timeLabel = "경기 시작시간",
-                            time = match.startTime,
+                            timeLabel = "경기 시간",
+                            startTime = match.startTime,
+                            endTime = match.endTime,
                             place = match.location
                         )
                     }
