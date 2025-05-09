@@ -35,7 +35,11 @@ public enum BaseResponseStatus {
     USER_INACTIVE(false, 2002, "탈퇴한 사용자입니다."),
 
     // 매치 관련 로직 에러(3000번대)
-    MATCH_NOT_FOUND(false, 3001, "해당하는 매치가 존재하지 않습니다.");
+    MATCH_NOT_FOUND(false, 3000, "해당하는 매치가 존재하지 않습니다."),
+
+    // 영상 관련 로직 에러(4000번대)
+    VIDEO_NOT_FOUND(false, 4000, "해당 경기에 업로드 된 영상이 없습니다."),
+    HIGHLIGHT_NOT_FOUND(false, 4001, "해당 영상에 하이라이트 영상이 없습니다.");
 
     // 팀 관련 로직 에러 (3000)
 

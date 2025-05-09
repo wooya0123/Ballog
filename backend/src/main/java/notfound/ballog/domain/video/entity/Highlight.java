@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import notfound.ballog.domain.video.dto.HighlightDto;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -40,4 +41,13 @@ public class Highlight {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    public static Highlight of(Video video, HighlightDto highlightDto) {
+        return Highlight.builder()
+                .video(video)
+                .highlightName(highlightDto.getHighlightName())
+                .startTime(highlightDto.getStartTime())
+                .endTime(highlightDto.getEndTime())
+                .build();
+    }
 }
