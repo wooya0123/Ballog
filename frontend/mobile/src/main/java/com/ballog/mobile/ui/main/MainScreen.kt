@@ -12,7 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ballog.mobile.ui.components.NavigationBar
-import com.ballog.mobile.ui.auth.HomeScreen
+import com.ballog.mobile.ui.home.HomeScreen
 import com.ballog.mobile.ui.match.MatchScreen
 import com.ballog.mobile.ui.team.TeamListScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
@@ -30,6 +30,8 @@ import com.ballog.mobile.ui.match.MatchRegisterScreen
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
 import java.time.LocalDate
+import com.ballog.mobile.ui.match.MatchDataScreen
+import com.ballog.mobile.navigation.Routes
 
 private const val TAG = "MainScreen"
 
@@ -75,10 +77,11 @@ fun MainScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                NavigationTab.HOME -> HomeScreen(navController = navController, viewModel = viewModel)
+                NavigationTab.HOME -> HomeScreen()
                 NavigationTab.MATCH -> MatchTabScreen(navController = rememberNavController())
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
                 NavigationTab.MYPAGE -> MyPageScreen(navController)
+                NavigationTab.DATA -> MatchDataScreen()
             }
         }
     }
