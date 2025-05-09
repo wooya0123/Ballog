@@ -42,7 +42,7 @@ fun MatchScreen(viewModel: MatchViewModel = viewModel()) {
             .background(Gray.Gray100),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopNavItem(title = "팀", type = TopNavType.MAIN_BASIC)
+        TopNavItem(title = "매치", type = TopNavType.MAIN_BASIC)
         Spacer(modifier = Modifier.height(24.dp))
 
         when (matchState) {
