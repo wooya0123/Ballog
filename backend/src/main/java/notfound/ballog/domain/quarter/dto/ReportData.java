@@ -13,6 +13,8 @@ public class ReportData {
 
     private Integer quarterNumber;
 
+    private String gameSide;
+
     private Map<String, Object> gameReportData;
 
 }

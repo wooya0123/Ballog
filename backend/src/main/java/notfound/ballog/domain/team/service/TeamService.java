@@ -12,7 +12,9 @@ import notfound.ballog.domain.team.entity.TeamMember;
 import notfound.ballog.domain.team.repository.TeamCardRepository;
 import notfound.ballog.domain.team.repository.TeamMemberRepository;
 import notfound.ballog.domain.team.repository.TeamRepository;
-import notfound.ballog.domain.team.request.*;
+import notfound.ballog.domain.team.request.TeamAddRequest;
+import notfound.ballog.domain.team.request.TeamInfoUpdateRequest;
+import notfound.ballog.domain.team.request.TeamMemberAddRequest;
 import notfound.ballog.domain.team.response.TeamDetailResponse;
 import notfound.ballog.domain.team.response.TeamMemberListResponse;
 import notfound.ballog.domain.team.response.UserTeamListResponse;
@@ -89,26 +91,26 @@ public class TeamService {
 
     // cascade 처리 필요, 매니저가 삭제한다고해서 다른 팀원의 팀들이 사라지는게 맞는가?
     @Transactional
-    public void deleteTeam(UUID userId, TeamDeleteRequest req){
-        if(checkTeamMemberRole(userId, req.getTeamId())){
+    public void deleteTeam(UUID userId, Integer teamId){
+        if(checkTeamMemberRole(userId, teamId)){
             throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
         }
 
-        teamMemberRepository.deleteAllByTeamId(req.getTeamId());
+        teamMemberRepository.deleteAllByTeamId(teamId);
 
-        teamCardRepository.deleteByTeamId(req.getTeamId());
+        teamCardRepository.deleteByTeamId(teamId);
 
-        teamRepository.deleteById(req.getTeamId());
+        teamRepository.deleteById(teamId);
     }
 
 
     @Transactional
-    public void deleteTeamMember(UUID userId, TeamMemberDeleteRequest req){
-        if(checkTeamMemberRole(userId, req.getTeamId())){
+    public void deleteTeamMember(UUID userId, Integer teamId, Integer teamMemberId){
+        if(checkTeamMemberRole(userId, teamId)){
             throw new InternalServerException(BaseResponseStatus.DATABASE_ERROR);
         }
 
-        teamMemberRepository.deleteById(req.getTeamMemberId());
+        teamMemberRepository.deleteById(teamMemberId);
     }
 
     private boolean checkTeamMemberRole(UUID userId, Integer teamId){
@@ -117,8 +119,8 @@ public class TeamService {
     }
 
     @Transactional
-    public void leaveTeam(UUID userId, LeaveTeanRequest req){
-        teamMemberRepository.deleteByUserIdAndTeamId(userId, req.getTeamId());
+    public void leaveTeam(UUID userId, Integer teamId){
+        teamMemberRepository.deleteByUserIdAndTeamId(userId, teamId);
     }
 
 }
