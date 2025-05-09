@@ -34,6 +34,8 @@ public enum BaseResponseStatus {
     PLAYERCARD_NOT_FOUND(false, 2001, "해당하는 사용자의 선수카드가 존재하지 않습니다."),
     USER_INACTIVE(false, 2002, "탈퇴한 사용자입니다.");
 
+    // 팀 관련 로직 에러 (3000)
+
     /*
         이후 자유롭게 에러 추가
      */

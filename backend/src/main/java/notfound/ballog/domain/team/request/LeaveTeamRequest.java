@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LeaveTeanRequest {
+public class LeaveTeamRequest {
 
     private Integer teamId;
 

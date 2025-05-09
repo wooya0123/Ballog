@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
-import notfound.ballog.domain.team.request.*;
+import notfound.ballog.domain.team.request.TeamAddRequest;
+import notfound.ballog.domain.team.request.TeamInfoUpdateRequest;
+import notfound.ballog.domain.team.request.TeamMemberAddRequest;
 import notfound.ballog.domain.team.response.TeamDetailResponse;
 import notfound.ballog.domain.team.response.TeamMemberListResponse;
 import notfound.ballog.domain.team.response.UserTeamListResponse;
@@ -61,24 +63,24 @@ public class TeamController {
         return BaseResponse.ok();
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{teamId}")
     @Operation(summary = "팀 삭제")
-    public BaseResponse<Void> deleteTeam(@AuthenticationPrincipal UUID userId, @RequestBody TeamDeleteRequest teamDeleteRequest){
-        teamService.deleteTeam(userId, teamDeleteRequest);
+    public BaseResponse<Void> deleteTeam(@AuthenticationPrincipal UUID userId, @PathVariable Integer teamId){
+        teamService.deleteTeam(userId, teamId);
         return BaseResponse.ok();
     }
 
-    @DeleteMapping("/members")
+    @DeleteMapping("/members/{teamId}/{teamMemberId}")
     @Operation(summary = "팀원 강퇴")
-    public BaseResponse<Void> deleteTeamMember(@AuthenticationPrincipal UUID userId, @RequestBody TeamMemberDeleteRequest teamMemberDeleteRequest){
-        teamService.deleteTeamMember(userId, teamMemberDeleteRequest);
+    public BaseResponse<Void> deleteTeamMember(@AuthenticationPrincipal UUID userId, @PathVariable Integer teamId, @PathVariable Integer teamMemberId){
+        teamService.deleteTeamMember(userId, teamId, teamMemberId);
         return BaseResponse.ok();
     }
 
-    @DeleteMapping("/leave")
+    @DeleteMapping("/leave/{teamId}")
     @Operation(summary = "팀 탈퇴")
-    public BaseResponse<Void> leaveTeam(@AuthenticationPrincipal UUID userId, @RequestBody LeaveTeanRequest leaveTeanRequest){
-        teamService.leaveTeam(userId, leaveTeanRequest);
+    public BaseResponse<Void> leaveTeam(@AuthenticationPrincipal UUID userId, @PathVariable Integer teamId){
+        teamService.leaveTeam(userId, teamId);
         return BaseResponse.ok();
     }
 
