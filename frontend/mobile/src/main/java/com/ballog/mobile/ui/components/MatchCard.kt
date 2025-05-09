@@ -19,9 +19,16 @@ import com.ballog.mobile.ui.theme.pretendard
 fun MatchCard(
     modifier: Modifier = Modifier,
     timeLabel: String,
-    time: String,
+    startTime: String,
+    endTime: String,
     place: String
 ) {
+    fun formatTime(time: String): String {
+        return time.split(":").let { parts ->
+            if (parts.size >= 2) "${parts[0]}:${parts[1]}" else time
+        }
+    }
+    val timeRange = "${formatTime(startTime)} - ${formatTime(endTime)}"
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -42,7 +49,7 @@ fun MatchCard(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = time,
+                text = timeRange,
                 color = Gray.Gray800,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
@@ -70,7 +77,8 @@ fun MatchCardPreview() {
     BallogTheme {
         MatchCard(
             timeLabel = "경기 시작시간",
-            time = "15:00",
+            startTime = "15:00:00",
+            endTime = "16:30:00",
             place = "잠실 올림픽 공식 풋살 경기장"
         )
     }

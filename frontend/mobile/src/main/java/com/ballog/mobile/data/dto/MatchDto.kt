@@ -2,7 +2,7 @@ package com.ballog.mobile.data.dto
 
 // 매치 관련 요청/응답 DTO 정의 예정
 
-// 1. 개인 매치 리스트 조회 / 팀 매치 리스트 조회
+// 개인 매치 리스트 조회 / 팀 매치 리스트 조회
 data class MatchListResponse(
     val matchList: List<MatchItemDto>
 )
@@ -14,3 +14,21 @@ data class MatchItemDto(
     val startTime: String,   // e.g., "20:00"
     val endTime: String      // e.g., "22:00"
 )
+
+// 경기장 리스트 응답
+data class Stadium(
+    val stadiumName: String
+)
+
+data class StadiumListResult(
+    val stadiumList: List<String>
+)
+
+// 개인 매치 등록 요청
+data class MatchRegisterRequest(
+    val matchDate: String,   // yyyy-MM-dd
+    val startTime: String,   // HH:mm
+    val endTime: String,     // HH:mm
+    val stadiumId: String
+)
+

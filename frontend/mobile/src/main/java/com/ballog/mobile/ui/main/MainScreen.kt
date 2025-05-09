@@ -25,7 +25,9 @@ import androidx.compose.material3.Scaffold
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ballog.mobile.ui.match.MatchDataScreen
+import com.ballog.mobile.ui.match.MatchRegisterMode
+import com.ballog.mobile.ui.match.MatchRegisterScreen
+import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
 import com.ballog.mobile.ui.team.TeamUpdateScreen
 import kotlinx.coroutines.launch
@@ -56,10 +58,10 @@ fun MainScreen(
         if (initialTeamId != null) {
             // 팀 목록 화면의 백스택 항목 생성
             teamNavController.navigate("team_list")
-            
+
             // 팀 상세 화면으로 이동
             teamNavController.navigate("team_detail/$initialTeamId")
-            
+
             // 로그 출력
             Log.d(TAG, "팀 상세 화면으로 자동 이동: teamId=$initialTeamId")
         }
@@ -84,7 +86,7 @@ fun MainScreen(
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 NavigationTab.HOME -> HomeScreen()
-                NavigationTab.MATCH -> MatchScreen()
+                NavigationTab.MATCH -> MatchTabScreen(navController = rememberNavController())
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
                 NavigationTab.MYPAGE -> MyPageScreen(navController)
                 NavigationTab.DATA -> MatchDataScreen()
@@ -109,7 +111,7 @@ fun TeamTabScreen(
             Log.d(TAG, "팀 목록 화면 표시")
             TeamListScreen(navController = teamNavController, viewModel = teamViewModel)
         }
-        
+
         // 팀 생성 화면 추가
         composable("team/create") {
             Log.d(TAG, "팀 생성 화면 표시")
@@ -123,7 +125,7 @@ fun TeamTabScreen(
                 }
             )
         }
-        
+
         composable(
             route = "team_detail/{teamId}",
             arguments = listOf(
@@ -268,3 +270,32 @@ fun TeamTabScreen(
         }
     }
 }
+
+@Composable
+fun MatchTabScreen(navController: NavHostController) {
+    val matchViewModel: MatchViewModel = viewModel()
+
+    NavHost(
+        navController = navController,
+        startDestination = "match/main"
+    ) {
+        composable("match/main") {
+            MatchScreen(navController = navController, viewModel = matchViewModel)
+        }
+
+        composable(
+            route = "match/register/{date}",
+            arguments = listOf(navArgument("date") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val selectedDate = backStackEntry.arguments?.getString("date") ?: LocalDate.now().toString()
+
+            MatchRegisterScreen(
+                mode = MatchRegisterMode.PERSONAL,
+                navController = navController,
+                viewModel = matchViewModel,
+                selectedDate = selectedDate
+            )
+        }
+    }
+}
+
