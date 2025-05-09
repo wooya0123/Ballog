@@ -13,7 +13,14 @@ data class TeamInfo(
 
 data class TeamAddRequest(
     val teamName: String,
-    val logoImageUrl: String,
+    val logoImageUrl: String? = null,
+    val foundationDate: String
+)
+
+data class TeamUpdateRequest(
+    val teamId: Int,
+    val teamName: String,
+    val logoImage: String,
     val foundationDate: String
 )
 
@@ -23,6 +30,7 @@ data class TeamMemberAddRequest(
 )
 
 data class TeamDetailResponse(
+    val teamId: Int = 0,
     val teamName: String? = null,
     val logoImageUrl: String? = null,
     val foundationDate: String? = null,
@@ -64,6 +72,6 @@ data class TeamMember(
     val nickname: String
 )
 
-data class TeamInviteResponse(
-    val inviteCode: String
-)
+
+
+

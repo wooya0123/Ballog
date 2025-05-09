@@ -36,7 +36,7 @@ private const val TAG = "TeamDetailScreen"
 fun TeamDetailScreen(
     navController: NavController,
     teamId: Int,
-    viewModel: TeamViewModel = viewModel()
+    viewModel: TeamViewModel
 ) {
     Log.d(TAG, "TeamDetailScreen 시작: teamId=$teamId")
     
@@ -105,11 +105,11 @@ fun TeamDetailScreen(
                         },
                         onActionClick = { 
                             Log.d(TAG, "설정 클릭")
-                            // Navigate to TeamSettingScreen, using teamId as teamName
-                            val teamNameParam = teamId.toString()
+                            // Navigate to TeamSettingScreen with teamId
+                            Log.d(TAG, "팀 설정 화면으로 이동 - teamId: $teamId")
                             
                             // 중첩된 NavHost에 맞는 경로 사용
-                            val settingsRoute = "team/settings/$teamNameParam"
+                            val settingsRoute = "team/settings/$teamId"
                             Log.d(TAG, "팀 설정 화면으로 이동: $settingsRoute")
                             navController.navigate(settingsRoute)
                         }

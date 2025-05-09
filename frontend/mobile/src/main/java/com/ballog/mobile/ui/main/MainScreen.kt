@@ -29,9 +29,10 @@ import com.ballog.mobile.ui.match.MatchRegisterMode
 import com.ballog.mobile.ui.match.MatchRegisterScreen
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
-import java.time.LocalDate
-import com.ballog.mobile.ui.match.MatchDataScreen
-import com.ballog.mobile.navigation.Routes
+import com.ballog.mobile.ui.team.TeamUpdateScreen
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private const val TAG = "MainScreen"
 
@@ -43,8 +44,15 @@ fun MainScreen(
 ) {
     var selectedTab by remember { mutableStateOf(if (initialTeamId != null) NavigationTab.TEAM else NavigationTab.HOME) }
     val teamNavController = rememberNavController()
-    val teamViewModel: TeamViewModel = viewModel()
-
+    val teamViewModel = remember { TeamViewModel() }
+    val tabRoutes = mapOf(
+        NavigationTab.HOME to "home",
+        NavigationTab.MATCH to "match",
+        NavigationTab.TEAM to "team",
+        NavigationTab.MYPAGE to "mypage"
+        // DATA는 실제 화면 route가 아님
+    )
+    
     // 초기 팀 ID가 있으면 팀 상세 화면으로 자동 이동
     LaunchedEffect(initialTeamId) {
         if (initialTeamId != null) {
@@ -92,6 +100,8 @@ fun TeamTabScreen(
     teamNavController: NavHostController,
     teamViewModel: TeamViewModel
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    
     // 팀 관련 화면에 대한 중첩 네비게이션
     NavHost(
         navController = teamNavController,
@@ -132,25 +142,25 @@ fun TeamTabScreen(
         }
         // 팀 설정 화면 추가
         composable(
-            route = "team/settings/{teamName}",
+            route = "team/settings/{teamId}",
             arguments = listOf(
-                navArgument("teamName") { type = NavType.StringType }
+                navArgument("teamId") { type = NavType.IntType }
             )
         ) { backStackEntry ->
-            val teamName = backStackEntry.arguments?.getString("teamName") ?: ""
-            Log.d(TAG, "팀 설정 화면 표시: teamName=$teamName")
+            val teamId = backStackEntry.arguments?.getInt("teamId") ?: 0
+            Log.d(TAG, "팀 설정 화면 표시: teamId=$teamId")
             TeamSettingScreen(
                 navController = teamNavController,
-                teamName = teamName,
+                teamId = teamId,
                 viewModel = teamViewModel,
                 onBackClick = {
                     teamNavController.popBackStack()
                 },
                 onDelegateClick = {
-                    teamNavController.navigate("team/delegate/$teamName")
+                    teamNavController.navigate("team/delegate/$teamId")
                 },
                 onKickMemberClick = {
-                    teamNavController.navigate("team/kick/$teamName")
+                    teamNavController.navigate("team/kick/$teamId")
                 },
                 onInviteLinkClick = {
                     // 초대 링크 다이얼로그는 TeamSettingScreen 내부에서 처리됩니다
@@ -158,14 +168,55 @@ fun TeamTabScreen(
                 },
                 onDeleteTeamClick = {
                     // 팀 삭제 요청
-                    Log.d(TAG, "팀 삭제 요청")
-                    // TODO: 팀 삭제 후 팀 목록으로 이동
-                    teamNavController.popBackStack()
+                    Log.d(TAG, "팀 삭제 요청 시작 - teamId: $teamId")
+                    coroutineScope.launch {
+                        try {
+                            val result = teamViewModel.deleteTeam(teamId)
+                            Log.d(TAG, "팀 삭제 결과: ${if (result.isSuccess) "성공" else "실패"}")
+                            if (result.isSuccess) {
+                                Log.d(TAG, "팀 삭제 성공, 이전 화면으로 이동")
+                                teamNavController.navigate("team_list")
+                            } else {
+                                Log.d(TAG, "팀 삭제 실패: ${result.exceptionOrNull()?.message}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "팀 삭제 중 예외 발생", e)
+                        }
+                    }
                 },
                 onLeaveTeamClick = {
                     // 팀 탈퇴 요청
                     Log.d(TAG, "팀 탈퇴 요청")
-                    // TODO: 팀 탈퇴 후 팀 목록으로 이동
+                    coroutineScope.launch {
+                        val result = teamViewModel.leaveTeam(teamId)
+                        if (result.isSuccess) {
+                            teamNavController.navigate("team_list")
+                        }
+                    }
+                },
+                onUpdateTeamClick = {
+                    // 팀 수정 화면으로 이동
+                    Log.d(TAG, "팀 수정 화면으로 이동: teamId=$teamId")
+                    teamNavController.navigate("team/update/$teamId")
+                }
+            )
+        }
+        // 팀 수정 화면 추가
+        composable(
+            route = "team/update/{teamId}",
+            arguments = listOf(
+                navArgument("teamId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getInt("teamId") ?: 0
+            Log.d(TAG, "팀 수정 화면 표시: teamId=$teamId")
+            TeamUpdateScreen(
+                teamId = teamId,
+                teamViewModel = teamViewModel,
+                onNavigateBack = {
+                    teamNavController.popBackStack()
+                },
+                onClose = {
                     teamNavController.popBackStack()
                 }
             )
@@ -209,6 +260,11 @@ fun TeamTabScreen(
                 },
                 onCloseClick = {
                     teamNavController.popBackStack()
+                },
+                onSuccess = {
+                    teamNavController.navigate("team_list") {
+                        popUpTo("team_list") { inclusive = true }
+                    }
                 }
             )
         }
