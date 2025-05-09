@@ -14,7 +14,7 @@ public class MatchDto {
 
     private Integer matchId;
 
-    private String location;
+    private String matchName;
 
     private LocalDate matchDate;
 
