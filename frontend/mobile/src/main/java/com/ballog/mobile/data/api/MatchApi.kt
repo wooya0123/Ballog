@@ -23,7 +23,7 @@ interface MatchApi {
     @GET("v1/matches/teams/{teamId}")
     suspend fun getTeamMatches(
         @Header("Authorization") token: String,
-        @Path("teamId") teamId: Long,
+        @Path("teamId") teamId: Int,
         @Query("month") month: String
     ): Response<ApiResponse<MatchListResponse>>
 

@@ -52,6 +52,30 @@ class MatchViewModel : ViewModel() {
     }
 
     /**
+     * 팀 매치 리스트 불러오기
+     */
+    fun fetchTeamMatches(teamId: Int, month: String) {
+        viewModelScope.launch {
+            _matchState.value = MatchState.Loading
+            try {
+                val token = tokenManager.getAccessToken().firstOrNull() ?: return@launch
+                val response = matchApi.getTeamMatches("Bearer $token", teamId, month)
+                val body = response.body()
+
+                if (response.isSuccessful && body?.isSuccess == true) {
+                    val matches = body.result?.matchList?.map { it.toDomain() } ?: emptyList()
+                    _matchState.value = MatchState.Success(matches)
+                } else {
+                    _matchState.value = MatchState.Error(body?.message ?: "팀 매치를 불러오지 못했습니다")
+                }
+            } catch (e: Exception) {
+                _matchState.value = MatchState.Error("네트워크 오류: ${e.localizedMessage}")
+            }
+        }
+    }
+
+
+    /**
      * 서버에 개인 신규 매치 등록하는 함수
      */
     fun registerMyMatch(
