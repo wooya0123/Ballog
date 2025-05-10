@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VideoRepository extends JpaRepository<Video, Integer> {
-    List<Video> findAllByMatchId(Integer matchId);
+    List<Video> findAllByMatch_MatchId(Integer matchId);
 }

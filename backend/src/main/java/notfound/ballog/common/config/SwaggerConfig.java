@@ -15,8 +15,7 @@ import org.springframework.context.annotation.Configuration;
                 title = "Ballog",
                 description = "Ballog API 문서",
                 version = "v1.0.0"
-        ),
-        security = @SecurityRequirement(name = "bearerAuth")
+        )
 )
 
 @SecurityScheme(

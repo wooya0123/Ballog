@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.match.entity.Match;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;
 
@@ -28,16 +30,17 @@ public class Video {
     @JoinColumn(name = "match_id", nullable = false)
     private Match match;
 
-    private Integer quaterNumber;
+    private Integer quarterNumber;
     private String videoUrl;
 
     @Column(columnDefinition = "INTERVAL")
+    @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
     private Duration duration;
 
-    public static Video of(Match match, Integer quaterNumber, String videoUrl, Duration duration) {
+    public static Video of(Match match, Integer quarterNumber, String videoUrl, Duration duration) {
         return Video.builder()
                 .match(match)
-                .quaterNumber(quaterNumber)
+                .quarterNumber(quarterNumber)
                 .videoUrl(videoUrl)
                 .duration(duration)
                 .build();

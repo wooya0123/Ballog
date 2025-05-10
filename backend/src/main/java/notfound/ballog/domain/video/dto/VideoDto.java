@@ -3,23 +3,25 @@ package notfound.ballog.domain.video.dto;
 import lombok.*;
 import notfound.ballog.domain.video.entity.Video;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuarterDto {
+public class VideoDto {
     private Integer videoId;
     private Integer quarterNumber;
     private String videoUrl;
-    private HighlightListDto highlightList;
+    private List<HighlightDto> highlightList;
 
-    public static QuarterDto of(Video video, HighlightListDto highlightListDto) {
-        return QuarterDto.builder()
+    public static VideoDto of(Video video, List<HighlightDto> highlightList) {
+        return VideoDto.builder()
                 .videoId(video.getVideoId())
-                .quarterNumber(video.getQuaterNumber())
+                .quarterNumber(video.getQuarterNumber())
                 .videoUrl(video.getVideoUrl())
-                .highlightList(highlightListDto)
+                .highlightList(highlightList)
                 .build();
     }
 }

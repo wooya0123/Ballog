@@ -1,5 +1,8 @@
 package notfound.ballog.domain.video.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +14,9 @@ import notfound.ballog.domain.video.service.HighlightService;
 import notfound.ballog.domain.video.service.VideoService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+@Tag(
+        name = "Video"
+)
 @RestController
 @RequestMapping("/v1/videos")
 @RequiredArgsConstructor
@@ -21,12 +26,21 @@ public class VideoController {
     private final VideoService videoService;
     private final HighlightService highlightService;
 
+    @Operation(
+            summary = "영상 업로드",
+            description = "구현 아직 안 됨",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @PostMapping()
     public BaseResponse<Void> uploadVideo(@Valid @RequestBody UploadVideoRequest request) {
         videoService.uploadVideo(request);
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "매치 영상 조회",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @GetMapping("/{matchId}")
     public BaseResponse<GetVideoListResponse> getVideo(
             @PathVariable
@@ -37,24 +51,40 @@ public class VideoController {
         return BaseResponse.ok(response);
     }
 
+    @Operation(
+            summary = "매치 영상 삭제",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @DeleteMapping()
     public BaseResponse<Void> deleteVideo(@Valid @RequestBody DeleteVideoRequest request) {
         videoService.deleteVideo(request);
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "하이라이트 구간 수정",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @PatchMapping("/highlight")
     public BaseResponse<Void> updateHighlight(@Valid @RequestBody UpdateHighlightRequest request) {
         highlightService.updateHighlight(request);
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "하이라이트 구간 삭제",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @DeleteMapping("/highlight")
     public BaseResponse<Void> deleteHighlight(@Valid @RequestBody DeleteHighlightRequest request) {
         highlightService.deleteHighlight(request);
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "하이라이트 구간 추가",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @PostMapping("/highlight")
     public BaseResponse<AddHighlightResponse> addHighlight(@Valid @RequestBody AddHighlightRequest request) {
         AddHighlightResponse response = highlightService.addHighlight(request);
