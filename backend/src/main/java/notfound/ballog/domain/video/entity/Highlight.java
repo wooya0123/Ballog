@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.video.dto.HighlightDto;
+import notfound.ballog.domain.video.request.UpdateHighlightRequest;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -49,5 +50,20 @@ public class Highlight {
                 .startTime(highlightDto.getStartTime())
                 .endTime(highlightDto.getEndTime())
                 .build();
+    }
+
+    public static Highlight toEntity(Video video, String highlightName, LocalTime startTime, LocalTime endTime) {
+        return Highlight.builder()
+                .video(video)
+                .highlightName(highlightName)
+                .startTime(startTime)
+                .endTime(endTime)
+                .build();
+    }
+
+    public void update(UpdateHighlightRequest request) {
+        this.highlightName = request.getHighlightName();
+        this.startTime = request.getStartTime();
+        this.endTime = request.getEndTime();
     }
 }

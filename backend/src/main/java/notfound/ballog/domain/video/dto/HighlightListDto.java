@@ -11,4 +11,8 @@ import java.util.List;
 @Builder
 public class HighlightListDto {
     private List<HighlightDto> highlightList;
+
+    public void add(HighlightDto highlightDto) {
+        this.highlightList.add(highlightDto);
+    }
 }

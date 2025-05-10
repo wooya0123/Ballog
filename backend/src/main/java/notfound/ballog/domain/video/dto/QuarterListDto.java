@@ -11,4 +11,8 @@ import java.util.List;
 @Builder
 public class QuarterListDto {
     private List<QuarterDto> quaterList;
+
+    public void add(QuarterDto quarterDto) {
+        this.quaterList.add(quarterDto);
+    }
 }
