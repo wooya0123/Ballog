@@ -27,7 +27,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ballog.mobile.R
 import com.ballog.mobile.data.model.MatchState
-import com.ballog.mobile.data.model.Player
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType

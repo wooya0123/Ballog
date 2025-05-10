@@ -64,7 +64,6 @@ fun MatchRegisterScreen(
     var minute by remember { mutableStateOf("") }
     var endHour by remember { mutableStateOf("") }
     var endMinute by remember { mutableStateOf("") }
-    var selectedPlayers by remember { mutableStateOf(setOf<String>()) }
 
     Column(
         modifier = Modifier.fillMaxSize().background(Color.White)

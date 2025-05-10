@@ -31,7 +31,6 @@ import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
 import java.time.LocalDate
 import com.ballog.mobile.ui.match.MatchDataScreen
-import com.ballog.mobile.navigation.Routes
 
 private const val TAG = "MainScreen"
 
