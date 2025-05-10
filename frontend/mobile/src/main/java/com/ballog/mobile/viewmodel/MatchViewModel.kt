@@ -6,6 +6,8 @@ import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
 import com.ballog.mobile.data.dto.MatchItemDto
 import com.ballog.mobile.data.dto.MatchRegisterRequest
+import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
+import com.ballog.mobile.data.dto.TeamMember
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
 import com.ballog.mobile.ui.components.DateMarkerState
@@ -74,6 +76,42 @@ class MatchViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 팀 맴버 불러오기
+     */
+    // 상태 선언
+    private val _teamPlayers = MutableStateFlow<List<TeamMember>>(emptyList())
+    val teamPlayers: StateFlow<List<TeamMember>> = _teamPlayers
+
+    fun fetchTeamPlayers(teamId: Int) {
+        viewModelScope.launch {
+            val token = tokenManager.getAccessToken().firstOrNull()
+            if (token == null) {
+                _teamPlayers.value = emptyList()
+                return@launch
+            }
+
+            try {
+                val response = RetrofitInstance.teamApi.getTeamMemberList("Bearer $token", teamId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    _teamPlayers.value = response.body()?.result?.teamMemberList ?: emptyList()
+
+                    val members = response.body()?.result?.teamMemberList ?: emptyList()
+                    _teamPlayers.value = members
+
+                    // 로그 출력
+                    android.util.Log.d(
+                        "MatchViewModel",
+                        "✅ 팀 멤버 로딩 성공: 총 ${members.size}명 → ${members.joinToString { it.nickname }}"
+                    )
+                } else {
+                    _teamPlayers.value = emptyList()
+                }
+            } catch (e: Exception) {
+                _teamPlayers.value = emptyList()
+            }
+        }
+    }
 
     /**
      * 서버에 개인 신규 매치 등록하는 함수
@@ -113,6 +151,49 @@ class MatchViewModel : ViewModel() {
             }
         }
     }
+
+    /**
+     * 서버에 팀 신규 매치 등록 함수
+     */
+    fun registerTeamMatch(
+        teamId: Int,
+        date: String,
+        startTime: String,
+        endTime: String,
+        matchName: String,
+        participantIds: List<Int>,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            val token = tokenManager.getAccessToken().firstOrNull()
+            if (token == null) {
+                onError("로그인이 필요합니다")
+                return@launch
+            }
+
+            val request = TeamMatchRegisterRequest(
+                teamId = teamId,
+                matchDate = date,
+                startTime = startTime,
+                endTime = endTime,
+                matchName = matchName,
+                participantList = participantIds
+            )
+
+            try {
+                val response = RetrofitInstance.matchApi.registerTeamMatch("Bearer $token", request)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    onSuccess()
+                } else {
+                    onError(response.body()?.message ?: "등록 실패")
+                }
+            } catch (e: Exception) {
+                onError("네트워크 오류: ${e.localizedMessage}")
+            }
+        }
+    }
+
 
 }
 

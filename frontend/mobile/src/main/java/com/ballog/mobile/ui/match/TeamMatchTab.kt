@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ballog.mobile.R
 import com.ballog.mobile.data.model.MatchState
+import com.ballog.mobile.data.model.Player
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
@@ -130,7 +131,7 @@ fun TeamMatchTab(
                     }
                     BallogButton(
                         onClick = {
-                            navController.navigate("match/register/$selectedDateStr?mode=TEAM")
+                            navController.navigate("match/register/$selectedDateStr?teamId=$teamId")
                         },
                         type = ButtonType.BOTH,
                         buttonColor = ButtonColor.GRAY,

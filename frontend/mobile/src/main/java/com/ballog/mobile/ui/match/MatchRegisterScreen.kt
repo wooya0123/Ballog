@@ -1,5 +1,6 @@
 package com.ballog.mobile.ui.match
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,9 +32,26 @@ fun MatchRegisterScreen(
     mode: MatchRegisterMode,
     navController: NavController,
     selectedDate: String,
+    teamId: Int? = null, // teamId는 TEAM 모드에서만 사용
     viewModel: MatchViewModel = viewModel()
 ) {
+    Log.d(
+        "MatchRegisterScreen",
+        "🟢 매치 등록화면 진입\nmode=$mode, selectedDate=$selectedDate, teamId=$teamId"
+    )
+
     val isTeam = mode == MatchRegisterMode.TEAM
+
+    // 팀일 경우 맴버 불러오기
+    val players by viewModel.teamPlayers.collectAsState()
+    var selectedPlayerIds by remember { mutableStateOf(setOf<Int>()) }
+
+
+    LaunchedEffect(teamId) {
+        if (isTeam && teamId != null) {
+            viewModel.fetchTeamPlayers(teamId)
+        }
+    }
 
     var matchName by remember { mutableStateOf("") }
     val hourFocus = remember { FocusRequester() }
@@ -46,7 +64,6 @@ fun MatchRegisterScreen(
     var minute by remember { mutableStateOf("") }
     var endHour by remember { mutableStateOf("") }
     var endMinute by remember { mutableStateOf("") }
-    val players = listOf("김가희", "이철수", "박영희", "최민수", "홍길동")
     var selectedPlayers by remember { mutableStateOf(setOf<String>()) }
 
     Column(
@@ -189,9 +206,13 @@ fun MatchRegisterScreen(
                                     .padding(horizontal = 4.dp, vertical = 4.dp)
                             ) {
                                 Checkbox(
-                                    checked = selectedPlayers.contains(player),
+                                    checked = selectedPlayerIds.contains(player.teamMemberId),
                                     onCheckedChange = {
-                                        selectedPlayers = if (it) selectedPlayers + player else selectedPlayers - player
+                                        selectedPlayerIds = if (it) {
+                                            selectedPlayerIds + player.teamMemberId
+                                        } else {
+                                            selectedPlayerIds - player.teamMemberId
+                                        }
                                     },
                                     colors = CheckboxDefaults.colors(
                                         checkedColor = Gray.Gray800,
@@ -200,12 +221,13 @@ fun MatchRegisterScreen(
                                     )
                                 )
                                 Text(
-                                    text = player,
+                                    text = player.nickname,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = pretendard
                                 )
                             }
+
                             if (index < players.lastIndex) {
                                 Box(
                                     modifier = Modifier
@@ -227,6 +249,20 @@ fun MatchRegisterScreen(
             onClick = {
                 if (isTeam) {
                     // TODO: 팀 매치 등록 로직
+                    viewModel.registerTeamMatch(
+                        teamId = teamId!!,
+                        date = selectedDate,
+                        startTime = "${hour.padStart(2, '0')}:${minute.padStart(2, '0')}",
+                        endTime = "${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}",
+                        matchName = matchName,
+                        participantIds = selectedPlayerIds.toList(),
+                        onSuccess = {
+                            navController.popBackStack()
+                        },
+                        onError = { error ->
+                            println("❌ 등록 실패: $error")
+                        }
+                    )
                 } else {
                     if (
                         matchName.isBlank() ||

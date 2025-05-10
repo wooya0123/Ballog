@@ -212,6 +212,29 @@ fun TeamTabScreen(
                 }
             )
         }
+        // 팀 매치 등록 화면 추가
+        composable(
+            route = "match/register/{date}?teamId={teamId}",
+            arguments = listOf(
+                navArgument("date") { type = NavType.StringType },
+                navArgument("teamId") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                }
+            )
+        ) { backStackEntry ->
+            val selectedDate = backStackEntry.arguments?.getString("date") ?: LocalDate.now().toString()
+            val teamId = backStackEntry.arguments?.getInt("teamId")?.takeIf { it != -1 }
+            val matchViewModel: MatchViewModel = viewModel()
+
+            MatchRegisterScreen(
+                mode = if (teamId != null) MatchRegisterMode.TEAM else MatchRegisterMode.PERSONAL,
+                navController = teamNavController,
+                viewModel = matchViewModel,
+                selectedDate = selectedDate,
+                teamId = teamId
+            )
+        }
     }
 }
 

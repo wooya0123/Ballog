@@ -23,3 +23,13 @@ data class MatchRegisterRequest(
     val matchName: String
 )
 
+// 팀 매치 등록 요청
+data class TeamMatchRegisterRequest(
+    val teamId: Int,
+    val matchDate: String,
+    val startTime: String,
+    val endTime: String,
+    val matchName: String,
+    val participantList: List<Int>
+)
+
