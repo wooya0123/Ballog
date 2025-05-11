@@ -124,7 +124,10 @@ fun TeamMatchTab(
                                 timeLabel = "경기 시간",
                                 startTime = match.startTime,
                                 endTime = match.endTime,
-                                matchName = match.matchName
+                                matchName = match.matchName,
+                                onClick = {
+                                    navController.navigate("match/detail/${match.id}")
+                                }
                             )
                         }
                     }

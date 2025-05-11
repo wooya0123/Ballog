@@ -14,6 +14,7 @@ import androidx.navigation.navArgument
 import com.ballog.mobile.ui.components.NavigationBar
 import com.ballog.mobile.ui.home.HomeScreen
 import com.ballog.mobile.ui.match.MatchScreen
+import com.ballog.mobile.ui.match.MatchDetailScreen
 import com.ballog.mobile.ui.team.TeamListScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
 import com.ballog.mobile.ui.team.TeamSettingScreen
@@ -234,6 +235,15 @@ fun TeamTabScreen(
                 teamId = teamId
             )
         }
+
+        // 매치 상세
+        composable(
+            route = "match/detail/{matchId}",
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
+            MatchDetailScreen(navController = teamNavController, matchId = matchId)
+        }
     }
 }
 
@@ -261,6 +271,15 @@ fun MatchTabScreen(navController: NavHostController) {
                 viewModel = matchViewModel,
                 selectedDate = selectedDate
             )
+        }
+
+        // 매치 상세
+        composable(
+            route = "match/detail/{matchId}",
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
+            MatchDetailScreen(navController = navController, matchId = matchId)
         }
     }
 }
