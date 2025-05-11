@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "frontend"
 include(":mobile")
 include(":watch")
+ 
