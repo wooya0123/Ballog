@@ -44,32 +44,37 @@ import kotlinx.coroutines.delay
 @Composable
 fun TeamSettingScreen(
     navController: NavController,
-    teamName: String,
-    viewModel: TeamViewModel = viewModel(),
+    teamId: Int,
+    viewModel: TeamViewModel,
     onBackClick: () -> Unit = {},
     onDelegateClick: () -> Unit = {},
     onKickMemberClick: () -> Unit = {},
     onInviteLinkClick: () -> Unit = {},
     onDeleteTeamClick: () -> Unit = {},
-    onLeaveTeamClick: () -> Unit = {}
+    onLeaveTeamClick: () -> Unit = {},
+    onUpdateTeamClick: () -> Unit = {}
 ) {
     var showInviteModal by remember { mutableStateOf(false) }
     val inviteLink by viewModel.inviteLink.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val teamDetail by viewModel.teamDetail.collectAsState()
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     var showCopyMessage by remember { mutableStateOf(false) }
-
-    // Get team ID from teamName
-    val teamId = try {
-        teamName.toIntOrNull() ?: 0
-    } catch (e: Exception) {
-        println("TeamSettingScreen: 팀 ID 변환 오류 - ${e.message}")
-        0
-    }
     
-    println("TeamSettingScreen: 현재 팀 ID - $teamId, 원본 teamName - $teamName")
+    println("TeamSettingScreen: 현재 팀 ID - $teamId")
+    println("TeamSettingScreen: teamDetail - $teamDetail")
+
+    // 팀 상세 정보 로드
+    LaunchedEffect(teamId) {
+        if (teamId > 0) {
+            println("TeamSettingScreen: getTeamDetail 호출 - teamId: $teamId")
+            viewModel.getTeamDetail(teamId)
+        } else {
+            println("TeamSettingScreen: 유효하지 않은 teamId - $teamId")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -85,8 +90,12 @@ fun TeamSettingScreen(
         Column(
             modifier = Modifier
                 .padding(horizontal = 24.dp)
-                .padding(top = 24.dp)
         ) {
+            SettingMenuItem(
+                text = "팀 수정",
+                onClick = onUpdateTeamClick
+            )
+
             SettingMenuItem(
                 text = "권한 위임",
                 onClick = onDelegateClick
@@ -348,58 +357,4 @@ private fun SettingMenuItem(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TeamSettingScreenPreview() {
-    TeamSettingScreen(
-        navController = rememberNavController(),
-        teamName = "1"
-    )
-}
-
-@Preview(showBackground = true, name = "Invite Modal - Loading")
-@Composable
-fun TeamSettingScreenInviteModalLoadingPreview() {
-    val viewModel = remember { 
-        TeamViewModel().apply {
-            setLoading(true)
-        }
-    }
-    TeamSettingScreen(
-        navController = rememberNavController(),
-        teamName = "1",
-        viewModel = viewModel
-    )
-}
-
-@Preview(showBackground = true, name = "Invite Modal - With Link")
-@Composable
-fun TeamSettingScreenInviteModalWithLinkPreview() {
-    val viewModel = remember { 
-        TeamViewModel().apply {
-            setInviteLink("https://ballog.page.link/team-invite?teamId=1&code=sample-invite-code")
-        }
-    }
-    TeamSettingScreen(
-        navController = rememberNavController(),
-        teamName = "1",
-        viewModel = viewModel
-    )
-}
-
-@Preview(showBackground = true, name = "Invite Modal - Error")
-@Composable
-fun TeamSettingScreenInviteModalErrorPreview() {
-    val viewModel = remember { 
-        TeamViewModel().apply {
-            setError("초대 링크 생성에 실패했습니다")
-        }
-    }
-    TeamSettingScreen(
-        navController = rememberNavController(),
-        teamName = "1",
-        viewModel = viewModel
-    )
 }
