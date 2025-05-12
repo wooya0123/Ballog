@@ -59,10 +59,9 @@ public class MatchController {
     }
 
     @GetMapping("/{matchId}")
-    @Operation(summary = "경기 상세 조회", description = "경기 ID로 경기 상세 정보를 조회합니다.",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    public BaseResponse<MatchDetailResponse> getMatchDetail(@PathVariable Integer matchId){
-        return BaseResponse.ok(matchService.getMatchDetail(matchId));
+    @Operation(summary = "경기 상세 조회", description = "경기 ID로 경기 상세 정보를 조회합니다.")
+    public BaseResponse<MatchDetailResponse> getMatchDetail(@AuthenticationPrincipal UUID userId, @PathVariable Integer matchId){
+        return BaseResponse.ok(matchService.getMatchDetail(userId, matchId));
     }
 
     @PatchMapping("/me")

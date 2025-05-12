@@ -18,6 +18,7 @@ import notfound.ballog.domain.team.request.TeamMemberAddRequest;
 import notfound.ballog.domain.team.response.TeamDetailResponse;
 import notfound.ballog.domain.team.response.TeamMemberListResponse;
 import notfound.ballog.domain.team.response.UserTeamListResponse;
+import notfound.ballog.domain.user.repository.PlayerCardRepository;
 import notfound.ballog.exception.InternalServerException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final TeamCardRepository teamCardRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final PlayerCardRepository playerCardRepository;
 
     @Transactional
     public void addTeam(UUID userId, TeamAddRequest teamAddRequest) {
@@ -128,4 +130,43 @@ public class TeamService {
         teamMemberRepository.deleteByUserIdAndTeamId(userId, teamId);
     }
 
+    @Transactional
+    public void updateAllTeamCards() {
+        List<Team> allTeams = teamRepository.findAll();
+        
+        log.info("총 {} 개의 팀 카드 업데이트 시작", allTeams.size());
+        
+        for (Team team : allTeams) {
+            try {
+                updateTeamCard(team.getTeamId());
+            } catch (Exception e) {
+                log.error("팀 카드 업데이트 중 오류 발생 - 팀 ID: {}, 오류: {}", team.getTeamId(), e.getMessage());
+            }
+        }
+    }
+
+    @Transactional
+    public void updateTeamCard(Integer teamId) {
+        // 집계 쿼리 결과를 받아올 DTO 가져오기
+        TeamCardDto teamCardDto = playerCardRepository.calculateTeamAverages(teamId);
+        
+        if (teamCardDto == null || teamCardDto.getMemberCount() == 0) {
+            log.info("팀 ID {}에 속한 팀원이 없거나 선수 카드가 없습니다.", teamId);
+            return;
+        }
+
+        // 팀 카드 업데이트
+        TeamCard teamCard = teamCardRepository.findById(teamId)
+                .orElseGet(() -> TeamCard.of(teamId));
+        
+        teamCard.setAvgSpeed(teamCardDto.getAvgSpeed());
+        teamCard.setAvgStamina(teamCardDto.getAvgStamina());
+        teamCard.setAvgAttack(teamCardDto.getAvgAttack());
+        teamCard.setAvgDefense(teamCardDto.getAvgDefense());
+        teamCard.setAvgRecovery(teamCardDto.getAvgRecovery());
+        
+        teamCardRepository.save(teamCard);
+        
+        log.info("팀 ID {}의 팀 카드 업데이트 완료. 팀원 수: {}", teamId, teamCardDto.getMemberCount());
+    }
 }

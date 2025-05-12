@@ -13,15 +13,11 @@ import notfound.ballog.domain.user.entity.PlayerCard;
 @Builder
 public class GetPlayerCardResponse {
     private String nickname;
-    private String playStyle;
-    private String rank;
     private PlayerCardStatListDto cardStats;
 
     public static GetPlayerCardResponse of(PlayerCard playerCard, PlayerCardStatListDto cardStatList) {
         return GetPlayerCardResponse.builder()
                 .nickname(playerCard.getUser().getNickname())
-                .playStyle(playerCard.getPlayStyle())
-                .rank(playerCard.getRank())
                 .cardStats(cardStatList)
                 .build();
     }
