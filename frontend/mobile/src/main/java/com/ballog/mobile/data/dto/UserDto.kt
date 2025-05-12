@@ -1,3 +1,15 @@
 package com.ballog.mobile.data.dto
 
-// 유저 관련 요청/응답 DTO 정의 예정
+data class UserInfoResponse(
+    val email: String,
+    val nickname: String,
+    val birthDate: String,
+    val profileImageUrl: String
+)
+
+data class UserUpdateRequest(
+    val nickname: String,
+    val birthDate: String,
+    val profileImageUrl: String
+)
+

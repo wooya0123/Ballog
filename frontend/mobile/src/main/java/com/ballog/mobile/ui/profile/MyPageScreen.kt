@@ -22,9 +22,33 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import com.ballog.mobile.ui.theme.System
 import com.ballog.mobile.ui.theme.pretendard
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.AuthViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
-fun MyPageScreen(navController: NavHostController) {
+fun MyPageScreen(navController: NavHostController, rootNavController: NavHostController, viewModel: AuthViewModel = viewModel()) {
+    // 로그아웃/회원탈퇴 상태 관찰
+    val signOutState by viewModel.signOutState.collectAsState()
+    val authState by viewModel.authState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // 로그아웃/회원탈퇴 성공 시 온보딩으로 이동
+    if (
+        (authState is com.ballog.mobile.data.model.AuthResult.Error && (authState as com.ballog.mobile.data.model.AuthResult.Error).message == "로그인이 필요합니다") ||
+        (signOutState is com.ballog.mobile.data.model.AuthResult.Success)
+    ) {
+        LaunchedEffect(Unit) {
+            rootNavController.navigate(Routes.ONBOARDING) {
+                popUpTo(0)
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,13 +79,13 @@ fun MyPageScreen(navController: NavHostController) {
             Divider(color = Gray.Gray200, thickness = 1.dp)
             MyPageMenuRow(
                 text = "로그아웃",
-                onClick = { /* TODO: 로그아웃 처리 */ }
+                onClick = { coroutineScope.launch { viewModel.logout() } }
             )
             Divider(color = Gray.Gray200, thickness = 1.dp)
             MyPageMenuRow(
                 text = "회원 탈퇴",
                 isWarning = true,
-                onClick = { /* TODO: 회원 탈퇴 처리 */ }
+                onClick = { viewModel.signOut() }
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -96,6 +120,6 @@ private fun MyPageMenuRow(
 @Composable
 fun MyPageScreenPreview() {
     BallogTheme {
-        MyPageScreen(navController = rememberNavController())
+        MyPageScreen(navController = rememberNavController(), rootNavController = rememberNavController())
     }
 }

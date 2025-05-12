@@ -130,11 +130,6 @@ fun SignupProfileScreen(
         }
     }
 
-    // 화면 생성 시 AWS S3 초기화
-    LaunchedEffect(Unit) {
-        viewModel.initS3(context)
-    }
-
     // 회원가입 진행 함수 수정 - 이미지가 선택된 경우 S3 업로드 후 회원가입 진행
     fun attemptSignUp(isSkip: Boolean = false) {
         // 이미 업로드 중이면 중복 실행 방지

@@ -75,6 +75,10 @@ class AuthViewModel : ViewModel() {
     // 프로필 이미지 원본 Uri
     private var _profileImageUri: Uri? = null
 
+    // 로그아웃/회원탈퇴 상태 관리
+    private val _signOutState = MutableStateFlow<AuthResult<Unit>>(AuthResult.Error(""))
+    val signOutState: StateFlow<AuthResult<Unit>> = _signOutState.asStateFlow()
+
     /**
      * S3 초기화 (처음 한 번만 호출)
      */
@@ -376,109 +380,112 @@ class AuthViewModel : ViewModel() {
         _signUpProgress.value = SignUpProgress.EMAIL_PASSWORD
     }
 
-    fun setSignUpProgress(progress: SignUpProgress) {
-        println("AuthViewModel - Setting signup progress to: $progress")
-        _signUpProgress.value = progress
-    }
-
-    // 회원가입 진행 상태 업데이트
-    fun updateSignUpProgress(progress: SignUpProgress) {
-        _signUpProgress.value = progress
-    }
-
-    fun completeSignUp() {
-        _signUpProgress.value = SignUpProgress.COMPLETED
-        resetSignUpProgress()
-    }
-
     // 로그인 처리
-    suspend fun login(email: String, password: String) {
-        try {
-            _authState.value = AuthResult.Loading
-            
-            val loginData = LoginData(email = email, password = password)
-            val request = LoginRequest(email = loginData.email, password = loginData.password)
-            val response = authApi.login(request)
-            
-            val loginResult = when (response.body()?.code) {
-                200 -> {
-                    response.body()?.result?.let { loginResponse ->
-                        val auth = Auth(
-                            accessToken = loginResponse.accessToken,
-                            refreshToken = loginResponse.refreshToken
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = AuthResult.Loading
+                val loginData = LoginData(email = email, password = password)
+                val request = LoginRequest(email = loginData.email, password = loginData.password)
+                val response = authApi.login(request)
+                val loginResult = when (response.body()?.code) {
+                    200 -> {
+                        response.body()?.result?.let { loginResponse ->
+                            val auth = Auth(
+                                accessToken = loginResponse.accessToken,
+                                refreshToken = loginResponse.refreshToken
+                            )
+                            LoginResult.Success(auth)
+                        } ?: LoginResult.Error("응답 데이터가 없습니다")
+                    }
+                    2000 -> LoginResult.RequireSignup
+                    1003 -> LoginResult.WrongPassword
+                    else -> LoginResult.Error(response.body()?.message ?: "로그인에 실패했습니다")
+                }
+                when (loginResult) {
+                    is LoginResult.Success -> {
+                        tokenManager.saveTokens(
+                            accessToken = loginResult.auth.accessToken,
+                            refreshToken = loginResult.auth.refreshToken
                         )
-                        LoginResult.Success(auth)
-                    } ?: LoginResult.Error("응답 데이터가 없습니다")
+                        _authState.value = AuthResult.Success(loginResult.auth)
+                    }
+                    is LoginResult.RequireSignup -> {
+                        _authState.value = AuthResult.Error("회원가입이 필요합니다")
+                    }
+                    is LoginResult.WrongPassword -> {
+                        _authState.value = AuthResult.Error("비밀번호가 일치하지 않습니다")
+                    }
+                    is LoginResult.Error -> {
+                        _authState.value = AuthResult.Error(loginResult.message)
+                    }
                 }
-                2000 -> LoginResult.RequireSignup
-                1003 -> LoginResult.WrongPassword
-                else -> LoginResult.Error(response.body()?.message ?: "로그인에 실패했습니다")
-            }
-
-            when (loginResult) {
-                is LoginResult.Success -> {
-                    // 토큰 저장
-                    tokenManager.saveTokens(
-                        accessToken = loginResult.auth.accessToken,
-                        refreshToken = loginResult.auth.refreshToken
-                    )
-                    _authState.value = AuthResult.Success(loginResult.auth)
+            } catch (e: Exception) {
+                _authState.value = AuthResult.Error(e.message ?: "로그인 중 오류가 발생했습니다")
+            } finally {
+                if (_authState.value is AuthResult.Loading) {
+                    _authState.value = AuthResult.Error("로그인 처리 중 오류가 발생했습니다")
                 }
-                is LoginResult.RequireSignup -> {
-                    _authState.value = AuthResult.Error("회원가입이 필요합니다")
-                }
-                is LoginResult.WrongPassword -> {
-                    _authState.value = AuthResult.Error("비밀번호가 일치하지 않습니다")
-                }
-                is LoginResult.Error -> {
-                    _authState.value = AuthResult.Error(loginResult.message)
-                }
-            }
-        } catch (e: Exception) {
-            _authState.value = AuthResult.Error(e.message ?: "로그인 중 오류가 발생했습니다")
-        } finally {
-            // 로딩 상태 해제
-            if (_authState.value is AuthResult.Loading) {
-                _authState.value = AuthResult.Error("로그인 처리 중 오류가 발생했습니다")
             }
         }
     }
 
-    // 로그아웃 처리
-    suspend fun logout() {
-        try {
-            println("AuthViewModel - Starting logout process")
-            _authState.value = AuthResult.Loading
-            
-            val token = tokenManager.getAccessToken().firstOrNull()
-            println("AuthViewModel - Current token exists: ${token != null}")
-            
-            if (token == null) {
-                println("AuthViewModel - No token found, clearing tokens")
+    // 로그아웃 처리 (회원탈퇴처럼 내부에서 launch)
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                println("AuthViewModel - Starting logout process")
+                _authState.value = AuthResult.Loading
+                val token = tokenManager.getAccessToken().firstOrNull()
+                println("AuthViewModel - Current token exists: ${token != null}")
+                if (token == null) {
+                    println("AuthViewModel - No token found, clearing tokens")
+                    tokenManager.clearTokens()
+                    _authState.value = AuthResult.Error("로그인이 필요합니다")
+                    return@launch
+                }
+                println("AuthViewModel - Calling logout API")
+                val response = authApi.logout("Bearer $token")
+                // API 응답과 관계없이 토큰 삭제
+                println("AuthViewModel - Clearing tokens regardless of API response")
                 tokenManager.clearTokens()
-                _authState.value = AuthResult.Error("로그인이 필요합니다")
-                return
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    println("AuthViewModel - Logout API success")
+                    _authState.value = AuthResult.Error("로그인이 필요합니다")
+                } else {
+                    println("AuthViewModel - Logout API failed: ${response.body()?.message}")
+                    _authState.value = AuthResult.Error(response.body()?.message ?: "로그아웃에 실패했습니다")
+                }
+            } catch (e: Exception) {
+                println("AuthViewModel - Logout error: ${e.message}")
+                // 에러가 발생해도 토큰 삭제
+                tokenManager.clearTokens()
+                _authState.value = AuthResult.Error(e.message ?: "로그아웃 중 오류가 발생했습니다")
             }
+        }
+    }
 
-            println("AuthViewModel - Calling logout API")
-            val response = authApi.logout("Bearer $token")
-            
-            // API 응답과 관계없이 토큰 삭제
-            println("AuthViewModel - Clearing tokens regardless of API response")
-            tokenManager.clearTokens()
-            
-            if (response.isSuccessful && response.body()?.isSuccess == true) {
-                println("AuthViewModel - Logout API success")
-                _authState.value = AuthResult.Error("로그인이 필요합니다")
-            } else {
-                println("AuthViewModel - Logout API failed: ${response.body()?.message}")
-                _authState.value = AuthResult.Error(response.body()?.message ?: "로그아웃에 실패했습니다")
+    // 회원탈퇴(탈퇴 API 호출)
+    fun signOut() {
+        viewModelScope.launch {
+            _signOutState.value = AuthResult.Loading
+            try {
+                val token = tokenManager.getAccessToken().firstOrNull()
+                if (token == null) {
+                    _signOutState.value = AuthResult.Error("로그인이 필요합니다")
+                    return@launch
+                }
+                val response = authApi.signOut("Bearer $token")
+                if (response.isSuccessful) {
+                    // 토큰 등 인증 정보 삭제
+                    tokenManager.clearTokens()
+                    _signOutState.value = AuthResult.Success(Unit)
+                } else {
+                    _signOutState.value = AuthResult.Error("회원탈퇴 실패: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _signOutState.value = AuthResult.Error(e.message ?: "알 수 없는 오류")
             }
-        } catch (e: Exception) {
-            println("AuthViewModel - Logout error: ${e.message}")
-            // 에러가 발생해도 토큰 삭제
-            tokenManager.clearTokens()
-            _authState.value = AuthResult.Error(e.message ?: "로그아웃 중 오류가 발생했습니다")
         }
     }
 }
