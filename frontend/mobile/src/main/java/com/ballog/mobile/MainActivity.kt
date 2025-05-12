@@ -59,8 +59,8 @@ class MainActivity : ComponentActivity() {
             BallogTheme {
                 // AppNavHost(navController)
                 // ... 기존 네비게이션 및 상태 관리 코드 주석처리 ...
-                // VideoTab만 임시로 렌더링
-                com.ballog.mobile.ui.video.VideoTab()
+                // MatchVideoTab 임시로 렌더링
+                com.ballog.mobile.ui.video.MatchVideoTab()
             }
         }
     }

@@ -15,9 +15,16 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+
+// 커스텀 컴포넌트
 import com.ballog.mobile.R
-import com.ballog.mobile.ui.components.*
+import com.ballog.mobile.ui.components.BallogButton
+import com.ballog.mobile.ui.components.ButtonType
+import com.ballog.mobile.ui.components.ButtonColor
+import com.ballog.mobile.ui.components.DropDown
 import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.video.HighlightCard
+import com.ballog.mobile.ui.video.HighlightUiState
 
 @Composable
 fun HighlightContentSection(
@@ -38,7 +45,8 @@ fun HighlightContentSection(
         VideoPlaceholderBox(
             videoUri = videoUri,
             showPlayer = showPlayer,
-            onTogglePlayer = onTogglePlayer
+            onTogglePlayer = onTogglePlayer,
+            selectedQuarter = selectedQuarter
         )
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -112,9 +120,41 @@ fun HighlightContentSection(
 fun VideoPlaceholderBox(
     videoUri: Uri?,
     showPlayer: Boolean,
-    onTogglePlayer: () -> Unit
+    onTogglePlayer: () -> Unit,
+    selectedQuarter: String
 ) {
     val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(true) }
+    var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
+
+    // 컴포넌트 생명주기에 따라 ExoPlayer 관리
+    val exoPlayer = remember(selectedQuarter) {
+        ExoPlayer.Builder(context).build().apply {
+            playWhenReady = false
+        }
+    }
+
+    // ExoPlayer 해제를 보장
+    DisposableEffect(selectedQuarter) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    // videoUri가 변경될 때 미디어 설정
+    LaunchedEffect(videoUri, selectedQuarter) {
+        isLoading = true
+        thumbnailUri = videoUri
+        
+        if (videoUri != null) {
+            exoPlayer.apply {
+                stop()
+                clearMediaItems()
+                setMediaItem(MediaItem.fromUri(videoUri))
+                prepare()
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -125,20 +165,6 @@ fun VideoPlaceholderBox(
     ) {
         if (videoUri != null) {
             if (showPlayer) {
-                val exoPlayer = remember(videoUri) {
-                    ExoPlayer.Builder(context).build().apply {
-                        setMediaItem(MediaItem.fromUri(videoUri))
-                        prepare()
-                        playWhenReady = false
-                    }
-                }
-
-                DisposableEffect(videoUri) {
-                    onDispose {
-                        exoPlayer.release()
-                    }
-                }
-
                 AndroidView(
                     factory = {
                         PlayerView(it).apply {
@@ -146,23 +172,24 @@ fun VideoPlaceholderBox(
                             useController = true
                         }
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    update = { playerView ->
+                        playerView.player = exoPlayer
+                    }
                 )
             } else {
-                // 🔽 변경 포인트: key 사용해서 AsyncImage 강제 재렌더링
-                key(videoUri) {
-                    AsyncImage(
-                        model = videoUri,
-                        contentDescription = "Video Thumbnail",
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                AsyncImage(
+                    model = thumbnailUri,
+                    contentDescription = "Video Thumbnail",
+                    modifier = Modifier.fillMaxSize(),
+                    onLoading = { isLoading = true },
+                    onSuccess = { isLoading = false },
+                    onError = { isLoading = false }
+                )
             }
         }
     }
 }
-
-
 
 @Composable
 private fun QuarterDropDown(
