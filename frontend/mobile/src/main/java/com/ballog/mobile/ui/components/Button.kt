@@ -69,7 +69,9 @@ fun BallogButton(
 
     Surface(
         onClick = onClick,
-        modifier = modifier.height(48.dp),
+        modifier = modifier
+            .padding(horizontal = 24.dp)
+            .height(48.dp),
         enabled = enabled,
         shape = RoundedCornerShape(8.dp),
         color = backgroundColor
@@ -92,7 +94,8 @@ fun BallogButton(
             }
             ButtonType.LABEL_ONLY -> {
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

@@ -60,7 +60,7 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = pretendard,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(24.dp)
                 )
             }
             is MatchState.Error -> {
@@ -69,7 +69,7 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = pretendard,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(24.dp)
                 )
             }
             is MatchState.Success -> {
@@ -94,7 +94,6 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     if (filteredMatches.isEmpty()) {
                         Text(
@@ -169,7 +168,6 @@ fun MatchScreenPreview() {
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
                 if (filteredMatches.isEmpty()) {
                     Text("경기 일정이 없습니다", modifier = Modifier.padding(bottom = 8.dp))

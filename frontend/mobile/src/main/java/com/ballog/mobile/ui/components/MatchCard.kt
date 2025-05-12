@@ -33,8 +33,9 @@ fun MatchCard(
     val timeRange = "${formatTime(startTime)} - ${formatTime(endTime)}"
     Column(
         modifier = modifier
+            .padding(horizontal = 24.dp)
             .fillMaxWidth()
-            .height(92.dp)
+            .wrapContentHeight()
             .background(Gray.Gray200, RoundedCornerShape(8.dp))
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 20.dp),
