@@ -2,15 +2,12 @@ package com.ballog.mobile.ui.match
 
 import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.Text
 import com.ballog.mobile.data.model.Match
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import com.ballog.mobile.ui.components.DropDown
-import com.ballog.mobile.ui.theme.pretendard
-import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.components.SectionHeader
 import com.ballog.mobile.ui.components.PlayerCard
 import androidx.compose.foundation.verticalScroll
