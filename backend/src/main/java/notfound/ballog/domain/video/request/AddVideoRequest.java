@@ -27,7 +27,6 @@ public class AddVideoRequest {
     )
     private String duration;
 
-    @NotNull(message = "영상 파일명을 입력해주세요.")
     @NotBlank(message = "영상 파일명을 입력해주세요.")
     private String fileName;
 }
