@@ -18,38 +18,40 @@ fun HeatMapOverlay(
 ) {
     val cols = 15
     val rows = 10
-
-    val density = LocalDensity.current
+    val alphaMap = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 0.9f)
 
     Canvas(modifier = modifier.fillMaxSize()) {
-        with(density) {
-            val cellWidth = 16.dp.toPx()
-            val cellHeight = 16.dp.toPx()
-            val spacingX = 5.dp.toPx() // col 하나당 21dp → 셀16 + 간격5
-            val spacingY = 5.dp.toPx()
+        val spacingRatio = 0.2f  // 셀 대비 spacing 비율 (20%)
 
-            val alphaMap = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 1f)
+        // 가로 기준으로 셀+간격 전체 너비 계산
+        val unitWidth = size.width / (cols + spacingRatio * (cols - 1))
+        val cellWidth = unitWidth
+        val spacingX = unitWidth * spacingRatio
 
-            val totalWidth = cellWidth * cols + spacingX * (cols - 1)
-            val totalHeight = cellHeight * rows + spacingY * (rows - 1)
+        // 세로 기준 동일 계산
+        val unitHeight = size.height / (rows + spacingRatio * (rows - 1))
+        val cellHeight = unitHeight
+        val spacingY = unitHeight * spacingRatio
 
-            val offsetX = (size.width - totalWidth) / 2
-            val offsetY = (size.height - totalHeight) / 2
+        val totalWidth = cellWidth * cols + spacingX * (cols - 1)
+        val totalHeight = cellHeight * rows + spacingY * (rows - 1)
 
-            for (x in 0 until cols) {
-                for (y in 0 until rows) {
-                    val intensity = heatData.getOrNull(x)?.getOrNull(y) ?: 0
-                    val alpha = alphaMap.getOrElse(intensity.coerceIn(0, 5)) { 0f }
+        val offsetX = (size.width - totalWidth) / 2
+        val offsetY = (size.height - totalHeight) / 2
 
-                    val left = offsetX + x * (cellWidth + spacingX)
-                    val top = offsetY + y * (cellHeight + spacingY)
+        for (x in 0 until cols) {
+            for (y in 0 until rows) {
+                val intensity = heatData.getOrNull(x)?.getOrNull(y) ?: 0
+                val alpha = alphaMap.getOrElse(intensity.coerceIn(0, 5)) { 0f }
 
-                    drawRoundRect(
-                        color = color.copy(alpha = alpha),
-                        topLeft = Offset(left, top),
-                        size = Size(cellWidth, cellHeight)
-                    )
-                }
+                val left = offsetX + x * (cellWidth + spacingX)
+                val top = offsetY + y * (cellHeight + spacingY)
+
+                drawRoundRect(
+                    color = color.copy(alpha = alpha),
+                    topLeft = Offset(left, top),
+                    size = Size(cellWidth, cellHeight)
+                )
             }
         }
     }

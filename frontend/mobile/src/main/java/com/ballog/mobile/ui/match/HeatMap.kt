@@ -24,9 +24,7 @@ fun HeatMap(
 ) {
     Column(
         modifier = modifier
-            .background(Gray.Gray200, shape = RoundedCornerShape(8.dp))
-            .padding(16.dp)
-            .width(312.dp),
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -37,7 +35,7 @@ fun HeatMap(
                 .background(Gray.Gray700) // 이미지 안 보일 때 대비
         ) {
             Image(
-                painter = painterResource(id = R.drawable.heatmap),
+                painter = painterResource(id = R.drawable.futsal),
                 contentDescription = "HeatMap Background",
                 modifier = Modifier.fillMaxSize()
             )
