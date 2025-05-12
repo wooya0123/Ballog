@@ -29,9 +29,12 @@ import com.ballog.mobile.navigation.TopNavType
 import com.ballog.mobile.ui.components.*
 import com.ballog.mobile.ui.theme.*
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.ballog.mobile.viewmodel.ProfileViewModel
 
 @Composable
-fun ProfileEditScreen(navController: NavController) {
+fun ProfileEditScreen(navController: NavController, rootNavController: NavHostController, viewModel: ProfileViewModel = viewModel()) {
     val context = LocalContext.current
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -41,10 +44,42 @@ fun ProfileEditScreen(navController: NavController) {
         profileImageUri = uri
     }
 
-    var nickname by remember { mutableStateOf("찐쨔시") }
-    var birthYear by remember { mutableStateOf("2000") }
-    var birthMonth by remember { mutableStateOf("11") }
-    var birthDay by remember { mutableStateOf("18") }
+    // ViewModel StateFlow 바인딩
+    val userInfo by viewModel.userInfo.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val imageUploadState by viewModel.imageUploadState.collectAsState()
+
+    // 입력값 상태
+    var nickname by remember { mutableStateOf("") }
+    var birthYear by remember { mutableStateOf("") }
+    var birthMonth by remember { mutableStateOf("") }
+    var birthDay by remember { mutableStateOf("") }
+
+    // 최초 진입 시 유저 정보 불러오기
+    LaunchedEffect(Unit) {
+        viewModel.getUserInfo()
+    }
+    // userInfo가 갱신되면 입력값도 갱신
+    LaunchedEffect(userInfo) {
+        userInfo?.let {
+            nickname = it.nickname
+            if (it.birthDate.contains("-")) {
+                // yyyy-MM-dd 형식
+                val parts = it.birthDate.split("-")
+                if (parts.size == 3) {
+                    birthYear = parts[0]
+                    birthMonth = parts[1]
+                    birthDay = parts[2]
+                }
+            } else if (it.birthDate.length == 8) {
+                // yyyyMMdd 형식
+                birthYear = it.birthDate.substring(0, 4)
+                birthMonth = it.birthDate.substring(4, 6)
+                birthDay = it.birthDate.substring(6, 8)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -150,16 +185,43 @@ fun ProfileEditScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // 저장 버튼
             BallogButton(
-                onClick = { navController.popBackStack() },
+                onClick = {
+                    val birthDate = "$birthYear-$birthMonth-$birthDay"
+                    if (profileImageUri != null) {
+                        // S3 업로드 후 성공 시 updateUserInfo 호출
+                        viewModel.uploadProfileImage(context, profileImageUri!!) { imageUrl ->
+                            viewModel.updateUserInfo(nickname, birthDate, imageUrl)
+                        }
+                    } else {
+                        // 기존 이미지 URL 사용
+                        val imageUrl = userInfo?.profileImageUrl ?: ""
+                        viewModel.updateUserInfo(nickname, birthDate, imageUrl)
+                    }
+                },
                 type = ButtonType.LABEL_ONLY,
                 buttonColor = ButtonColor.BLACK,
-                label = "저장",
+                label = if (isLoading || imageUploadState is com.ballog.mobile.viewmodel.ImageUploadState.Loading) "저장 중..." else "저장",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp)
+                    .padding(bottom = 40.dp),
+                enabled = !isLoading && imageUploadState !is com.ballog.mobile.viewmodel.ImageUploadState.Loading
             )
+
+            if (error != null) {
+                Text(
+                    text = error ?: "",
+                    color = Color.Red,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            if (imageUploadState is com.ballog.mobile.viewmodel.ImageUploadState.Error) {
+                Text(
+                    text = (imageUploadState as com.ballog.mobile.viewmodel.ImageUploadState.Error).message,
+                    color = Color.Red,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }
@@ -167,5 +229,5 @@ fun ProfileEditScreen(navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun ProfileEditScreenPreview() {
-    ProfileEditScreen(navController = rememberNavController())
+    ProfileEditScreen(navController = rememberNavController(), rootNavController = rememberNavController())
 }

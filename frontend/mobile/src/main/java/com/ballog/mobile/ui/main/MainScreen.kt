@@ -94,7 +94,10 @@ fun MainScreen(
                 NavigationTab.HOME -> HomeScreen()
                 NavigationTab.MATCH -> MatchTabScreen(navController = rememberNavController())
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
-                NavigationTab.MYPAGE -> ProfileTabScreen(rememberNavController())
+                NavigationTab.MYPAGE -> ProfileTabScreen(
+                    navController = rememberNavController(),
+                    rootNavController = navController
+                )
                 NavigationTab.DATA -> MatchDataScreen()
             }
         }
@@ -347,16 +350,16 @@ fun MatchTabScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun ProfileTabScreen(navController: NavHostController) {
+private fun ProfileTabScreen(navController: NavHostController, rootNavController: NavHostController) {
     androidx.navigation.compose.NavHost(
         navController = navController,
         startDestination = "mypage"
     ) {
         composable("mypage") {
-            MyPageScreen(navController)
+            MyPageScreen(navController, rootNavController)
         }
         composable("profile/edit") {
-            ProfileEditScreen(navController)
+            ProfileEditScreen(navController, rootNavController)
         }
         composable("mypage/liked-videos") {
             LikedVideosScreen()
