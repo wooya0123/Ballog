@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ballog.mobile"
-        minSdk = 26
+        minSdk = 31
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -66,6 +66,10 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom) // ✅ 추가
+
+    // SamSung SDK
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
+    implementation(libs.gson)
 
     // Compose
     implementation("androidx.compose.ui:ui")

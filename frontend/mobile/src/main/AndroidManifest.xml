@@ -9,6 +9,11 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- Android 11 이상에서 Samsung Health 연결을 위한 설정 -->
+    <queries>
+        <package android:name="com.sec.android.app.shealth" />
+    </queries>
+
     <application
         android:name=".BallogApplication"
         android:allowBackup="true"
@@ -16,6 +21,12 @@
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true">
+
+        <!-- 삼성헬스 SDK 읽기 권한 메타데이터 -->
+        <meta-data
+            android:name="com.samsung.android.health.permission.read"
+            android:value="com.samsung.health.exercise" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
