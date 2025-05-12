@@ -32,6 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.ballog.mobile.viewmodel.ProfileViewModel
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 
 @Composable
 fun ProfileEditScreen(navController: NavController, rootNavController: NavHostController, viewModel: ProfileViewModel = viewModel()) {
@@ -81,147 +85,191 @@ fun ProfileEditScreen(navController: NavController, rootNavController: NavHostCo
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Gray.Gray100)
-    ) {
-        TopNavItem(
-            title = "정보 수정",
-            type = TopNavType.DETAIL_WITH_BACK,
-            onBackClick = { navController.popBackStack() },
-        )
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var lastUserInfo by remember { mutableStateOf<com.ballog.mobile.data.model.User?>(null) }
+    var isUpdateRequested by remember { mutableStateOf(false) }
 
+    // userInfo가 성공적으로 갱신될 때 AlertDialog 표시
+    LaunchedEffect(userInfo, isLoading, error) {
+        if (isUpdateRequested && !isLoading && error == null && userInfo != null && userInfo != lastUserInfo) {
+            showSuccessDialog = true
+            lastUserInfo = userInfo
+            isUpdateRequested = false
+        }
+    }
+
+    Scaffold(
+        // snackbarHost = { SnackbarHost(snackbarHostState) }, // 완전히 삭제
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .padding(top = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(Gray.Gray100)
+                .padding(innerPadding)
         ) {
-            // 프로필 이미지
-            Box(
+            TopNavItem(
+                title = "정보 수정",
+                type = TopNavType.DETAIL_WITH_BACK,
+                onBackClick = { navController.popBackStack() },
+            )
+
+            Column(
                 modifier = Modifier
-                    .size(146.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF2F5F8))
-                    .clickable { imagePickerLauncher.launch("image/*") },
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                profileImageUri?.let { uri ->
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = "프로필 이미지",
-                        modifier = Modifier.fillMaxSize()
+                // 프로필 이미지
+                Box(
+                    modifier = Modifier
+                        .size(146.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF2F5F8))
+                        .clickable { imagePickerLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        profileImageUri != null -> {
+                            AsyncImage(
+                                model = profileImageUri,
+                                contentDescription = "프로필 이미지",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        !userInfo?.profileImageUrl.isNullOrBlank() -> {
+                            AsyncImage(
+                                model = userInfo?.profileImageUrl,
+                                contentDescription = "프로필 이미지",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_camera),
+                                contentDescription = "프로필 선택",
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // 닉네임 라벨
+                Text(
+                    text = "닉네임",
+                    fontSize = 14.sp,
+                    fontFamily = pretendard,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+
+                Input(
+                    value = nickname,
+                    onValueChange = { nickname = it },
+                    placeholder = "닉네임",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 생년월일 라벨
+                Text(
+                    text = "생년월일",
+                    fontSize = 14.sp,
+                    fontFamily = pretendard,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Input(
+                        value = birthYear,
+                        onValueChange = { birthYear = it },
+                        placeholder = "년",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.weight(1f)
                     )
-                } ?: Image(
-                    painter = painterResource(id = R.drawable.ic_camera),
-                    contentDescription = "프로필 선택",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+                    Input(
+                        value = birthMonth,
+                        onValueChange = { birthMonth = it },
+                        placeholder = "월",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Input(
+                        value = birthDay,
+                        onValueChange = { birthDay = it },
+                        placeholder = "일",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
-            // 닉네임 라벨
-            Text(
-                text = "닉네임",
-                fontSize = 14.sp,
-                fontFamily = pretendard,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-            )
-
-            Input(
-                value = nickname,
-                onValueChange = { nickname = it },
-                placeholder = "닉네임",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 생년월일 라벨
-            Text(
-                text = "생년월일",
-                fontSize = 14.sp,
-                fontFamily = pretendard,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Input(
-                    value = birthYear,
-                    onValueChange = { birthYear = it },
-                    placeholder = "년",
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.weight(1f)
-                )
-                Input(
-                    value = birthMonth,
-                    onValueChange = { birthMonth = it },
-                    placeholder = "월",
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.weight(1f)
-                )
-                Input(
-                    value = birthDay,
-                    onValueChange = { birthDay = it },
-                    placeholder = "일",
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            BallogButton(
-                onClick = {
-                    val birthDate = "$birthYear-$birthMonth-$birthDay"
-                    if (profileImageUri != null) {
-                        // S3 업로드 후 성공 시 updateUserInfo 호출
-                        viewModel.uploadProfileImage(context, profileImageUri!!) { imageUrl ->
+                BallogButton(
+                    onClick = {
+                        isUpdateRequested = true
+                        val birthDate = "$birthYear-$birthMonth-$birthDay"
+                        if (profileImageUri != null) {
+                            // S3 업로드 후 성공 시 updateUserInfo 호출
+                            viewModel.uploadProfileImage(context, profileImageUri!!) { imageUrl ->
+                                viewModel.updateUserInfo(nickname, birthDate, imageUrl)
+                            }
+                        } else {
+                            // 기존 이미지 URL 사용
+                            val imageUrl = userInfo?.profileImageUrl ?: ""
                             viewModel.updateUserInfo(nickname, birthDate, imageUrl)
                         }
-                    } else {
-                        // 기존 이미지 URL 사용
-                        val imageUrl = userInfo?.profileImageUrl ?: ""
-                        viewModel.updateUserInfo(nickname, birthDate, imageUrl)
+                    },
+                    type = ButtonType.LABEL_ONLY,
+                    buttonColor = ButtonColor.BLACK,
+                    label = if (isLoading || imageUploadState is com.ballog.mobile.viewmodel.ImageUploadState.Loading) "저장 중..." else "저장",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 40.dp),
+                    enabled = !isLoading && imageUploadState !is com.ballog.mobile.viewmodel.ImageUploadState.Loading
+                )
+
+                if (error != null) {
+                    Text(
+                        text = error ?: "",
+                        color = Color.Red,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                if (imageUploadState is com.ballog.mobile.viewmodel.ImageUploadState.Error) {
+                    Text(
+                        text = (imageUploadState as com.ballog.mobile.viewmodel.ImageUploadState.Error).message,
+                        color = Color.Red,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
+        // 성공 다이얼로그
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = { showSuccessDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showSuccessDialog = false }) {
+                        Text("확인")
                     }
                 },
-                type = ButtonType.LABEL_ONLY,
-                buttonColor = ButtonColor.BLACK,
-                label = if (isLoading || imageUploadState is com.ballog.mobile.viewmodel.ImageUploadState.Loading) "저장 중..." else "저장",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 40.dp),
-                enabled = !isLoading && imageUploadState !is com.ballog.mobile.viewmodel.ImageUploadState.Loading
+                title = { Text("수정 완료") },
+                text = { Text("수정이 완료되었습니다") }
             )
-
-            if (error != null) {
-                Text(
-                    text = error ?: "",
-                    color = Color.Red,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-            if (imageUploadState is com.ballog.mobile.viewmodel.ImageUploadState.Error) {
-                Text(
-                    text = (imageUploadState as com.ballog.mobile.viewmodel.ImageUploadState.Error).message,
-                    color = Color.Red,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
         }
     }
 }
