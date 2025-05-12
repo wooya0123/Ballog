@@ -3,6 +3,7 @@ package com.ballog.mobile
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
@@ -17,18 +18,22 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.ballog.mobile.data.model.AuthResult
+import com.ballog.mobile.data.repository.MatchRepository
 import com.ballog.mobile.navigation.AppNavHost
 import com.ballog.mobile.navigation.Routes
 import com.ballog.mobile.ui.theme.BallogTheme
 import com.ballog.mobile.viewmodel.AuthViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
+import com.google.android.gms.wearable.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
+    private val TAG = "MainActivity"
+    
     // 딥 링크 데이터 저장
     private var pendingDeepLinkData: DeepLinkData? = null
     
@@ -38,6 +43,9 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Wearable Data API 리스너 등록
+        Wearable.getDataClient(this).addListener(this)
         
         // 시스템 바 설정
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -102,6 +110,45 @@ class MainActivity : ComponentActivity() {
                         println("MainActivity - Deep link event triggered")
                         handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
                         _deepLinkEvent.value = false // 이벤트 처리 후 초기화
+                    }
+                }
+            }
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // Wearable Data API 리스너 해제
+        Wearable.getDataClient(this).removeListener(this)
+    }
+
+    override fun onDataChanged(dataEvents: DataEventBuffer) {
+        Log.d(TAG, "데이터 변경 이벤트 수신")
+        
+        for (event in dataEvents) {
+            if (event.type == DataEvent.TYPE_CHANGED) {
+                val dataItem = event.dataItem
+                if (dataItem.uri.path?.compareTo("/field_corners") == 0) {
+                    Log.d(TAG, "경기장 모서리 데이터 수신")
+                    
+                    val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
+                    val repository = MatchRepository(applicationContext)
+                    
+                    try {
+                        repository.saveFieldDataFromWatch(
+                            lat1 = dataMap.getDouble("lat1"),
+                            lon1 = dataMap.getDouble("lon1"),
+                            lat2 = dataMap.getDouble("lat2"),
+                            lon2 = dataMap.getDouble("lon2"),
+                            lat3 = dataMap.getDouble("lat3"),
+                            lon3 = dataMap.getDouble("lon3"),
+                            lat4 = dataMap.getDouble("lat4"),
+                            lon4 = dataMap.getDouble("lon4"),
+                            timestamp = dataMap.getLong("timestamp")
+                        )
+                        Log.d(TAG, "경기장 모서리 데이터 저장 완료")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "경기장 모서리 데이터 저장 실패: ${e.message}")
                     }
                 }
             }

@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("kotlin-parcelize")
     alias(libs.plugins.spotless)
 }
 
@@ -108,4 +109,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences-core:1.0.0")
 
     androidTestImplementation("androidx.compose.ui:ui-test-junit4") // ✅ BOM 적용됨
+
+    // Wearable API
+    implementation(libs.play.services.wearable.v1810)
 }

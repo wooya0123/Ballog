@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import com.ballog.mobile.ui.theme.pretendard
-import androidx.compose.ui.tooling.preview.Preview
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
 import androidx.compose.runtime.*
@@ -30,37 +29,55 @@ import com.ballog.mobile.ui.theme.Primary
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import com.ballog.mobile.R
+import com.ballog.mobile.data.service.SamsungHealthDataService
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 @Composable
 fun MatchDataScreen() {
     var showModal by remember { mutableStateOf(false) }
     var modalData by remember { mutableStateOf<MatchDataCardInfo?>(null) }
+    val context = LocalContext.current
+    val samsungHealthService = remember { SamsungHealthDataService(context) }
+    val scope = rememberCoroutineScope()
+    var matchData by remember { mutableStateOf<List<MatchDataCardInfo>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            val exerciseData = samsungHealthService.getExercise()
+            matchData = exerciseData.map { exercise ->
+                val buttonText = if (false) "정보 입력하기" else "정보 수정하기"
+                MatchDataCardInfo(
+                    date = exercise.date,
+                    startTime = exercise.startTime,
+                    endTime = exercise.endTime,
+                    buttonText = buttonText
+                )
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .verticalScroll(rememberScrollState())
     ) {
-        // Top Navigation Bar
         TopNavItem(
             title = "매치 데이터 연동",
             type = TopNavType.MAIN_BASIC
         )
         Spacer(modifier = Modifier.height(20.dp))
-        // MatchDataCard 리스트 (샘플 데이터)
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            val cardList = listOf(
-                MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기"),
-                MatchDataCardInfo("2025.05.09", "16:00", "16:45", "정보 입력하기"),
-                MatchDataCardInfo("2025.05.10", "17:10", "17:55", "정보 입력하기"),
-                MatchDataCardInfo("2025.05.11", "18:20", "19:05", "정보 입력하기")
-            )
-            cardList.forEach { card ->
+            matchData.forEach { card ->
                 MatchDataCard(
                     date = card.date,
                     startTime = card.startTime,
@@ -74,13 +91,13 @@ fun MatchDataScreen() {
             }
         }
         Spacer(modifier = Modifier.height(32.dp))
-        // 저장하기 버튼 (하단)
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .height(48.dp)
-                .background(Color(0xFF1B1B1D), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                .background(Color(0xFF1B1B1D), shape = RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -115,8 +132,46 @@ fun MatchDataModal(
     onDismiss: () -> Unit
 ) {
     var quarter by remember { mutableStateOf("") }
-    var heatData by remember { mutableStateOf(List(15) { List(10) { (0..5).random() } }) }
-    var selectedSide by remember { mutableStateOf<String?>("LEFT") } // "LEFT" or "RIGHT"
+    var heatData by remember { mutableStateOf(List(10) { List(16) { 0 } }) }
+    var selectedSide by remember { mutableStateOf<String?>("LEFT") }
+    val context = LocalContext.current
+    val samsungHealthService = remember { SamsungHealthDataService(context) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            val exerciseData = samsungHealthService.getExercise()
+            if (exerciseData.isNotEmpty()) {
+                val gpsPoints = exerciseData.firstOrNull()?.gpsPoints ?: emptyList()
+                if (gpsPoints.isNotEmpty()) {
+                    // === 핵심: min-max 정규화(min-max normalization)와 선형 스케일링(linear scaling) ===
+                    // 운동 경로의 위도/경도 최소~최대값을 0~15(세로), 0~9(가로) 그리드로 선형적으로 매핑합니다.
+                    // 즉, 각 GPS 포인트의 상대적 위치를 히트맵 전체에 분포시키는 방식입니다.
+                    val minLat = gpsPoints.minOf { it.latitude }
+                    val maxLat = gpsPoints.maxOf { it.latitude }
+                    val minLng = gpsPoints.minOf { it.longitude }
+                    val maxLng = gpsPoints.maxOf { it.longitude }
+
+                    val grid = Array(16) { IntArray(10) { 0 } } // 16행(세로), 10열(가로)
+                    var includedCount = 0
+
+                    gpsPoints.forEach { point ->
+                        // min-max 정규화 및 선형 스케일링 적용
+                        val row = if (maxLat != minLat) {
+                            ((point.latitude - minLat) / (maxLat - minLat) * 15).toInt().coerceIn(0, 15)
+                        } else 0
+                        val col = if (maxLng != minLng) {
+                            ((point.longitude - minLng) / (maxLng - minLng) * 9).toInt().coerceIn(0, 9)
+                        } else 0
+                        grid[row][col]++
+                        includedCount++
+                    }
+                    heatData = grid.map { it.toList() }
+                    println("히트맵에 포함된 GPS 포인트 개수: $includedCount / 전체: ${gpsPoints.size}")
+                }
+            }
+        }
+    }
 
     Box(
         Modifier
@@ -240,7 +295,7 @@ fun MatchDataModal(
                 BallogButton(
                     onClick = { /* TODO: 저장 동작 구현 */ },
                     type = ButtonType.LABEL_ONLY,
-                    buttonColor = ButtonColor.BLACK,
+                    buttonColor = ButtonColor.PRIMARY,
                     label = "저장",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -250,18 +305,3 @@ fun MatchDataModal(
         }
     }
 }
-
-@Preview
-@Composable
-fun PreviewMatchDataModal() {
-    MatchDataModal(
-        data = MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기"),
-        onDismiss = {}
-    )
-}
-
-@Preview
-@Composable
-fun PreviewMatchDataScreen() {
-    MatchDataScreen()
-} 

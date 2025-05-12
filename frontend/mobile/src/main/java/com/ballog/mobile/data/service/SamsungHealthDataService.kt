@@ -102,9 +102,9 @@ class SamsungHealthDataService(private val context: Context) {
      * @return Ballog 앱의 운동 데이터 목록
      */
     private suspend fun readExercise(): List<Exercise> {
-        // 최근 30일 데이터 조회를 위한 시간 설정
+        // 최근 7일 데이터 조회를 위한 시간 설정
         val endTime = LocalDateTime.now()
-        val startTime = endTime.minusDays(30)
+        val startTime = endTime.minusDays(7)
 
         try {
             // 데이터 요청 객체 생성
@@ -206,6 +206,7 @@ class SamsungHealthDataService(private val context: Context) {
      * @return 생성된 운동 데이터 객체
      */
     private fun createExercise(session: Any, uid: String, customName: String?): Exercise {
+        Log.e("DEBUG", "createExercise() 진입")
         // 세션 헬퍼 생성
         val sessionHelper = SessionHelper(session)
         val timeInfo = TimeInfo(sessionHelper.getStartTime(), sessionHelper.getEndTime())
@@ -218,7 +219,7 @@ class SamsungHealthDataService(private val context: Context) {
         Log.d(TAG, "스프린트 횟수: $sprintCount")
 
         // 운동 데이터 객체 생성 및 반환
-        return Exercise(
+        val exercise = Exercise(
             id = uid,
             exerciseType = customName ?: APP_NAME, // 항상 "Ballog"로 설정
             date = timeInfo.dateString,
@@ -236,6 +237,9 @@ class SamsungHealthDataService(private val context: Context) {
             timestamp = sessionHelper.getStartTime()?.toEpochMilli() ?: 0L,
             sprintCount = sprintCount // 스프린트 횟수 추가
         )
+
+        Log.e("DEBUG", "gpsPoints size: ${exercise.gpsPoints.size}")
+        return exercise
     }
 
     /**
@@ -415,28 +419,33 @@ class SamsungHealthDataService(private val context: Context) {
      * @return GPS 위치 데이터 목록
      */
     private fun extractGpsPoints(session: Any): List<GpsPoint> {
+        Log.e("DEBUG", "extractGpsPoints() 진입")
         val gpsPoints = mutableListOf<GpsPoint>()
-
         try {
-            // getRoute 메서드 호출하여 경로 데이터 가져오기
-            val route = session::class.java.getMethod("getRoute").invoke(session) as? List<*>
-            route?.forEach { location ->
-                if (location != null) {
-                    try {
-                        val locationHelper = LocationHelper(location)
-                        val gpsPoint = locationHelper.toGpsPoint()
-                        if (gpsPoint != null) {
-                            gpsPoints.add(gpsPoint)
+
+            val getRouteMethod = session::class.java.methods.find { it.name == "getRoute" }
+            if (getRouteMethod != null) {
+                val route = getRouteMethod.invoke(session) as? List<*>
+                route?.forEach { location ->
+                    if (location != null) {
+                        try {
+                            val locationHelper = LocationHelper(location)
+                            val gpsPoint = locationHelper.toGpsPoint()
+                            if (gpsPoint != null) {
+                                gpsPoints.add(gpsPoint)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "GPS 포인트 추출 실패: ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "GPS 포인트 추출 실패: ${e.message}")
                     }
                 }
+            } else {
+                Log.e(TAG, "getRoute 메서드가 session 객체에 없습니다.")
             }
         } catch (e: Exception) {
-            Log.d(TAG, "Route 메서드 없음")
+            Log.e("DEBUG", "extractGpsPoints 오류: ${e.message}")
         }
-
+        Log.e("DEBUG", "최종 추출된 gpsPoints 개수: ${gpsPoints.size}")
         return gpsPoints
     }
 
