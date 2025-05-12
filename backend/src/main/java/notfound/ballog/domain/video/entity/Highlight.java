@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -17,6 +19,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE highlight SET is_deleted = TRUE WHERE highlight_id = ?")
 public class Highlight {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "video_seq_generator")
@@ -42,6 +45,9 @@ public class Highlight {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @Column(columnDefinition = "boolean default false")
+    private boolean isDeleted;
 
     public static Highlight of(Video video, HighlightDto highlightDto) {
         return Highlight.builder()

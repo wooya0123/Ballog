@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface VideoRepository extends JpaRepository<Video, Integer> {
     List<Video> findAllByMatch_MatchId(Integer matchId);
+    Optional<Video> findByMatch_MatchIdAndQuarterNumber(Integer matchId, Integer quarterNumber);
 }

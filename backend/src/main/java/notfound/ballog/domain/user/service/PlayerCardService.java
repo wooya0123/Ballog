@@ -29,7 +29,7 @@ public class PlayerCardService {
 
     public GetPlayerCardResponse getPlayerCard(UUID userId) {
         PlayerCard playerCard = playerCardRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.PLAYERCARD_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.PLAYER_CARD_NOT_FOUND));
 
         PlayerCardStatListDto playerCardStatList = PlayerCardStatListDto.of(playerCard);
         return GetPlayerCardResponse.of(playerCard, playerCardStatList);

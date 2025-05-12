@@ -48,10 +48,26 @@ spring:
           writetimeout: 10000         # 쓰기 타임아웃 10초
     auth-code-expiration-ms: 300000   # 5분간 유효
 
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ${AWS_S3_REGION}
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+      stack:
+        auto: false
+
 jwt:
   secret: ${JWT_SECRET}
   access-expire-ms: 2592000000      # 15분(개발 단계에서는 1달)
 #  refresh-expire-ms: 2592000000     # refresh 토큰 만료 없음
+
+aws:
+  presign:
+    expirationMinutes: 60
 
 server:
   servlet:

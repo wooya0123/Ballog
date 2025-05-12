@@ -31,7 +31,7 @@ public enum BaseResponseStatus {
 
     // 유저 관련 로직 에러 (2000번대)
     USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다."),
-    PLAYERCARD_NOT_FOUND(false, 2001, "해당하는 사용자의 선수카드가 존재하지 않습니다."),
+    PLAYER_CARD_NOT_FOUND(false, 2001, "해당하는 사용자의 선수카드가 존재하지 않습니다."),
     USER_INACTIVE(false, 2002, "탈퇴한 사용자입니다."),
 
     // 매치 관련 로직 에러(3000번대)
@@ -39,7 +39,10 @@ public enum BaseResponseStatus {
 
     // 영상 관련 로직 에러(4000번대)
     VIDEO_NOT_FOUND(false, 4000, "해당 경기에 업로드 된 영상이 없습니다."),
-    HIGHLIGHT_NOT_FOUND(false, 4001, "해당 영상에 하이라이트 영상이 없습니다.");
+    HIGHLIGHT_NOT_FOUND(false, 4001, "해당 영상에 하이라이트 영상이 없습니다."),
+    URL_GENERATION_FAIL(false, 4002, "영상 업로드 url 생성에 실패했습니다."),
+    VIDEO_ALREADY_EXIST(false, 4003, "이미 업로드된 영상이 있습니다.");
+
 
     // 팀 관련 로직 에러 (3000)
 
