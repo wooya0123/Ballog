@@ -18,7 +18,7 @@ public class AddVideoRequest {
     private Integer matchId;
 
     @NotNull(message = "몇 쿼터인지 등록해주세요.")
-    private Integer quaterNumber;
+    private Integer quarterNumber;
 
     @NotNull(message = "영상 길이를 입력해주세요.")
     @Pattern(
