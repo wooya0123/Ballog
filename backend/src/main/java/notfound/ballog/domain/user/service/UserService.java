@@ -44,13 +44,14 @@ public class UserService {
         return GetUserResponse.of(user, email);
     }
 
+    @Transactional
     public void updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
         user.updateUser(request);
-        userRepository.save(user);
     }
 
+    @Transactional
     public User reactivateUser(User user) {
         return userRepository.save(user);
     }
