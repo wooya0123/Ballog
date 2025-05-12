@@ -29,7 +29,7 @@ fun MatchReportCard(
                 shape = RoundedCornerShape(8.dp)
             )
             .height(51.dp)
-            .width(312.dp)
+            .fillMaxWidth()
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
