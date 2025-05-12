@@ -51,16 +51,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void updateProfileImage(UUID userId, UpdateProfileImageRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
-        user.updateProfileImage(request);
-        userRepository.save(user);
-    }
-
     public User reactivateUser(User user) {
-        User savedUser = userRepository.save(user);
-        return savedUser;
+        return userRepository.save(user);
     }
 }
 

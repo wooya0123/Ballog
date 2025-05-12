@@ -20,4 +20,6 @@ public class UpdateUserRequest {
 
     @NotNull
     private LocalDate birthDate;
+
+    private String profileImageUrl;
 }

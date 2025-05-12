@@ -51,18 +51,6 @@ public class UserController {
     }
 
     @Operation(
-            summary = "유저 프로필 이미지 수정",
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @PostMapping("/profile-image")
-    public BaseResponse<Void> updateProfileImage(@AuthenticationPrincipal UUID userId,
-                                                 @Valid @RequestBody UpdateProfileImageRequest request
-    ) {
-        userService.updateProfileImage(userId, request);
-        return BaseResponse.ok();
-    }
-
-    @Operation(
             summary = "내 선수카드 조회",
             security = @SecurityRequirement(name = "bearerAuth")
     )
