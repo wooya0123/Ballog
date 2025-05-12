@@ -48,19 +48,62 @@ class MainActivity : ComponentActivity() {
         println("MainActivity - After handleIntent in onCreate, pendingDeepLinkData: $pendingDeepLinkData")
 
         setContent {
-            // val navController = rememberNavController()
-            // val tokenManager = (application as BallogApplication).tokenManager
-            // val teamViewModel: TeamViewModel = viewModel()
-            // val authViewModel: AuthViewModel = viewModel()
-            // val authState by authViewModel.authState.collectAsState()
-            // val coroutineScope = rememberCoroutineScope()
-            // val deepLinkTrigger by deepLinkEvent.collectAsState()
+            val navController = rememberNavController()
+            val tokenManager = (application as BallogApplication).tokenManager
+            val teamViewModel: TeamViewModel = viewModel()
+            val authViewModel: AuthViewModel = viewModel()
+            val authState by authViewModel.authState.collectAsState()
+            val coroutineScope = rememberCoroutineScope()
+            val deepLinkTrigger by deepLinkEvent.collectAsState()
 
             BallogTheme {
-                // AppNavHost(navController)
-                // ... 기존 네비게이션 및 상태 관리 코드 주석처리 ...
-                // MatchVideoTab 임시로 렌더링
-                com.ballog.mobile.ui.video.MatchVideoTab()
+                AppNavHost(navController)
+
+                // 토큰 존재 여부에 따라 화면 전환
+                LaunchedEffect(Unit) {
+                    try {
+                        val hasTokens = tokenManager.hasTokens().first()
+                        println("MainActivity - Token check result: $hasTokens")
+
+                        if (hasTokens) {
+                            handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                        } else {
+                            // 딥 링크가 있는 경우 로그인 화면으로 바로 이동
+                            if (pendingDeepLinkData != null) {
+                                println("MainActivity - Deep link detected but not logged in, navigating to login")
+                                navController.navigate(Routes.LOGIN) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Routes.ONBOARDING) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        println("MainActivity - Error checking tokens: ${e.message}")
+                        navController.navigate(Routes.ONBOARDING) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                }
+
+                // 로그인 상태가 변경될 때마다 실행
+                LaunchedEffect(authState) {
+                    if (authState is AuthResult.Success) {
+                        println("MainActivity - Login successful, handling navigation")
+                        handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                    }
+                }
+
+                // 딥 링크 이벤트가 발생했을 때 실행
+                LaunchedEffect(deepLinkTrigger) {
+                    if (deepLinkTrigger) {
+                        println("MainActivity - Deep link event triggered")
+                        handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                        _deepLinkEvent.value = false // 이벤트 처리 후 초기화
+                    }
+                }
             }
         }
     }
