@@ -103,7 +103,7 @@ fun MatchDetailScreen(
             match != null -> {
                 when (selectedTab) {
                     0 -> MatchReportTab(match = match)
-                    1 -> MatchVideoTab()
+                    1 -> MatchVideoTab(matchId = matchId)
                 }
             }
             else -> {

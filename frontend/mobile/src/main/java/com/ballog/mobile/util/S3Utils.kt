@@ -241,4 +241,27 @@ object S3Utils {
             throw e
         }
     }
+
+    suspend fun putFileToPresignedUrl(url: String, file: File): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val client = okhttp3.OkHttpClient()
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .put(okhttp3.RequestBody.create(null, file))
+                .build()
+            Log.d(TAG, "📡 Presigned URL로 PUT 업로드 요청 시작: $url")
+            val response = client.newCall(request).execute()
+            Log.d(TAG, "📬 응답 코드: ${response.code}")
+            val success = response.isSuccessful
+            if (!success) {
+                Log.e(TAG, "S3 Presigned URL 업로드 실패: ${response.code}")
+            }
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Presigned URL 업로드 중 오류 발생: ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+
 }
