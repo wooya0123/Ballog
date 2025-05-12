@@ -21,7 +21,6 @@ import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
-import com.ballog.mobile.ui.profile.MyPageScreen
 import androidx.compose.material3.Scaffold
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
@@ -37,6 +36,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import com.ballog.mobile.ui.match.MatchDataScreen
+import com.ballog.mobile.ui.profile.LikedVideosScreen
+import com.ballog.mobile.ui.profile.MyPageScreen
+import com.ballog.mobile.ui.profile.ProfileEditScreen
 
 private const val TAG = "MainScreen"
 
@@ -92,7 +94,7 @@ fun MainScreen(
                 NavigationTab.HOME -> HomeScreen()
                 NavigationTab.MATCH -> MatchTabScreen(navController = rememberNavController())
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
-                NavigationTab.MYPAGE -> MyPageScreen(navController)
+                NavigationTab.MYPAGE -> ProfileTabScreen(rememberNavController())
                 NavigationTab.DATA -> MatchDataScreen()
             }
         }
@@ -341,6 +343,25 @@ fun MatchTabScreen(navController: NavHostController) {
             val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
             MatchDetailScreen(navController = navController, matchId = matchId)
         }
+    }
+}
+
+@Composable
+private fun ProfileTabScreen(navController: NavHostController) {
+    androidx.navigation.compose.NavHost(
+        navController = navController,
+        startDestination = "mypage"
+    ) {
+        composable("mypage") {
+            MyPageScreen(navController)
+        }
+        composable("profile/edit") {
+            ProfileEditScreen(navController)
+        }
+        composable("mypage/liked-videos") {
+            LikedVideosScreen()
+        }
+        // 필요시 추가 스크린...
     }
 }
 
