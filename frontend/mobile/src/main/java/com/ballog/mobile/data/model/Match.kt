@@ -9,7 +9,7 @@ data class Match(
     val date: String,       // "2025-04-30"
     val startTime: String,  // "20:00"
     val endTime: String,    // "22:00"
-    val location: String
+    val matchName: String
 )
 
 // UI 상태 표현을 위한 sealed class

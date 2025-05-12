@@ -6,6 +6,8 @@ import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
 import com.ballog.mobile.data.dto.MatchItemDto
 import com.ballog.mobile.data.dto.MatchRegisterRequest
+import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
+import com.ballog.mobile.data.dto.TeamMember
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
 import com.ballog.mobile.ui.components.DateMarkerState
@@ -51,24 +53,62 @@ class MatchViewModel : ViewModel() {
         }
     }
 
-    // 경기장 리스트 상태
-    private val _stadiumList = MutableStateFlow<List<String>>(emptyList())
-    val stadiumList: StateFlow<List<String>> = _stadiumList
+    /**
+     * 팀 매치 리스트 불러오기
+     */
+    fun fetchTeamMatches(teamId: Int, month: String) {
+        viewModelScope.launch {
+            _matchState.value = MatchState.Loading
+            try {
+                val token = tokenManager.getAccessToken().firstOrNull() ?: return@launch
+                val response = matchApi.getTeamMatches("Bearer $token", teamId, month)
+                val body = response.body()
+
+                if (response.isSuccessful && body?.isSuccess == true) {
+                    val matches = body.result?.matchList?.map { it.toDomain() } ?: emptyList()
+                    _matchState.value = MatchState.Success(matches)
+                } else {
+                    _matchState.value = MatchState.Error(body?.message ?: "팀 매치를 불러오지 못했습니다")
+                }
+            } catch (e: Exception) {
+                _matchState.value = MatchState.Error("네트워크 오류: ${e.localizedMessage}")
+            }
+        }
+    }
 
     /**
-     * 서버로부터 경기장 리스트를 조회하는 함수
+     * 팀 맴버 불러오기
      */
-    fun fetchStadiumList() {
+    // 상태 선언
+    private val _teamPlayers = MutableStateFlow<List<TeamMember>>(emptyList())
+    val teamPlayers: StateFlow<List<TeamMember>> = _teamPlayers
+
+    fun fetchTeamPlayers(teamId: Int) {
         viewModelScope.launch {
             val token = tokenManager.getAccessToken().firstOrNull()
-            if (token == null) return@launch
+            if (token == null) {
+                _teamPlayers.value = emptyList()
+                return@launch
+            }
 
-            val response = RetrofitInstance.matchApi.getStadiumList("Bearer $token")
-            if (response.isSuccessful && response.body()?.isSuccess == true) {
-                val list = response.body()?.result?.stadiumList ?: emptyList()
-                _stadiumList.value = list
-            } else {
-                // TODO: 에러 처리 필요
+            try {
+                val response = RetrofitInstance.teamApi.getTeamMemberList("Bearer $token", teamId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    _teamPlayers.value = response.body()?.result?.teamMemberList ?: emptyList()
+
+                    val members = response.body()?.result?.teamMemberList ?: emptyList()
+                    _teamPlayers.value = members
+
+                    // 로그 출력
+                    android.util.Log.d(
+                        "MatchViewModel",
+                        "✅ 팀 멤버 로딩 성공: 총 ${members.size}명 → ${members.joinToString { it.nickname }}"
+                    )
+                } else {
+                    _teamPlayers.value = emptyList()
+                }
+            } catch (e: Exception) {
+                _teamPlayers.value = emptyList()
             }
         }
     }
@@ -80,7 +120,7 @@ class MatchViewModel : ViewModel() {
         date: String,
         startTime: String,
         endTime: String,
-        stadiumId: String,
+        matchName: String,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -95,17 +135,65 @@ class MatchViewModel : ViewModel() {
                 matchDate = date,
                 startTime = startTime,
                 endTime = endTime,
-                stadiumId = stadiumId
+                matchName = matchName
             )
 
             val response = matchApi.registerMyMatch("Bearer $token", request)
+            android.util.Log.d("MatchViewModel", "📤 요청 내용: $request")
+
+
             if (response.isSuccessful && response.body()?.isSuccess == true) {
                 onSuccess()
             } else {
-                onError(response.body()?.message ?: "매치 등록 실패")
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("MatchViewModel", "❌ 매치 등록 실패: code=${response.code()}, body=$errorBody")
+                onError(response.body()?.message ?: "매치 등록 실패 (${response.code()})")
             }
         }
     }
+
+    /**
+     * 서버에 팀 신규 매치 등록 함수
+     */
+    fun registerTeamMatch(
+        teamId: Int,
+        date: String,
+        startTime: String,
+        endTime: String,
+        matchName: String,
+        participantIds: List<Int>,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            val token = tokenManager.getAccessToken().firstOrNull()
+            if (token == null) {
+                onError("로그인이 필요합니다")
+                return@launch
+            }
+
+            val request = TeamMatchRegisterRequest(
+                teamId = teamId,
+                matchDate = date,
+                startTime = startTime,
+                endTime = endTime,
+                matchName = matchName,
+                participantList = participantIds
+            )
+
+            try {
+                val response = RetrofitInstance.matchApi.registerTeamMatch("Bearer $token", request)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    onSuccess()
+                } else {
+                    onError(response.body()?.message ?: "등록 실패")
+                }
+            } catch (e: Exception) {
+                onError("네트워크 오류: ${e.localizedMessage}")
+            }
+        }
+    }
+
 
 }
 
@@ -118,7 +206,7 @@ fun MatchItemDto.toDomain(): Match {
         date = matchDate,
         startTime = startTime,
         endTime = endTime,
-        location = location
+        matchName = matchName,
     )
 }
 
