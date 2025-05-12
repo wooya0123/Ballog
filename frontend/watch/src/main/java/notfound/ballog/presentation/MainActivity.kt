@@ -1,8 +1,3 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package notfound.ballog.presentation
 
 import android.os.Bundle
@@ -25,6 +20,13 @@ import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import notfound.ballog.R
 import notfound.ballog.presentation.theme.WatchTheme
+import androidx.navigation.NavHostController
+import androidx.wear.compose.navigation.SwipeDismissableNavHost
+import androidx.wear.compose.navigation.composable
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import notfound.ballog.presentation.screens.HomeScreen
+import notfound.ballog.presentation.screens.InstructionScreen
+import notfound.ballog.presentation.screens.MeasurementScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +37,47 @@ class MainActivity : ComponentActivity() {
         setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
-            WearApp("Android")
+            WearApp()
+        }
+    }
+}
+
+@Composable
+fun WearApp() {
+    WatchTheme {
+        val navController = rememberSwipeDismissableNavController()
+        NavigationGraph(navController = navController)
+    }
+}
+
+@Composable
+fun NavigationGraph(navController: NavHostController) {
+    SwipeDismissableNavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable("home") {
+            HomeScreen(
+                onMeasureClick = {
+                    navController.navigate("instruction")
+                }
+            )
+        }
+        composable("instruction") {
+            InstructionScreen(
+                onContinueClick = {
+                    navController.navigate("measurement")
+                }
+            )
+        }
+        composable("measurement") {
+            MeasurementScreen(
+                onComplete = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
