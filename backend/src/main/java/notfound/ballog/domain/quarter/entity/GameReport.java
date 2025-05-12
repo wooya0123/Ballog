@@ -35,14 +35,17 @@ public class GameReport {
 
     @Column(columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> jsonData;
+    private Map<String, Object> reportData;
+
+    private String matchSide;
 
     private LocalDateTime createdAt;
 
-    public GameReport(UUID userId, Integer quarterId, Map<String, Object> jsonData) {
+    public GameReport(UUID userId, Integer quarterId, Map<String, Object> jsonData, String matchSide) {
         this.userId = userId;
         this.quarterId = quarterId;
-        this.jsonData = jsonData;
+        this.reportData = jsonData;
+        this.matchSide = matchSide;
         this.createdAt = LocalDateTime.now();
     }
 

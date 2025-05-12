@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.match.dto.ParticipantDto;
+import notfound.ballog.domain.quarter.dto.GameReportDto;
 
 import java.util.List;
 
@@ -14,6 +15,6 @@ public class MatchDetailResponse {
 
     private List<ParticipantDto> participantList;
 
-    //private List<Hitmap> QuaterList;
+    private List<GameReportDto> quaterList;
 
 }

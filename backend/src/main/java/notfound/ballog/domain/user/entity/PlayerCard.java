@@ -5,6 +5,7 @@ import lombok.*;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -22,12 +23,6 @@ public class PlayerCard {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Column(length = 50)
-    private String playStyle;
-
-    @Column(length = 50)
-    private String rank;
 
     @Column(columnDefinition = "SMALLINT")
     private int speed;
@@ -47,8 +42,6 @@ public class PlayerCard {
     public static PlayerCard addBaseCard(User savedUser) {
         return PlayerCard.builder()
                 .user(savedUser)
-                .playStyle(null)
-                .rank(null)
                 .speed(0)
                 .stamina(0)
                 .attack(0)

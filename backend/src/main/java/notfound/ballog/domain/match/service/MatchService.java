@@ -3,6 +3,7 @@ package notfound.ballog.domain.match.service;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.match.dto.MatchDto;
+import notfound.ballog.domain.match.dto.ParticipantDto;
 import notfound.ballog.domain.match.entity.Match;
 import notfound.ballog.domain.match.entity.Participant;
 import notfound.ballog.domain.match.repository.MatchRepository;
@@ -12,7 +13,10 @@ import notfound.ballog.domain.match.request.TeamMatchAddRequest;
 import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
 import notfound.ballog.domain.match.request.UpdateTeamMatchRequest;
 import notfound.ballog.domain.match.response.MatchDetailResponse;
+import notfound.ballog.domain.quarter.dto.GameReportDto;
+import notfound.ballog.domain.quarter.repository.QuarterRepository;
 import notfound.ballog.domain.team.repository.TeamMemberRepository;
+import notfound.ballog.domain.team.repository.TeamRepository;
 import notfound.ballog.exception.InternalServerException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +33,8 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final ParticipantRepository participantRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final TeamRepository teamRepository;
+    private final QuarterRepository quarterRepository;
 
     @Transactional
     public void addPesonalMatch(UUID userId, PersonalMatchAddRequest req){
@@ -64,8 +70,12 @@ public class MatchService {
         return matchRepository.findMatchesByTeamIdAndMonth(teamId, month);
     }
 
-    public MatchDetailResponse getMatchDetail(Integer matchId){
-        return null;
+    public MatchDetailResponse getMatchDetail(UUID userId, Integer matchId){
+        List<ParticipantDto> participantDtos = teamRepository.findParticipantsByUserIdAndMatchId(userId, matchId);
+
+        List<GameReportDto> gameReportDtos = quarterRepository.findGameReportByUserIdAndMatchId(userId, matchId);
+
+        return new MatchDetailResponse(participantDtos, gameReportDtos);
     }
 
     @Transactional
