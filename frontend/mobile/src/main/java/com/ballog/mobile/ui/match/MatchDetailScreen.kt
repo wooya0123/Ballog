@@ -30,7 +30,7 @@ import com.ballog.mobile.ui.theme.pretendard
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.data.model.MatchState
-import com.ballog.mobile.ui.video.VideoTab
+import com.ballog.mobile.ui.video.MatchVideoTab
 
 private const val TAG = "MatchDetailScreen"
 
@@ -103,7 +103,7 @@ fun MatchDetailScreen(
             match != null -> {
                 when (selectedTab) {
                     0 -> MatchReportTab(match = match)
-                    1 -> VideoTab()
+                    1 -> MatchVideoTab()
                 }
             }
             else -> {
