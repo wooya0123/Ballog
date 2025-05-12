@@ -38,7 +38,8 @@ public class AuthController {
     private final EmailService emailService;
 
     @Operation(
-            summary = "회원가입"
+            summary = "회원가입",
+            description = "인증 필요 없음"
     )
     @PostMapping("/signup")
     public BaseResponse<Void> addUser(@Valid @RequestBody SignUpRequest request){
@@ -47,7 +48,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "로그인"
+            summary = "로그인",
+            description = "인증 필요 없음"
     )
     @PostMapping("/login")
     public BaseResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request){
@@ -56,8 +58,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "로그아웃",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "로그아웃"
     )
     @PostMapping("/logout")
     public BaseResponse<Void> logout(
@@ -67,8 +68,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "토큰 재발급",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "토큰 재발급"
     )
     @PostMapping("/refresh-token")
     public BaseResponse<TokenRefreshResponse> refreshToken(
@@ -81,7 +81,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "이메일 중복 확인"
+            summary = "이메일 중복 확인",
+            description = "인증 필요 없음"
     )
     @GetMapping("/check-email")
     public BaseResponse<CheckEmailResponse> checkEmail(
@@ -95,8 +96,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "회원탈퇴",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "회원탈퇴"
     )
     @PostMapping("/signout")
     public BaseResponse<Void> signOut(@AuthenticationPrincipal UUID userId) {
@@ -105,7 +105,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "이메일 인증 코드 요청"
+            summary = "이메일 인증 코드 요청",
+            description = "인증 필요 없음"
     )
     @PostMapping("/send-email")
     public BaseResponse<Void> sendEmailCode(@Valid @RequestBody SendEmailRequest request) {
@@ -114,7 +115,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "이메일 인증 코드 확인"
+            summary = "이메일 인증 코드 확인",
+            description = "인증 필요 없음"
     )
     @PostMapping("/verify-email")
     public BaseResponse<Void> verifyEmailCode(@Valid @RequestBody VerifyEmailRequest request) {

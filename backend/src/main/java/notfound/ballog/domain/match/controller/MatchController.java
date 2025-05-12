@@ -27,32 +27,28 @@ public class MatchController {
     private final MatchService matchService;
 
     @PostMapping("/me")
-    @Operation(summary = "개인 경기 추가", description = "개인 경기 기록을 추가합니다.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "개인 경기 추가", description = "개인 경기 기록을 추가합니다.")
     public BaseResponse<Void> addPesonalMatch(@AuthenticationPrincipal UUID userId, @RequestBody PersonalMatchAddRequest pesonalMatchAddRequest) {
         matchService.addPesonalMatch(userId ,pesonalMatchAddRequest);
         return BaseResponse.ok();
     }
 
     @PostMapping("/teams")
-    @Operation(summary = "팀 경기 추가", description = "팀 경기 기록을 추가합니다.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "팀 경기 추가", description = "팀 경기 기록을 추가합니다.")
     public BaseResponse<Void> addTeamMatch(@RequestBody TeamMatchAddRequest teamMatchAddRequest) {
         matchService.addTeamMatch(teamMatchAddRequest);
         return BaseResponse.ok();
     }
 
     @GetMapping("/me")
-    @Operation(summary = "개인 경기 목록 조회", description = "월별 개인 경기 목록을 조회합니다.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "개인 경기 목록 조회", description = "월별 개인 경기 목록을 조회합니다.")
     public BaseResponse<PersonalMatchListResponse> getPesonalMatches(@AuthenticationPrincipal UUID userId, @RequestParam("month") String month) {
         PersonalMatchListResponse response = new PersonalMatchListResponse(matchService.getPesonalMatches(userId,month));
         return BaseResponse.ok(response);
     }
 
     @GetMapping("/teams/{teamId}")
-    @Operation(summary = "팀 경기 목록 조회", description = "월별 팀 경기 목록을 조회합니다.",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "팀 경기 목록 조회", description = "월별 팀 경기 목록을 조회합니다.")
     public BaseResponse<TeamMatchListResponse> getTeamMatches(@PathVariable Integer teamId, @RequestParam("month") String month) {
         TeamMatchListResponse response = new TeamMatchListResponse(matchService.getTeamMatches(teamId,month));
         return BaseResponse.ok(response);
@@ -65,16 +61,14 @@ public class MatchController {
     }
 
     @PatchMapping("/me")
-    @Operation(summary = "경기 일정 수정",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "경기 일정 수정")
     public BaseResponse<Void> updatePersonalMatch(@RequestBody UpdatePersonalMatchRequest updatePersonalMatchRequest){
         matchService.updatePersonalMatch(updatePersonalMatchRequest);
         return BaseResponse.ok();
     }
 
     @PatchMapping("/teams")
-    @Operation(summary = "경기 일정 수정",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "경기 일정 수정")
     public BaseResponse<Void> updatePersonalMatch(@RequestBody UpdateTeamMatchRequest updateTeamMatchRequest){
         matchService.updateTeamMatch(updateTeamMatchRequest);
         return BaseResponse.ok();

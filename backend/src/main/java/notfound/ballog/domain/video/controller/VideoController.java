@@ -28,9 +28,7 @@ public class VideoController {
     private final HighlightService highlightService;
 
     @Operation(
-            summary = "영상 업로드",
-            description = "구현 아직 안 됨",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "영상 업로드"
     )
     @PostMapping()
     public BaseResponse<AddVideoResponse> uploadVideo(@Valid @RequestBody AddVideoRequest request) {
@@ -39,8 +37,7 @@ public class VideoController {
     }
 
     @Operation(
-            summary = "매치 영상 조회",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "매치 영상 조회"
     )
     @GetMapping("/{matchId}")
     public BaseResponse<GetVideoListResponse> getVideo(
@@ -53,8 +50,7 @@ public class VideoController {
     }
 
     @Operation(
-            summary = "매치 영상 삭제",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "매치 영상 삭제"
     )
     @DeleteMapping()
     public BaseResponse<Void> deleteVideo(@Valid @RequestBody DeleteVideoRequest request) {
@@ -63,8 +59,7 @@ public class VideoController {
     }
 
     @Operation(
-            summary = "하이라이트 구간 수정",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "하이라이트 구간 수정"
     )
     @PatchMapping("/highlight")
     public BaseResponse<Void> updateHighlight(@Valid @RequestBody UpdateHighlightRequest request) {
@@ -73,8 +68,7 @@ public class VideoController {
     }
 
     @Operation(
-            summary = "하이라이트 구간 삭제",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "하이라이트 구간 삭제"
     )
     @DeleteMapping("/highlight")
     public BaseResponse<Void> deleteHighlight(@Valid @RequestBody DeleteHighlightRequest request) {
@@ -83,8 +77,7 @@ public class VideoController {
     }
 
     @Operation(
-            summary = "하이라이트 구간 추가",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "하이라이트 구간 추가"
     )
     @PostMapping("/highlight")
     public BaseResponse<AddHighlightResponse> addHighlight(@Valid @RequestBody AddHighlightRequest request) {

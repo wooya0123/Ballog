@@ -24,8 +24,7 @@ public class QuarterController {
     private final QuarterService quarterService;
 
     @PostMapping
-    @Operation(summary = "쿼터 등록",
-            security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "쿼터 등록")
     public BaseResponse<Void> addQuarterAndGameReport(@AuthenticationPrincipal UUID userId, @RequestBody AddQuarterAndGameReportRequest addQuarterAndGameReportRequest) {
         quarterService.addQuarterAndGameReport(userId, addQuarterAndGameReportRequest);
         return BaseResponse.ok();

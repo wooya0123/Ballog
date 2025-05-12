@@ -30,8 +30,7 @@ public class UserController {
     private final PlayerCardService playerCardService;
 
     @Operation(
-        summary = "유저 정보 조회",
-        security = @SecurityRequirement(name = "bearerAuth")
+        summary = "유저 정보 조회"
     )
     @GetMapping()
     public BaseResponse<GetUserResponse> getUser(@AuthenticationPrincipal UUID userId) {
@@ -39,8 +38,7 @@ public class UserController {
         return BaseResponse.ok(response);
     }
     @Operation(
-            summary = "유저 정보 수정",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "유저 정보 수정"
     )
     @PatchMapping()
     public BaseResponse<Void> updateUser(@AuthenticationPrincipal UUID userId,
@@ -51,8 +49,7 @@ public class UserController {
     }
 
     @Operation(
-            summary = "내 선수카드 조회",
-            security = @SecurityRequirement(name = "bearerAuth")
+            summary = "내 선수카드 조회"
     )
     @GetMapping("/player-card")
     public BaseResponse<GetPlayerCardResponse> getMyPlayerCard(@AuthenticationPrincipal UUID userId) {
