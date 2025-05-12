@@ -1,5 +1,8 @@
 package com.ballog.mobile.ui.video
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -9,11 +12,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.ballog.mobile.ui.theme.BallogTheme
 import kotlinx.coroutines.launch
 
-// ✅ 목업 하이라이트 데이터
-val mockHighlights = listOf(
-    HighlightUiState("하이라이트 1", "01", "20", "01", "35"),
-    HighlightUiState("하이라이트 2", "03", "10", "03", "18"),
-    HighlightUiState("하이라이트 3", "02", "50", "03", "05")
+data class QuarterVideoData(
+    val videoUri: Uri? = null,
+    val highlights: List<HighlightUiState> = emptyList(),
+    val showPlayer: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,24 +28,63 @@ fun VideoTab() {
     var expanded by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
-    var highlightState by remember { mutableStateOf(mockHighlights.first()) }
+    var editingHighlight by remember { mutableStateOf(HighlightUiState("", "", "", "", "")) }
 
-    val uploadedSet = remember { setOf("1 쿼터") }
-    val isUploaded = selectedQuarter in uploadedSet
+    // TODO: API 응답으로 대체 예정
+    val quarterList = listOf("1 쿼터", "2 쿼터", "3 쿼터", "4 쿼터")
+
+    val quarterData = remember {
+        mutableStateMapOf<String, QuarterVideoData>().apply {
+            quarterList.forEach { this[it] = QuarterVideoData() }
+        }
+    }
+
+    // ❗ 현재 쿼터의 최신 데이터 접근
+    fun currentData(): QuarterVideoData {
+        return quarterData[selectedQuarter] ?: QuarterVideoData()
+    }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            // 모든 showPlayer false → 선택 쿼터만 true
+            quarterData.forEach { (key, value) ->
+                quarterData[key] = value.copy(showPlayer = false)
+            }
+            quarterData[selectedQuarter] = currentData().copy(
+                videoUri = it,
+                showPlayer = true
+            )
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         HighlightContentSection(
-            highlights = if (isUploaded) mockHighlights else emptyList(),
+            videoUri = currentData().videoUri,
+            highlights = currentData().highlights,
+            showPlayer = currentData().showPlayer,
+            onTogglePlayer = {
+                quarterData[selectedQuarter] = currentData().copy(showPlayer = !currentData().showPlayer)
+            },
             selectedQuarter = selectedQuarter,
             expanded = expanded,
-            onQuarterChange = { selectedQuarter = it },
+            onQuarterChange = {
+                selectedQuarter = it
+                quarterData.forEach { (key, data) ->
+                    quarterData[key] = data.copy(showPlayer = false)
+                }
+            },
             onExpandedChange = { expanded = it },
             onAddClick = { showAddSheet = true },
-            onEditClick = { highlight ->
-                highlightState = highlight
+            onEditClick = {
+                editingHighlight = it
                 showEditSheet = true
             },
-            onDeleteVideo = { /* TODO: 영상 삭제 처리 */ }
+            onDeleteVideo = {
+                quarterData[selectedQuarter] = QuarterVideoData()
+            },
+            onUploadClick = {
+                launcher.launch("video/*")
+            }
         )
     }
 
@@ -56,8 +97,9 @@ fun VideoTab() {
                     showAddSheet = false
                 }
             },
-            onConfirm = { newState ->
-                // TODO: 구간 추가 처리
+            onConfirm = { newHighlight ->
+                val updatedHighlights = currentData().highlights + newHighlight
+                quarterData[selectedQuarter] = currentData().copy(highlights = updatedHighlights)
                 coroutineScope.launch {
                     sheetState.hide()
                     showAddSheet = false
@@ -69,7 +111,7 @@ fun VideoTab() {
     if (showEditSheet) {
         HighlightEditBottomSheet(
             sheetState = sheetState,
-            initialState = highlightState,
+            initialState = editingHighlight,
             onDismiss = {
                 coroutineScope.launch {
                     sheetState.hide()
@@ -77,15 +119,18 @@ fun VideoTab() {
                 }
             },
             onConfirm = { updated ->
-                highlightState = updated
-                // TODO: 구간 수정 처리
+                val updatedList = currentData().highlights.map {
+                    if (it == editingHighlight) updated else it
+                }
+                quarterData[selectedQuarter] = currentData().copy(highlights = updatedList)
                 coroutineScope.launch {
                     sheetState.hide()
                     showEditSheet = false
                 }
             },
             onDelete = {
-                // TODO: 구간 삭제 처리
+                val updatedList = currentData().highlights.filterNot { it == editingHighlight }
+                quarterData[selectedQuarter] = currentData().copy(highlights = updatedList)
                 coroutineScope.launch {
                     sheetState.hide()
                     showEditSheet = false

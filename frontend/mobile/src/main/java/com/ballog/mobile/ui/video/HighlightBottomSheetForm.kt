@@ -20,11 +20,11 @@ fun HighlightForm(
     onStateChange: (HighlightUiState) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-        FormFieldWithLabel("구간 이름") {
+        FormFieldWithLabel("하이라이트 제목") {
             Input(
                 value = state.title,
                 onValueChange = { onStateChange(state.copy(title = it)) },
-                placeholder = "구간 이름"
+                placeholder = "하이라이트 구간의 제목을 입력해주세요."
             )
         }
 
