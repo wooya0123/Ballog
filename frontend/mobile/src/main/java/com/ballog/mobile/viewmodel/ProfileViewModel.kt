@@ -85,25 +85,34 @@ class ProfileViewModel : ViewModel() {
 
     fun updateUserInfo(nickname: String, birthDate: String, profileImageUrl: String) {
         viewModelScope.launch {
+            println("[updateUserInfo] 호출됨: nickname=$nickname, birthDate=$birthDate, profileImageUrl=$profileImageUrl")
             _isLoading.value = true
             _error.value = null
             try {
                 val token = tokenManager.getAccessToken().first()
+                println("[updateUserInfo] 토큰: $token")
                 if (token == null) {
                     _error.value = "로그인이 필요합니다"
+                    println("[updateUserInfo] 토큰 없음, 종료")
                     return@launch
                 }
                 val request = UserUpdateRequest(nickname, birthDate, profileImageUrl)
+                println("[updateUserInfo] PATCH 요청: $request")
                 val response = userApi.updateUserInfo("Bearer $token", request)
+                println("[updateUserInfo] 서버 응답: isSuccessful=${response.isSuccessful}, code=${response.code()}, message=${response.message()}")
                 if (response.isSuccessful) {
+                    println("[updateUserInfo] 성공, getUserInfo 호출")
                     getUserInfo()
                 } else {
                     _error.value = "정보 수정 실패"
+                    println("[updateUserInfo] 실패: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "알 수 없는 오류"
+                println("[updateUserInfo] 예외 발생: ${e.message}")
             } finally {
                 _isLoading.value = false
+                println("[updateUserInfo] 종료, isLoading=false")
             }
         }
     }
