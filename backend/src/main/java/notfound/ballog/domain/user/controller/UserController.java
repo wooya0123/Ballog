@@ -10,6 +10,7 @@ import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
 import notfound.ballog.domain.user.response.GetPlayerCardResponse;
+import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
 import notfound.ballog.domain.user.service.PlayerCardService;
 import notfound.ballog.domain.user.service.UserService;
@@ -56,4 +57,11 @@ public class UserController {
         GetPlayerCardResponse response = playerCardService.getPlayerCard(userId);
         return BaseResponse.ok(response);
     }
+
+    @GetMapping("/statistics")
+    public BaseResponse<GetStatisticsResponse> getStatistics(@AuthenticationPrincipal UUID userId) {
+        GetStatisticsResponse response = userService.getStatistics(userId);
+        return BaseResponse.ok(response);
+    }
+
 }
