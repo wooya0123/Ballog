@@ -53,5 +53,4 @@ public class Team {
                 .updatedAt(now)
                 .build();
     }
-
 }

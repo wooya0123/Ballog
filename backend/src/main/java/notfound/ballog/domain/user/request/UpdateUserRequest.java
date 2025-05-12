@@ -12,12 +12,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateUserRequest {
-    @NotBlank(message = "성별을 입력해주세요.")
-    private String gender;
-
     @NotBlank(message = "닉네임을 입력해주세요.")
     private String nickname;
 
     @NotNull
     private LocalDate birthDate;
+
+    private String profileImageUrl;
 }

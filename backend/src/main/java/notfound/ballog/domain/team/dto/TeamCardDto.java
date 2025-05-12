@@ -12,6 +12,8 @@ import notfound.ballog.domain.team.entity.TeamCard;
 @AllArgsConstructor
 public class TeamCardDto {
 
+    private Integer memberCount;
+
     private Integer avgSpeed;
 
     private Integer avgStamina;

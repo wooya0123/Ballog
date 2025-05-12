@@ -13,4 +13,5 @@ public interface MatchRepositoryCustom {
     List<MatchDto> findMatchesByTeamIdAndMonth(Integer teamId, String month);
 
     Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate);
+
 }
