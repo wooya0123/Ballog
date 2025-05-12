@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.video.request.*;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
+import notfound.ballog.domain.video.response.AddVideoResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.domain.video.service.HighlightService;
 import notfound.ballog.domain.video.service.VideoService;
@@ -32,9 +33,9 @@ public class VideoController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping()
-    public BaseResponse<Void> uploadVideo(@Valid @RequestBody UploadVideoRequest request) {
-        videoService.uploadVideo(request);
-        return BaseResponse.ok();
+    public BaseResponse<AddVideoResponse> uploadVideo(@Valid @RequestBody AddVideoRequest request) {
+        AddVideoResponse response = videoService.uploadVideo(request);
+        return BaseResponse.ok(response);
     }
 
     @Operation(
