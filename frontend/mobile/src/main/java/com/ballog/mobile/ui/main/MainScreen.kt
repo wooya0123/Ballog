@@ -14,13 +14,13 @@ import androidx.navigation.navArgument
 import com.ballog.mobile.ui.components.NavigationBar
 import com.ballog.mobile.ui.home.HomeScreen
 import com.ballog.mobile.ui.match.MatchScreen
+import com.ballog.mobile.ui.match.MatchDetailScreen
 import com.ballog.mobile.ui.team.TeamListScreen
 import com.ballog.mobile.ui.team.TeamDetailScreen
 import com.ballog.mobile.ui.team.TeamSettingScreen
 import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
-import com.ballog.mobile.ui.profile.MyPageScreen
 import androidx.compose.material3.Scaffold
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
@@ -35,6 +35,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import com.ballog.mobile.ui.match.MatchDataScreen
+import com.ballog.mobile.ui.profile.LikedVideosScreen
+import com.ballog.mobile.ui.profile.MyPageScreen
+import com.ballog.mobile.ui.profile.ProfileEditScreen
 
 private const val TAG = "MainScreen"
 
@@ -90,7 +94,10 @@ fun MainScreen(
                 NavigationTab.HOME -> HomeScreen()
                 NavigationTab.MATCH -> MatchTabScreen(navController = rememberNavController())
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
-                NavigationTab.MYPAGE -> MyPageScreen(navController)
+                NavigationTab.MYPAGE -> ProfileTabScreen(
+                    navController = rememberNavController(),
+                    rootNavController = navController
+                )
                 NavigationTab.DATA -> MatchDataScreen()
             }
         }
@@ -270,6 +277,38 @@ fun TeamTabScreen(
                 }
             )
         }
+        // 팀 매치 등록 화면 추가
+        composable(
+            route = "match/register/{date}?teamId={teamId}",
+            arguments = listOf(
+                navArgument("date") { type = NavType.StringType },
+                navArgument("teamId") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                }
+            )
+        ) { backStackEntry ->
+            val selectedDate = backStackEntry.arguments?.getString("date") ?: LocalDate.now().toString()
+            val teamId = backStackEntry.arguments?.getInt("teamId")?.takeIf { it != -1 }
+            val matchViewModel: MatchViewModel = viewModel()
+
+            MatchRegisterScreen(
+                mode = if (teamId != null) MatchRegisterMode.TEAM else MatchRegisterMode.PERSONAL,
+                navController = teamNavController,
+                viewModel = matchViewModel,
+                selectedDate = selectedDate,
+                teamId = teamId
+            )
+        }
+
+        // 매치 상세
+        composable(
+            route = "match/detail/{matchId}",
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
+            MatchDetailScreen(navController = teamNavController, matchId = matchId)
+        }
     }
 }
 
@@ -298,6 +337,34 @@ fun MatchTabScreen(navController: NavHostController) {
                 selectedDate = selectedDate
             )
         }
+
+        // 매치 상세
+        composable(
+            route = "match/detail/{matchId}",
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
+            MatchDetailScreen(navController = navController, matchId = matchId)
+        }
+    }
+}
+
+@Composable
+private fun ProfileTabScreen(navController: NavHostController, rootNavController: NavHostController) {
+    androidx.navigation.compose.NavHost(
+        navController = navController,
+        startDestination = "mypage"
+    ) {
+        composable("mypage") {
+            MyPageScreen(navController, rootNavController)
+        }
+        composable("profile/edit") {
+            ProfileEditScreen(navController, rootNavController)
+        }
+        composable("mypage/liked-videos") {
+            LikedVideosScreen()
+        }
+        // 필요시 추가 스크린...
     }
 }
 

@@ -26,6 +26,7 @@ import com.ballog.mobile.ui.components.PlayerCard
 import com.ballog.mobile.ui.components.TabMenu
 import com.ballog.mobile.ui.components.TeamInfoCard
 import com.ballog.mobile.ui.components.TeamStats
+import com.ballog.mobile.ui.match.TeamMatchTab
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.TeamViewModel
@@ -134,7 +135,7 @@ fun TeamDetailScreen(
                         }
                         1 -> {
                             Log.d(TAG, "매치 탭 표시")
-                            TeamMatchTab()
+                            TeamMatchTab(navController = navController, teamId = teamId)
                         }
                     }
                 }
@@ -280,11 +281,5 @@ private fun TeamInfoTab(
             }
         }
     }
-}
-
-@Composable
-private fun TeamMatchTab() {
-    Log.d(TAG, "TeamMatchTab 시작")
-    // TODO: Implement match tab
 }
 

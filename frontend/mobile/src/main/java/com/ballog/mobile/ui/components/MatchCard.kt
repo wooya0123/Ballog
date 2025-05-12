@@ -1,6 +1,7 @@
 package com.ballog.mobile.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -21,7 +22,8 @@ fun MatchCard(
     timeLabel: String,
     startTime: String,
     endTime: String,
-    place: String
+    matchName: String,
+    onClick: () -> Unit = {}
 ) {
     fun formatTime(time: String): String {
         return time.split(":").let { parts ->
@@ -34,6 +36,7 @@ fun MatchCard(
             .fillMaxWidth()
             .height(92.dp)
             .background(Gray.Gray200, RoundedCornerShape(8.dp))
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -61,7 +64,7 @@ fun MatchCard(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = place,
+            text = matchName,
             color = Gray.Gray800,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
@@ -79,7 +82,7 @@ fun MatchCardPreview() {
             timeLabel = "경기 시작시간",
             startTime = "15:00:00",
             endTime = "16:30:00",
-            place = "잠실 올림픽 공식 풋살 경기장"
+            matchName = "잠실 올림픽 공식 풋살 경기장"
         )
     }
 }

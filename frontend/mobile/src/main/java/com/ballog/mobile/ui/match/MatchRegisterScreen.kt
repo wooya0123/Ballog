@@ -1,5 +1,6 @@
 package com.ballog.mobile.ui.match
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,13 +32,28 @@ fun MatchRegisterScreen(
     mode: MatchRegisterMode,
     navController: NavController,
     selectedDate: String,
+    teamId: Int? = null, // teamId는 TEAM 모드에서만 사용
     viewModel: MatchViewModel = viewModel()
 ) {
-    val isTeam = mode == MatchRegisterMode.TEAM
-    val stadiumList by viewModel.stadiumList.collectAsState()
-    var selectedLocation by remember { mutableStateOf("") }
-    var locationDropdownExpanded by remember { mutableStateOf(false) }
+    Log.d(
+        "MatchRegisterScreen",
+        "🟢 매치 등록화면 진입\nmode=$mode, selectedDate=$selectedDate, teamId=$teamId"
+    )
 
+    val isTeam = mode == MatchRegisterMode.TEAM
+
+    // 팀일 경우 맴버 불러오기
+    val players by viewModel.teamPlayers.collectAsState()
+    var selectedPlayerIds by remember { mutableStateOf(setOf<Int>()) }
+
+
+    LaunchedEffect(teamId) {
+        if (isTeam && teamId != null) {
+            viewModel.fetchTeamPlayers(teamId)
+        }
+    }
+
+    var matchName by remember { mutableStateOf("") }
     val hourFocus = remember { FocusRequester() }
     val minuteFocus = remember { FocusRequester() }
     val endHourFocus = remember { FocusRequester() }
@@ -48,15 +64,6 @@ fun MatchRegisterScreen(
     var minute by remember { mutableStateOf("") }
     var endHour by remember { mutableStateOf("") }
     var endMinute by remember { mutableStateOf("") }
-    val players = listOf("김가희", "이철수", "박영희", "최민수", "홍길동")
-    var selectedPlayers by remember { mutableStateOf(setOf<String>()) }
-
-    LaunchedEffect(Unit) { viewModel.fetchStadiumList() }
-    LaunchedEffect(stadiumList) {
-        if (stadiumList.isNotEmpty() && selectedLocation.isBlank()) {
-            selectedLocation = stadiumList.first()
-        }
-    }
 
     Column(
         modifier = Modifier.fillMaxSize().background(Color.White)
@@ -70,21 +77,22 @@ fun MatchRegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "어디서 매치 예정이신가요?",
+            text = "매치 이름을 정해주세요 !",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = pretendard,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
-        DropDown(
-            items = stadiumList,
-            selectedItem = selectedLocation,
-            onItemSelected = { selectedLocation = it },
-            expanded = locationDropdownExpanded,
-            onExpandedChange = { locationDropdownExpanded = it },
-            modifier = Modifier.padding(horizontal = 24.dp)
+        Input(
+            value = matchName,
+            onValueChange = { matchName = it },
+            placeholder = "매치 이름",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 4.dp)
         )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -197,9 +205,13 @@ fun MatchRegisterScreen(
                                     .padding(horizontal = 4.dp, vertical = 4.dp)
                             ) {
                                 Checkbox(
-                                    checked = selectedPlayers.contains(player),
+                                    checked = selectedPlayerIds.contains(player.teamMemberId),
                                     onCheckedChange = {
-                                        selectedPlayers = if (it) selectedPlayers + player else selectedPlayers - player
+                                        selectedPlayerIds = if (it) {
+                                            selectedPlayerIds + player.teamMemberId
+                                        } else {
+                                            selectedPlayerIds - player.teamMemberId
+                                        }
                                     },
                                     colors = CheckboxDefaults.colors(
                                         checkedColor = Gray.Gray800,
@@ -208,12 +220,13 @@ fun MatchRegisterScreen(
                                     )
                                 )
                                 Text(
-                                    text = player,
+                                    text = player.nickname,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = pretendard
                                 )
                             }
+
                             if (index < players.lastIndex) {
                                 Box(
                                     modifier = Modifier
@@ -235,9 +248,24 @@ fun MatchRegisterScreen(
             onClick = {
                 if (isTeam) {
                     // TODO: 팀 매치 등록 로직
+                    viewModel.registerTeamMatch(
+                        teamId = teamId!!,
+                        date = selectedDate,
+                        startTime = "${hour.padStart(2, '0')}:${minute.padStart(2, '0')}",
+                        endTime = "${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}",
+                        matchName = matchName,
+                        participantIds = selectedPlayerIds.toList(),
+                        onSuccess = {
+                            navController.popBackStack()
+                        },
+                        onError = { error ->
+                            println("❌ 등록 실패: $error")
+                        }
+                    )
                 } else {
                     if (
-                        selectedLocation.isBlank() || hour.isBlank() || minute.isBlank() ||
+                        matchName.isBlank() ||
+                        hour.isBlank() || minute.isBlank() ||
                         endHour.isBlank() || endMinute.isBlank()
                     ) {
                         println("⚠️ 입력값이 부족합니다.")
@@ -247,13 +275,12 @@ fun MatchRegisterScreen(
                     val date = selectedDate
                     val startTime = "${hour.padStart(2, '0')}:${minute.padStart(2, '0')}"
                     val endTime = "${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}"
-                    val stadiumId = "1" // TODO: stadiumName → stadiumId 매핑 필요
 
                     viewModel.registerMyMatch(
                         date = date,
                         startTime = startTime,
                         endTime = endTime,
-                        stadiumId = stadiumId,
+                        matchName = matchName,
                         onSuccess = {
                             println("✅ 매치 등록 성공")
                             navController.popBackStack()

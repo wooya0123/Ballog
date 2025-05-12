@@ -59,4 +59,8 @@ object RetrofitInstance {
     val matchApi: MatchApi by lazy {
         retrofit?.create(MatchApi::class.java) ?: throw IllegalStateException("RetrofitInstance must be initialized before use")
     }
+
+    val userApi: UserApi by lazy {
+        retrofit?.create(UserApi::class.java) ?: throw IllegalStateException("RetrofitInstance must be initialized before use")
+    }
 } 

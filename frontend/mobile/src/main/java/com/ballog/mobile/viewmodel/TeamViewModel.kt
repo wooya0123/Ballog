@@ -49,8 +49,6 @@ class TeamViewModel : ViewModel() {
     private val _logoImageUrl = MutableStateFlow<String?>(null)
     val logoImageUrl: StateFlow<String?> = _logoImageUrl.asStateFlow()
 
-    private var isS3Initialized = false
-
     fun setError(message: String?) {
         _error.value = message
     }
@@ -61,16 +59,6 @@ class TeamViewModel : ViewModel() {
 
     fun setInviteLink(link: String?) {
         _inviteLink.value = link
-    }
-
-    /**
-     * S3 초기화 (처음 한 번만 호출)
-     */
-    fun initS3(context: Context) {
-        if (!isS3Initialized) {
-            S3Utils.init(context)
-            isS3Initialized = true
-        }
     }
 
     /**
@@ -116,11 +104,6 @@ class TeamViewModel : ViewModel() {
                 _error.value = "인터넷 연결을 확인해주세요"
                 println("TeamViewModel: 인터넷 연결이 없습니다")
                 return Result.failure(Exception("인터넷 연결을 확인해주세요"))
-            }
-            
-            // S3 초기화 확인
-            if (!isS3Initialized) {
-                initS3(context)
             }
             
             _isLoading.value = true

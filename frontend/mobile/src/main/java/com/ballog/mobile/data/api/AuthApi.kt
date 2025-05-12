@@ -9,6 +9,7 @@ import com.ballog.mobile.data.dto.SignUpRequest
 import com.ballog.mobile.data.model.ApiResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Header
 import retrofit2.http.POST
 
@@ -26,6 +27,11 @@ interface AuthApi {
     @POST("v1/auth/signup")
     suspend fun signUp(
         @Body request: SignUpRequest
+    ): Response<ApiResponse<Unit>>
+
+    @POST("v1/auth/signout")
+    suspend fun signOut(
+        @Header("Authorization") token: String
     ): Response<ApiResponse<Unit>>
 
     @POST("v1/auth/send-email")
