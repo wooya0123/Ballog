@@ -1,6 +1,7 @@
 package notfound.ballog.domain.quarter.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
@@ -23,7 +24,8 @@ public class QuarterController {
     private final QuarterService quarterService;
 
     @PostMapping
-    @Operation(summary = "쿼터 등록")
+    @Operation(summary = "쿼터 등록",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public BaseResponse<Void> addQuarterAndGameReport(@AuthenticationPrincipal UUID userId, @RequestBody AddQuarterAndGameReportRequest addQuarterAndGameReportRequest) {
         quarterService.addQuarterAndGameReport(userId, addQuarterAndGameReportRequest);
         return BaseResponse.ok();

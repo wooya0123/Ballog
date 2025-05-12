@@ -2,6 +2,7 @@ package notfound.ballog.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,8 @@ public class UserController {
     private final PlayerCardService playerCardService;
 
     @Operation(
-        summary = "유저 정보 조회"
+        summary = "유저 정보 조회",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @GetMapping()
     public BaseResponse<GetUserResponse> getUser(@AuthenticationPrincipal UUID userId) {
@@ -37,7 +39,8 @@ public class UserController {
         return BaseResponse.ok(response);
     }
     @Operation(
-            summary = "유저 정보 수정"
+            summary = "유저 정보 수정",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @PatchMapping()
     public BaseResponse<Void> updateUser(@AuthenticationPrincipal UUID userId,
@@ -48,7 +51,8 @@ public class UserController {
     }
 
     @Operation(
-            summary = "유저 프로필 이미지 수정"
+            summary = "유저 프로필 이미지 수정",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping("/profile-image")
     public BaseResponse<Void> updateProfileImage(@AuthenticationPrincipal UUID userId,
@@ -59,7 +63,8 @@ public class UserController {
     }
 
     @Operation(
-            summary = "내 선수카드 조회"
+            summary = "내 선수카드 조회",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @GetMapping("/player-card")
     public BaseResponse<GetPlayerCardResponse> getMyPlayerCard(@AuthenticationPrincipal UUID userId) {
