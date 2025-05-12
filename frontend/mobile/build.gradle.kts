@@ -62,6 +62,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.tv.material)
     val composeBom = platform("androidx.compose:compose-bom:2024.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom) // ✅ 추가
@@ -72,6 +73,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.activity:activity-ktx:1.8.0")
 
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")

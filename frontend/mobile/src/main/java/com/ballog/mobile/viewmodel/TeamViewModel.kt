@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.io.File
 import java.util.UUID
 
 class TeamViewModel : ViewModel() {
@@ -79,6 +78,10 @@ class TeamViewModel : ViewModel() {
      */
     fun setLogoImageUri(uri: Uri?) {
         _logoImageUri.value = uri
+    }
+
+    fun setLogoImageUrl(url: String?) {
+        _logoImageUrl.value = url
     }
 
     /**
@@ -220,31 +223,20 @@ class TeamViewModel : ViewModel() {
                 return Result.failure(Exception("로그인이 필요합니다"))
             }
 
-            // 요청 객체 생성 및 로깅
+            // 요청 객체 생성
             val request = TeamAddRequest(teamName, logoImageUrl, foundationDate)
-            println("TeamViewModel: 팀 생성 요청 - 팀명: $teamName")
-            println("TeamViewModel: 팀 생성 요청 - 로고URL: $logoImageUrl")
-            println("TeamViewModel: 팀 생성 요청 - 창단일: $foundationDate")
             
             val response = teamApi.addTeam("Bearer $token", request)
-            println("TeamViewModel: 팀 생성 응답 - 코드: ${response.code()}")
             
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                println("TeamViewModel: 팀 생성 성공 - ${response.body()?.message}")
                 getUserTeamList() // 팀 목록 갱신
-                
-                // 팀 생성 후 상태 초기화
-                resetTeamCreationState()
-                
                 Result.success(Unit)
             } else {
                 val errorMessage = response.body()?.message ?: "팀 생성에 실패했습니다"
-                println("TeamViewModel: 팀 생성 실패 - $errorMessage")
                 _error.value = errorMessage
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
-            println("TeamViewModel: 팀 생성 예외 - ${e.message}")
             _error.value = e.message
             Result.failure(e)
         } finally {
@@ -446,6 +438,148 @@ class TeamViewModel : ViewModel() {
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    // 팀 정보 수정
+    suspend fun updateTeamInfo(teamId: Int, teamName: String, logoImageUrl: String, foundationDate: String): Result<Unit> {
+        return try {
+            _isLoading.value = true
+            _error.value = null
+            
+            val token = tokenManager.getAccessToken().first()
+            if (token == null) {
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            // 요청 객체 생성 및 로깅
+            val request = TeamUpdateRequest(teamId, teamName, logoImageUrl, foundationDate)
+            println("TeamViewModel: 팀 정보 수정 요청 - 팀ID: $teamId")
+            println("TeamViewModel: 팀 정보 수정 요청 - 팀명: $teamName")
+            println("TeamViewModel: 팀 정보 수정 요청 - 로고URL: $logoImageUrl")
+            println("TeamViewModel: 팀 정보 수정 요청 - 창단일: $foundationDate")
+            
+            val response = teamApi.updateTeamInfo("Bearer $token", request)
+            println("TeamViewModel: 팀 정보 수정 응답 - 코드: ${response.code()}")
+            
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                println("TeamViewModel: 팀 정보 수정 성공 - ${response.body()?.message}")
+                getTeamDetail(teamId) // 팀 상세 정보 갱신
+                
+                // 팀 정보 수정 후 상태 초기화
+                resetTeamCreationState()
+                
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "팀 정보 수정에 실패했습니다"
+                println("TeamViewModel: 팀 정보 수정 실패 - $errorMessage")
+                _error.value = errorMessage
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            println("TeamViewModel: 팀 정보 수정 예외 - ${e.message}")
+            _error.value = e.message
+            Result.failure(e)
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    // 팀 삭제
+    suspend fun deleteTeam(teamId: Int): Result<Unit> {
+        return try {
+            println("TeamViewModel: 팀 삭제 시작 - teamId: $teamId")
+            _isLoading.value = true
+            _error.value = null
+            
+            val token = tokenManager.getAccessToken().first()
+            if (token == null) {
+                println("TeamViewModel: 토큰이 null입니다")
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+            println("TeamViewModel: 토큰 획득 성공")
+
+            val response = teamApi.deleteTeam("Bearer $token", teamId)
+            println("TeamViewModel: 팀 삭제 응답 - 코드: ${response.code()}")
+            println("TeamViewModel: 팀 삭제 응답 - 메시지: ${response.message()}")
+            println("TeamViewModel: 팀 삭제 응답 - 본문: ${response.body()}")
+            
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                println("TeamViewModel: 팀 삭제 성공")
+                getUserTeamList() // 팀 목록 갱신
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "팀 삭제에 실패했습니다"
+                println("TeamViewModel: 팀 삭제 실패 - $errorMessage")
+                _error.value = errorMessage
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            println("TeamViewModel: 팀 삭제 중 예외 발생 - ${e.message}")
+            e.printStackTrace()
+            _error.value = e.message
+            Result.failure(e)
+        } finally {
+            _isLoading.value = false
+            println("TeamViewModel: 팀 삭제 완료")
+        }
+    }
+
+    // 팀 탈퇴
+    suspend fun leaveTeam(teamId: Int): Result<Unit> {
+        return try {
+            _isLoading.value = true
+            _error.value = null
+            
+            val token = tokenManager.getAccessToken().first()
+            if (token == null) {
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            val response = teamApi.leaveTeam("Bearer $token", teamId)
+            
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                getUserTeamList() // 팀 목록 갱신
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "팀 탈퇴에 실패했습니다"
+                _error.value = errorMessage
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            _error.value = e.message
+            Result.failure(e)
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    // 팀원 강제 퇴장
+    suspend fun deleteTeamMember(teamId: Int, teamMemberId: Int): Result<Unit> {
+        return try {
+            _isLoading.value = true
+            _error.value = null
+            
+            val token = tokenManager.getAccessToken().first()
+            if (token == null) {
+                return Result.failure(Exception("로그인이 필요합니다"))
+            }
+
+            val response = teamApi.deleteTeamMember("Bearer $token", teamId = teamId, teamMemberId = teamMemberId)
+            
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                getTeamMemberList(teamId) // 멤버 목록 갱신
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "팀원 강제 퇴장에 실패했습니다"
+                _error.value = errorMessage
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            _error.value = e.message
+            Result.failure(e)
+        } finally {
+            _isLoading.value = false
         }
     }
 }
