@@ -46,6 +46,11 @@ deploy:
         echo "MAIL_PORT: $MAIL_PORT" >> backend/src/main/resources/env.yml &&
         echo "MAIL_USERNAME: $MAIL_USERNAME" >> backend/src/main/resources/env.yml &&
         echo "MAIL_PASSWORD: $MAIL_PASSWORD" >> backend/src/main/resources/env.yml &&
+
+        echo "AWS_S3_REGION: $AWS_S3_REGION" >> backend/src/main/resources/env.yml &&
+        echo "AWS_S3_BUCKET: $AWS_S3_BUCKET" >> backend/src/main/resources/env.yml &&
+        echo "AWS_ACCESS_KEY: $AWS_ACCESS_KEY" >> backend/src/main/resources/env.yml &&
+        echo "AWS_SECRET_KEY: $AWS_SECRET_KEY" >> backend/src/main/resources/env.yml &&
         
         # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
         echo "DB_URL=$DB_URL" > .env &&

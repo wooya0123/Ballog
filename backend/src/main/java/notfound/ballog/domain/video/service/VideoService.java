@@ -37,7 +37,7 @@ public class VideoService {
     @Transactional
     public AddVideoResponse uploadVideo(AddVideoRequest request) {
         // 업로드한 영상 있는지 확인
-        Optional<Video> existingVideo = videoRepository.findByMatch_MatchIdAndQuarterNumber(request.getMatchId(), request.getQuaterNumber());
+        Optional<Video> existingVideo = videoRepository.findByMatch_MatchIdAndQuarterNumber(request.getMatchId(), request.getQuarterNumber());
         if (existingVideo.isPresent()) {
             throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
         }
@@ -57,7 +57,7 @@ public class VideoService {
                 .plusMinutes(minutes)
                 .plusSeconds(seconds);
 
-        Video video = Video.of(match, request.getQuaterNumber(), presignedUrl, videoDuration);
+        Video video = Video.of(match, request.getQuarterNumber(), presignedUrl, videoDuration);
         Video savedVideo = videoRepository.save(video);
         return AddVideoResponse.of(savedVideo.getVideoUrl());
     }
