@@ -13,3 +13,11 @@ data class UserUpdateRequest(
     val profileImageUrl: String
 )
 
+fun UserInfoResponse.toUser(): com.ballog.mobile.data.model.User =
+    com.ballog.mobile.data.model.User(
+        email = this.email,
+        nickname = this.nickname,
+        birthDate = this.birthDate,
+        profileImageUrl = this.profileImageUrl
+    )
+

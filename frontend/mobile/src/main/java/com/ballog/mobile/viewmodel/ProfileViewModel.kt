@@ -10,6 +10,8 @@ import com.ballog.mobile.data.dto.UserInfoResponse
 import com.ballog.mobile.data.dto.UserUpdateRequest
 import com.ballog.mobile.util.ImageUtils
 import com.ballog.mobile.util.S3Utils
+import com.ballog.mobile.data.model.User
+import com.ballog.mobile.data.dto.toUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,8 +22,8 @@ class ProfileViewModel : ViewModel() {
     private val tokenManager = BallogApplication.getInstance().tokenManager
     private val userApi = RetrofitInstance.userApi
 
-    private val _userInfo = MutableStateFlow<UserInfoResponse?>(null)
-    val userInfo: StateFlow<UserInfoResponse?> = _userInfo.asStateFlow()
+    private val _userInfo = MutableStateFlow<User?>(null)
+    val userInfo: StateFlow<User?> = _userInfo.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -66,7 +68,7 @@ class ProfileViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     val apiResponse = response.body()
                     if (apiResponse?.isSuccess == true && apiResponse.result != null) {
-                        _userInfo.value = apiResponse.result
+                        _userInfo.value = apiResponse.result.toUser()
                     } else {
                         _error.value = apiResponse?.message ?: "유저 정보 조회 실패"
                     }
