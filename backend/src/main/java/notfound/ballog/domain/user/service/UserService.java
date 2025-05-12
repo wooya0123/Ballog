@@ -5,14 +5,20 @@ import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.auth.repository.AuthRepository;
+import notfound.ballog.domain.quarter.entity.GameReport;
+import notfound.ballog.domain.quarter.repository.GameReportRepository;
 import notfound.ballog.domain.user.entity.User;
 import notfound.ballog.domain.user.repository.UserRepository;
 import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
+import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
 import notfound.ballog.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -21,6 +27,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final AuthRepository authRepository;
+    private final GameReportRepository gameReportRepository;
     private final PlayerCardService playerCardService;
 
     // 회원가입
@@ -54,6 +61,48 @@ public class UserService {
     @Transactional
     public User reactivateUser(User user) {
         return userRepository.save(user);
+    }
+
+    public GetStatisticsResponse getStatistics(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
+        // 1. 최대 5개의 쿼터 리포트 조회
+        List<GameReport> gameReportList =
+                gameReportRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+
+        // 2. 응답에 담을 각 필드별 리스트 초기화
+        List<List<List<Integer>>> heatmapList = new ArrayList<>(); // 2D 배열 5개
+        List<Double> distanceList       = new ArrayList<>();     // 거리 5개
+        List<Integer> speedList         = new ArrayList<>();     // 평균 속도 5개
+        List<Integer> sprintList        = new ArrayList<>();     // 스프린트 횟수 5개
+        List<Integer> heartRateList     = new ArrayList<>();     // 평균 심박수 5개
+
+        // 3. gameReport에서 값 꺼내서 담아주기
+        for (GameReport gameReport : gameReportList) {
+            Map<String, Object> reportData = (Map<String, Object>) gameReport.getReportData();
+
+            List<List<Integer>> heatmap = (List<List<Integer>>) reportData.get("heatmap");
+            heatmapList.add(heatmap);
+
+            Number distance = (Number) reportData.get("distance");
+            distanceList.add(distance.doubleValue());
+
+            Number speed = (Number) reportData.get("avgSpeed");
+            speedList.add(speed.intValue());
+
+            Number sprint = (Number) reportData.get("sprint");
+            sprintList.add(sprint.intValue());
+
+            Number heartRate = (Number) reportData.get("avgHeartRate");
+            heartRateList.add(heartRate.intValue());
+        }
+        return GetStatisticsResponse.of(user.getNickname(),
+                                        heatmapList,
+                                        distanceList,
+                                        speedList,
+                                        sprintList,
+                                        heartRateList);
     }
 }
 
