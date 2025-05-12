@@ -28,7 +28,7 @@ fun PlayerCard(
 ) {
     Surface(
         modifier = modifier
-            .width(310.dp)
+            .fillMaxWidth()
             .height(48.dp),
         shape = RoundedCornerShape(8.dp),
         color = Gray.Gray200
@@ -53,18 +53,20 @@ fun PlayerCard(
                 )
                 
                 if (isManager) {
-                    Surface(
-                        shape = RoundedCornerShape(9999.dp),
-                        color = Color(0xFF7EE4EA).copy(alpha = 0.2f)
-                    ) {
-                        Text(
-                            text = "매니저",
-                            fontSize = 12.sp,
-                            fontFamily = pretendard,
-                            fontWeight = FontWeight.Normal,
-                            color = Primary,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                    Box(modifier = Modifier.padding(top = 2.dp)) {
+                        Surface(
+                            shape = RoundedCornerShape(9999.dp),
+                            color = Color(0xFF7EE4EA).copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                text = "매니저",
+                                fontSize = 12.sp,
+                                fontFamily = pretendard,
+                                fontWeight = FontWeight.Normal,
+                                color = Primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
             }
