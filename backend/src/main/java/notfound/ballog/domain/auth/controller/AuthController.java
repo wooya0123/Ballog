@@ -1,6 +1,7 @@
 package notfound.ballog.domain.auth.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -55,7 +56,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "로그아웃"
+            summary = "로그아웃",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping("/logout")
     public BaseResponse<Void> logout(
@@ -65,7 +67,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "토큰 재발급"
+            summary = "토큰 재발급",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping("/refresh-token")
     public BaseResponse<TokenRefreshResponse> refreshToken(
@@ -92,7 +95,8 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "회원탈퇴"
+            summary = "회원탈퇴",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @PostMapping("/signout")
     public BaseResponse<Void> signOut(@AuthenticationPrincipal UUID userId) {

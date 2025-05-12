@@ -44,23 +44,16 @@ public class UserService {
         return GetUserResponse.of(user, email);
     }
 
+    @Transactional
     public void updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
         user.updateUser(request);
-        userRepository.save(user);
     }
 
-    public void updateProfileImage(UUID userId, UpdateProfileImageRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
-        user.updateProfileImage(request);
-        userRepository.save(user);
-    }
-
+    @Transactional
     public User reactivateUser(User user) {
-        User savedUser = userRepository.save(user);
-        return savedUser;
+        return userRepository.save(user);
     }
 }
 

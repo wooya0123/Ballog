@@ -13,10 +13,16 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class GetUserResponse {
+
     private String email;
+
     private String gender;
+
     private String nickname;
+
     private LocalDate birthDate;
+
+    private String profileImageUrl;
 
     public static GetUserResponse of(User user, String email) {
         return GetUserResponse.builder()
@@ -24,6 +30,7 @@ public class GetUserResponse {
                 .gender(user.getGender())
                 .nickname(user.getNickname())
                 .birthDate(user.getBirthDate())
+                .profileImageUrl(user.getProfileImageUrl())
                 .build();
     }
 }
