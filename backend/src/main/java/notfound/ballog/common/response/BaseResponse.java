@@ -4,10 +4,14 @@ import lombok.Getter;
 
 @Getter
 public class BaseResponse<T> {
+
     private final Boolean isSuccess;
+
     private final int code;
+
     private String message;
-    private T result;
+
+    private final T result;
 
     // 성공 응답 생성자
     private BaseResponse(T result) {
@@ -46,4 +50,5 @@ public class BaseResponse<T> {
         response.message = message;
         return response;
     }
+
 }

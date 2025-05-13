@@ -35,7 +35,8 @@ public class Match {
     private String matchName;
 
     @Column(nullable = false)
-    //상태 ('예정', '진행중', '종료', '취소')
+
+    //상태 ('예정', '진행중', '종료')
     private String matchStatus;
 
     @Column(nullable = false)
