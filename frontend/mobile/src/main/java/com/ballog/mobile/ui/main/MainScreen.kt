@@ -303,12 +303,22 @@ fun TeamTabScreen(
 
         // 매치 상세
         composable(
-            route = "match/detail/{matchId}",
-            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+            route = "match/detail/{matchId}/{matchName}",
+            arguments = listOf(
+                navArgument("matchId") { type = NavType.IntType },
+                navArgument("matchName") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
-            MatchDetailScreen(navController = teamNavController, matchId = matchId)
+            val matchName = backStackEntry.arguments?.getString("matchName") ?: "매치 상세"
+
+            MatchDetailScreen(
+                navController = teamNavController,
+                matchId = matchId,
+                initialTitle = matchName
+            )
         }
+
     }
 }
 
@@ -340,11 +350,20 @@ fun MatchTabScreen(navController: NavHostController) {
 
         // 매치 상세
         composable(
-            route = "match/detail/{matchId}",
-            arguments = listOf(navArgument("matchId") { type = NavType.IntType })
+            route = "match/detail/{matchId}/{matchName}",
+            arguments = listOf(
+                navArgument("matchId") { type = NavType.IntType },
+                navArgument("matchName") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val matchId = backStackEntry.arguments?.getInt("matchId") ?: 0
-            MatchDetailScreen(navController = navController, matchId = matchId)
+            val matchName = backStackEntry.arguments?.getString("matchName") ?: "매치 상세"
+
+            MatchDetailScreen(
+                navController = navController,
+                matchId = matchId,
+                initialTitle = matchName
+            )
         }
     }
 }

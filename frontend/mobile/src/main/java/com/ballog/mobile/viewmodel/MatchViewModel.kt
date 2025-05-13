@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
+import com.ballog.mobile.data.dto.MatchDetailResponseDto
 import com.ballog.mobile.data.dto.MatchItemDto
 import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
@@ -248,6 +249,28 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /* 매치 상세 조회 */
+    private val _matchDetail = MutableStateFlow<MatchDetailResponseDto?>(null)
+    val matchDetail: StateFlow<MatchDetailResponseDto?> = _matchDetail
+
+    fun fetchMatchDetail(matchId: Int) {
+        viewModelScope.launch {
+            try {
+                val token = tokenManager.getAccessToken().firstOrNull() ?: return@launch
+                val response = matchApi.getMatchDetail("Bearer $token", matchId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    android.util.Log.d("MatchViewModel", "✅ 매치 상세 조회 성공: $result")
+                    _matchDetail.value = result
+                } else {
+                    android.util.Log.e("MatchViewModel", "❌ 매치 상세 조회 실패: ${response.body()?.message}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MatchViewModel", "❌ 예외 발생: ${e.localizedMessage}")
+            }
+        }
+    }
+    
     // 샘플: 상태 전환 메서드 (나중에 실제 연동 로직으로 대체)
     fun setWatchChecking() {
         android.util.Log.d("MatchViewModel", "상태 전환: WatchChecking")

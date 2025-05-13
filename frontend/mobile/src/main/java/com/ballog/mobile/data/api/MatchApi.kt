@@ -1,5 +1,6 @@
 package com.ballog.mobile.data.api
 
+import com.ballog.mobile.data.dto.MatchDetailResponseDto
 import com.ballog.mobile.data.dto.MatchListResponse
 import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
@@ -41,5 +42,13 @@ interface MatchApi {
         @Header("Authorization") token: String,
         @Body request: TeamMatchRegisterRequest
     ): Response<ApiResponse<Unit>>
+
+    // 매치 상세 조회
+    @GET("v1/matches/{matchId}")
+    suspend fun getMatchDetail(
+        @Header("Authorization") token: String,
+        @Path("matchId") matchId: Int
+    ): Response<ApiResponse<MatchDetailResponseDto>>
+
 
 }

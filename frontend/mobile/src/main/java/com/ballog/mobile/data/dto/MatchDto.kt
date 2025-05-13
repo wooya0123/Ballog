@@ -33,3 +33,34 @@ data class TeamMatchRegisterRequest(
     val participantList: List<Int>
 )
 
+data class MatchDetailResponseDto(
+    val participantList: List<ParticipantDto>,
+    val quarterList: List<QuarterDto>
+)
+
+data class ParticipantDto(
+    val nickName: String,
+    val role: String,
+    val profileImageUrl: String
+)
+
+data class QuarterDto(
+    val quarterNumber: Int,
+    val reportData: ReportDataDto,
+    val matchName: String
+)
+
+data class ReportDataDto(
+    val startTime: String,
+    val endTime: String,
+    val distance: Double,
+    val avgSpeed: Int,
+    val maxSpeed: Int,
+    val calories: Int,
+    val sprint: Int,
+    val avgHeartRate: Int,
+    val maxHeartRate: Int,
+    val heatmap: List<List<Int>>
+)
+
+

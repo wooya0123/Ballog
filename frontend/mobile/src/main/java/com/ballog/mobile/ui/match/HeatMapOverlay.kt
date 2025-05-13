@@ -14,7 +14,7 @@ fun HeatMapOverlay(
     modifier: Modifier = Modifier,
     color: Color = Color(0xFF20E9F5)
 ) {
-    val cols = 15
+    val cols = 16
     val rows = 10
     val alphaMap = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 0.9f)
 
