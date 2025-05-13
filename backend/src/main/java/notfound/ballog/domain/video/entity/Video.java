@@ -47,6 +47,9 @@ public class Video {
     private LocalDateTime createdAt;
 
     @Column(columnDefinition = "boolean default false")
+    private boolean uploadSuccess;
+
+    @Column(columnDefinition = "boolean default false")
     private boolean isDeleted;
 
     public static Video of(Match match, Integer quarterNumber, String videoUrl, Duration duration) {
@@ -58,4 +61,7 @@ public class Video {
                 .build();
     }
 
+    public void updateUploadSuccess() {
+        this.uploadSuccess = true;
+    }
 }

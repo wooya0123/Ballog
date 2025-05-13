@@ -37,6 +37,15 @@ public class VideoController {
     }
 
     @Operation(
+            summary = "영상 업로드 체크"
+    )
+    @PostMapping("/status")
+    public BaseResponse<Void> updateVideo(@Valid @RequestBody UpdateVideoRequest request) {
+        videoService.updateVideo(request);
+        return BaseResponse.ok();
+    }
+
+    @Operation(
             summary = "매치 영상 조회"
     )
     @GetMapping("/{matchId}")
