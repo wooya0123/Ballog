@@ -17,10 +17,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignUpRequest {
-    @Email @NotBlank(message = "이메일을 입력하세요.")
+    @Email(message = "올바른 이메일을 입력하세요.")
+    @NotBlank(message = "이메일을 입력하세요.")
     private String email;
 
-    @Size
     @NotBlank(message = "비밀번호를 입력하세요.")
     private String password;
 

@@ -13,6 +13,7 @@ import notfound.ballog.domain.video.response.AddVideoResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.domain.video.service.HighlightService;
 import notfound.ballog.domain.video.service.VideoService;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,12 +72,14 @@ public class VideoController {
         return BaseResponse.ok();
     }
 
+    @Operation(
+            summary = "하이라이트 자동 추출"
+    )
     @PostMapping("/highlight/auto")
     public BaseResponse<Void> extractHighlight(
-            @RequestPart("json") ExtractHighlightRequest request,
-            @RequestPart("file") MultipartFile file
-    ) throws IOException {
-        highlightService.extractHighlight(request, file);
+            @RequestPart("videoId") Integer videoId,
+            @RequestPart("file") MultipartFile file) throws IOException {
+        highlightService.extractHighlight(videoId, file);
         return BaseResponse.ok();
     }
 

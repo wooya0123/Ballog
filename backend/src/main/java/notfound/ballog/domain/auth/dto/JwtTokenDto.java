@@ -13,6 +13,8 @@ import java.time.LocalDate;
 @Builder
 public class JwtTokenDto {
     private String grantType;       // "Bearer"
+
     private String accessToken;
+
     private String refreshToken;
 }

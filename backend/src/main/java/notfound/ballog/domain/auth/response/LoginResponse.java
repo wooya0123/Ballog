@@ -16,7 +16,9 @@ import java.util.UUID;
 @Builder
 public class LoginResponse {
     private String accessToken;
+
     private String refreshToken;
+
     private UserIdDto user;
 
     public static LoginResponse of(JwtTokenDto token, UserIdDto userIdDto) {

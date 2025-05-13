@@ -14,6 +14,7 @@ import notfound.ballog.domain.video.request.ExtractHighlightRequest;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
 import notfound.ballog.domain.video.response.ExtractHighlightResponse;
+import notfound.ballog.exception.DuplicateDataException;
 import notfound.ballog.exception.NotFoundException;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -59,11 +61,18 @@ public class HighlightService {
     }
 
     @Transactional
-    public void extractHighlight(ExtractHighlightRequest request, MultipartFile file) throws IOException {
-        Integer videoId = request.getVideoId();
+    public void extractHighlight(Integer videoId, MultipartFile file) throws IOException {
+        // Video 조회
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
 
+        // Highlight 조회(Highlight가 하나도 없을 때만 자동 추출)
+        Optional<Highlight> existingHighlight = highlightRepository.findByVideo_VideoId(videoId);
+        if (existingHighlight.isPresent()) {
+            throw new DuplicateDataException(BaseResponseStatus.HIGHLIGHT_ALREADY_EXIST);
+        }
+
+        // 파일을 담은 form-data 생성
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("file",
                 new ByteArrayResource(file.getBytes()) {
@@ -73,6 +82,7 @@ public class HighlightService {
                 })
                 .header("Content-Type", file.getContentType());
 
+        // fastAPI로 post 요청
         ExtractHighlightResponse highlightResponse = webClient.post()
                 .uri("/api/v1/videos/highlight/extract")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -81,8 +91,7 @@ public class HighlightService {
                 .bodyToMono(ExtractHighlightResponse.class)
                 .block();
 
-        System.out.println("fastapi 응답" + highlightResponse);
-
+        // DB에 하이라이트 저장
         List<HighlightDto> highlightList = highlightResponse.getHighlightList();
         for (HighlightDto highlightDto : highlightList) {
             Highlight highlight = Highlight.of(video, highlightDto);

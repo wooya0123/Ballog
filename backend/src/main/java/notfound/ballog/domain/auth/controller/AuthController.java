@@ -47,6 +47,7 @@ public class AuthController {
         return BaseResponse.ok();
     }
 
+
     @Operation(
             summary = "로그인",
             description = "인증 필요 없음"
@@ -57,6 +58,7 @@ public class AuthController {
         return BaseResponse.ok(response);
     }
 
+
     @Operation(
             summary = "로그아웃"
     )
@@ -66,6 +68,7 @@ public class AuthController {
         authService.logOut(userId);
         return BaseResponse.ok();
     }
+
 
     @Operation(
             summary = "토큰 재발급"
@@ -80,20 +83,21 @@ public class AuthController {
         return BaseResponse.ok(response);
     }
 
+
     @Operation(
             summary = "이메일 중복 확인",
             description = "인증 필요 없음"
     )
     @GetMapping("/check-email")
-    public BaseResponse<CheckEmailResponse> checkEmail(
-            @RequestParam("email")
-            @Email(message = "올바른 이메일을 입력하세요.")
-            @NotBlank(message = "이메일을 입력하세요.")
-            String email
+    public BaseResponse<CheckEmailResponse> checkEmail(@RequestParam("email")
+                                                       @Email(message = "올바른 이메일을 입력하세요.")
+                                                       @NotBlank(message = "이메일을 입력하세요.")
+                                                       String email
     ){
         CheckEmailResponse response = authService.checkEmail(email);
         return BaseResponse.ok(response);
     }
+
 
     @Operation(
             summary = "회원탈퇴"
@@ -104,6 +108,7 @@ public class AuthController {
         return BaseResponse.ok();
     }
 
+
     @Operation(
             summary = "이메일 인증 코드 요청",
             description = "인증 필요 없음"
@@ -113,6 +118,7 @@ public class AuthController {
         emailService.sendEmailCode(request);
         return BaseResponse.ok();
     }
+
 
     @Operation(
             summary = "이메일 인증 코드 확인",

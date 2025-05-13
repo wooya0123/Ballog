@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CheckEmailResponse {
-    private Boolean isValid;
+    private boolean isValid;
 
     public static CheckEmailResponse of(Boolean isExist) {
         return CheckEmailResponse.builder()
