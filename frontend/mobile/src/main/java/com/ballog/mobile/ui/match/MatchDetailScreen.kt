@@ -29,7 +29,6 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ballog.mobile.viewmodel.MatchViewModel
-import com.ballog.mobile.data.model.MatchState
 import com.ballog.mobile.ui.video.MatchVideoTab
 
 private const val TAG = "MatchDetailScreen"
@@ -38,24 +37,19 @@ private const val TAG = "MatchDetailScreen"
 fun MatchDetailScreen(
     navController: NavController,
     matchId: Int,
+    initialTitle: String = "매치 상세",
     viewModel: MatchViewModel = viewModel()
 ) {
     Log.d(TAG, "MatchDetailScreen 시작: matchId=$matchId")
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val matchState by viewModel.matchState.collectAsState()
-    val error = when (matchState) {
-        is MatchState.Error -> (matchState as MatchState.Error).message
-        else -> null
-    }
-    val isLoading = matchState is MatchState.Loading
-    val match = (matchState as? MatchState.Success)?.matches?.find { it.id == matchId }
+    val matchDetail by viewModel.matchDetail.collectAsState()
 
-    // 화면이 처음 표시될 때 매치 리스트(혹은 단일 매치) 요청
+    val isLoading = matchDetail == null
+    val error: String? = null // 필요 시 matchDetailState 도입 가능
+
     LaunchedEffect(matchId) {
-        // NOTE: 단일 매치 API가 없으므로, 임시로 이번달 매치 전체를 불러와서 id로 찾음
-        val month = java.time.LocalDate.now().toString().substring(0, 7) // yyyy-MM
-        viewModel.fetchMyMatches(month)
+        viewModel.fetchMatchDetail(matchId)
     }
 
     Column(
@@ -64,16 +58,18 @@ fun MatchDetailScreen(
             .background(Gray.Gray100)
     ) {
         TopNavItem(
-            title = match?.matchName ?: "매치 상세",
+            title = initialTitle,
             type = TopNavType.DETAIL_WITH_BACK,
             onBackClick = { navController.popBackStack() },
         )
+
         TabMenu(
             leftTabText = "레포트",
             rightTabText = "영상",
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it }
         )
+
         when {
             isLoading -> {
                 Box(
@@ -83,6 +79,7 @@ fun MatchDetailScreen(
                     CircularProgressIndicator()
                 }
             }
+
             error != null -> {
                 Box(
                     modifier = Modifier
@@ -91,7 +88,7 @@ fun MatchDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = error ?: "알 수 없는 오류가 발생했습니다",
+                        text = error,
                         fontSize = 16.sp,
                         fontFamily = pretendard,
                         fontWeight = FontWeight.Medium,
@@ -100,30 +97,15 @@ fun MatchDetailScreen(
                     )
                 }
             }
-            match != null -> {
-                when (selectedTab) {
-                    0 -> MatchReportTab(match = match)
-                    1 -> MatchVideoTab()
-                }
-            }
+
             else -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "매치 정보를 불러올 수 없습니다",
-                        fontSize = 16.sp,
-                        fontFamily = pretendard,
-                        fontWeight = FontWeight.Medium,
-                        color = Gray.Gray500,
-                        textAlign = TextAlign.Center
-                    )
+                when (selectedTab) {
+                    0 -> MatchReportTab(matchDetail = matchDetail!!)
+                    1 -> MatchVideoTab()
                 }
             }
         }
     }
 }
+
 

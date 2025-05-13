@@ -110,7 +110,7 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
                                 endTime = match.endTime,
                                 matchName = match.matchName,
                                 onClick = {
-                                    navController.navigate("match/detail/${match.id}")
+                                    navController.navigate("match/detail/${match.id}/${match.matchName}")
                                 }
                             )
                         }
