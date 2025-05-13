@@ -18,10 +18,11 @@ import notfound.ballog.domain.quarter.repository.QuarterRepository;
 import notfound.ballog.domain.team.repository.TeamMemberRepository;
 import notfound.ballog.domain.team.repository.TeamRepository;
 import notfound.ballog.exception.InternalServerException;
-import notfound.ballog.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -65,16 +66,34 @@ public class MatchService {
     }
 
     public List<MatchDto> getPesonalMatches(UUID userId, String month){
-        return matchRepository.findMatchesByUserIdAndMonth(userId, month);
+        LocalDate[] dates = parseMonth(month);
+        return matchRepository.findMatchesByUserIdAndMonth(userId, dates[0], dates[1]);
     }
 
     public List<MatchDto> getTeamMatches(Integer teamId, String month){
-        return matchRepository.findMatchesByTeamIdAndMonth(teamId, month);
+        LocalDate[] dates = parseMonth(month);
+        return matchRepository.findMatchesByTeamIdAndMonth(teamId, dates[0], dates[1]);
+    }
+
+    private LocalDate[] parseMonth(String month){
+        String[] parts = month.split("-");
+        int year = Integer.parseInt(parts[0]);
+        int monthValue = Integer.parseInt(parts[1]);
+
+        LocalDate[] dates = new LocalDate[2];
+
+        LocalDate startOfMonth = LocalDate.of(year, monthValue, 1);
+        LocalDate endOfMonth = startOfMonth.with(TemporalAdjusters.lastDayOfMonth());
+
+        dates[0] = startOfMonth;
+        dates[1] = endOfMonth;
+
+        return dates;
     }
 
     public MatchDetailResponse getMatchDetail(UUID userId, Integer matchId){
         Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.BAD_REQUEST));
+                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.MATCH_NOT_FOUND));
         List<ParticipantDto> participantDtos = new ArrayList<>();
 
         if(match.getTeamId() != null) {
@@ -89,7 +108,7 @@ public class MatchService {
     @Transactional
     public void updatePersonalMatch(UpdatePersonalMatchRequest req){
         Match match = matchRepository.findById(req.getMatchId())
-                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.DATABASE_ERROR));
+                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.MATCH_NOT_FOUND));
 
         match.setMatchDate(req.getMatchDate());
         match.setStartTime(req.getStartTime());
@@ -100,8 +119,7 @@ public class MatchService {
     @Transactional
     public void updateTeamMatch(UpdateTeamMatchRequest req){
         Match match = matchRepository.findById(req.getMatchId())
-                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.DATABASE_ERROR));
-
+                .orElseThrow(() -> new InternalServerException(BaseResponseStatus.MATCH_NOT_FOUND));
 
         match.setMatchDate(req.getMatchDate());
         match.setStartTime(req.getStartTime());

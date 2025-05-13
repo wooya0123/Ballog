@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ParticipantRepository extends JpaRepository<Participant, Integer> {
+
     void deleteAllByMatchId(Integer matchId);
+
 }
