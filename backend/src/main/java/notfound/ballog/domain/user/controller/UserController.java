@@ -58,10 +58,12 @@ public class UserController {
         return BaseResponse.ok(response);
     }
 
+    @Operation(
+            summary = "최근 5쿼터 데이터 조회"
+    )
     @GetMapping("/statistics")
     public BaseResponse<GetStatisticsResponse> getStatistics(@AuthenticationPrincipal UUID userId) {
         GetStatisticsResponse response = userService.getStatistics(userId);
         return BaseResponse.ok(response);
     }
-
 }
