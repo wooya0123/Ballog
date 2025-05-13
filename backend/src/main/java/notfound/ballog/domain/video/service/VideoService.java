@@ -52,6 +52,10 @@ public class VideoService {
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
         String presignedUrl = s3Util.generatePresignedUrl(objectKey);
 
+        // db에 저장할 videoUrl
+        int queryIndex = presignedUrl.indexOf('?');
+        String videoUrl = presignedUrl.substring(0, queryIndex);
+
         // Duration 타입으로 변환
         String[] part = request.getDuration().split(":");
         long hours = Long.parseLong(part[0]);
@@ -61,7 +65,7 @@ public class VideoService {
                 .plusMinutes(minutes)
                 .plusSeconds(seconds);
 
-        Video video = Video.of(match, request.getQuarterNumber(), presignedUrl, videoDuration);
+        Video video = Video.of(match, request.getQuarterNumber(), videoUrl, videoDuration);
         Video savedVideo = videoRepository.save(video);
         return AddVideoResponse.of(savedVideo.getVideoUrl());
     }
