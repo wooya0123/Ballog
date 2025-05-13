@@ -108,4 +108,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences-core:1.0.0")
 
     androidTestImplementation("androidx.compose.ui:ui-test-junit4") // ✅ BOM 적용됨
+
+    // Wearable
+    implementation("com.google.android.gms:play-services-wearable:18.0.0")
 }

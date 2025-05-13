@@ -24,4 +24,5 @@ object Routes {
     const val MATCH_DATA = "match_data"
 
     // 그 외 다른 route 상수들도 여기에 추가 예정
+    const val PERMISSION_CHECK = "permission_check"
 }
