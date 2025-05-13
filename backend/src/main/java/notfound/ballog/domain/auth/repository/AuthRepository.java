@@ -8,8 +8,12 @@ import java.util.UUID;
 
 public interface AuthRepository extends JpaRepository<Auth, Integer> {
     boolean existsByEmailAndIsActiveTrue(String email);
+
     Optional<Auth> findByEmail(String email);
+
     Optional<Auth> findByEmailAndIsActiveTrue(String email);
+
     Optional<Auth> findByAuthIdAndIsActiveTrue(Integer authId);
+
     Optional<Auth> findByUser_UserIdAndIsActiveTrue(UUID userId);
 }

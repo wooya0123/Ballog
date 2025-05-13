@@ -84,7 +84,7 @@ public class VideoService {
     @Transactional
     public GetVideoListResponse getVideo(Integer matchId) {
         // 1. 매치 영상 조회
-        List<Video> videoList = videoRepository.findAllByMatch_MatchId(matchId);
+        List<Video> videoList = videoRepository.findAllByMatch_MatchIdAndDeletedFalse(matchId);
         // 매치 영상 없으면 예외 처리
         if (videoList.isEmpty()) {
             throw new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND);

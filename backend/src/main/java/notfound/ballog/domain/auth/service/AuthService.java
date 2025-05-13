@@ -35,19 +35,22 @@ public class AuthService {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
     private final AuthRepository authRepository;
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public void signUp(SignUpRequest request){
         String email = request.getEmail();
         String password = passwordEncoder.encode(request.getPassword());
 
+        // 이메일로 유저 조회 -> 탈퇴한 사용자면 복구, 이미 있는 사용자는 예외 처리
         Optional<Auth> existingAuth = authRepository.findByEmail(email);
         if (existingAuth.isPresent()) {
             Auth auth = existingAuth.get();
-            // 탈퇴한 사용자라면 복구
+
+            // 탈퇴한 사용자라면 복구하고 저장
             if (!auth.getIsActive()) {
                 User user = auth.getUser();
                 user.reactivate(request.getNickname(), request.getBirthDate(), request.getProfileImageUrl());

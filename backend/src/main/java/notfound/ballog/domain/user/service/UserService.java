@@ -42,6 +42,7 @@ public class UserService {
         return savedUser;
     }
 
+
     public GetUserResponse getUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
@@ -51,12 +52,14 @@ public class UserService {
         return GetUserResponse.of(user, email);
     }
 
+
     @Transactional
     public void updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
         user.updateUser(request);
     }
+
 
     @Transactional
     public User reactivateUser(User user) {
@@ -74,7 +77,7 @@ public class UserService {
         // 2. 응답에 담을 각 필드별 리스트 초기화
         List<List<List<Integer>>> heatmapList = new ArrayList<>(); // 2D 배열 5개
         List<Double> distanceList       = new ArrayList<>();     // 거리 5개
-        List<Integer> speedList         = new ArrayList<>();     // 평균 속도 5개
+        List<Double> speedList         = new ArrayList<>();     // 평균 속도 5개
         List<Integer> sprintList        = new ArrayList<>();     // 스프린트 횟수 5개
         List<Integer> heartRateList     = new ArrayList<>();     // 평균 심박수 5개
 
@@ -89,7 +92,7 @@ public class UserService {
             distanceList.add(distance.doubleValue());
 
             Number speed = (Number) reportData.get("avgSpeed");
-            speedList.add(speed.intValue());
+            speedList.add(speed.doubleValue());
 
             Number sprint = (Number) reportData.get("sprint");
             sprintList.add(sprint.intValue());
@@ -97,8 +100,44 @@ public class UserService {
             Number heartRate = (Number) reportData.get("avgHeartRate");
             heartRateList.add(heartRate.intValue());
         }
+
+        // 4. 히트맵 평균 내기
+        List<List<Integer>> averagedHeatmap = new ArrayList<>();
+
+        if (!heatmapList.isEmpty()) {
+            // 2) 첫 번째 heatmap의 사이즈를 기준으로 행(row)과 열(col) 크기 결정
+            int numRows = heatmapList.get(0).size();
+            int numCols = heatmapList.get(0).get(0).size();
+            int count = heatmapList.size(); // 보통 5
+
+            // 3) 행 단위 순회
+            for (int i = 0; i < numRows; i++) {
+                List<Integer> averagedRow = new ArrayList<>();
+
+                // 4) 열 단위 순회
+                for (int j = 0; j < numCols; j++) {
+                    double sum = 0.0;
+
+                    // 5) 5개의 heatmap에서 같은 (i,j) 위치 값을 모두 더하기
+                    for (List<List<Integer>> singleHeatmap : heatmapList) {
+                        // 만약 일부 heatmap에 해당 위치가 없으면 0 처리
+                        List<Integer> row = singleHeatmap.get(i);
+                        int value = (j < row.size() ? row.get(j) : 0);
+                        sum += value;
+                    }
+
+                    // 6) 평균 계산 및 소수점 저장
+                    int avgInt = (int) Math.round(sum / numRows);
+                    averagedRow.add(avgInt);
+                }
+
+                // 7) 완성된 행을 결과에 추가
+                averagedHeatmap.add(averagedRow);
+            }
+        }
+
         return GetStatisticsResponse.of(user.getNickname(),
-                                        heatmapList,
+                                        averagedHeatmap,
                                         distanceList,
                                         speedList,
                                         sprintList,
