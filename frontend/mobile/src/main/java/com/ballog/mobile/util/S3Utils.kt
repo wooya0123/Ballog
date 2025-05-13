@@ -44,23 +44,10 @@ object S3Utils {
     fun init(context: Context) {
         try {
             Log.d(TAG, "S3 Utils 초기화 시작")
-            
-            // 인터넷 연결 확인
-            try {
-                val runtime = Runtime.getRuntime()
-                val ipProcess = runtime.exec("ping -c 1 8.8.8.8")
-                val exitValue = ipProcess.waitFor()
-                val connectedToInternet = (exitValue == 0)
-                Log.d(TAG, "인터넷 연결 상태: ${if(connectedToInternet) "연결됨" else "연결 안됨"}")
-            } catch (e: Exception) {
-                Log.w(TAG, "인터넷 연결 확인 실패: ${e.message}")
-            }
-            
             // assets에서 aws.properties 파일 직접 읽기
             try {
                 val fileContents = context.assets.open("aws.properties").bufferedReader().use { it.readText() }
                 Log.d(TAG, "aws.properties 파일 읽기 성공 (${fileContents.length} 바이트)")
-                
                 // 파일 내용에서 키 값을 추출
                 fileContents.lines().forEach { line ->
                     when {
@@ -74,13 +61,11 @@ object S3Utils {
                         }
                     }
                 }
-                
                 Log.d(TAG, "AWS 자격 증명 로드 완료")
             } catch (e: Exception) {
                 Log.e(TAG, "aws.properties 파일 읽기 실패: ${e.message}")
                 e.printStackTrace()
             }
-            
             // 키가 설정되어 있지 않으면 로그로 경고
             if (accessKey.isNullOrEmpty() || secretKey.isNullOrEmpty()) {
                 Log.e(TAG, "WARNING: AWS credentials not properly configured!")
@@ -188,57 +173,5 @@ object S3Utils {
             throw e
         }
     }
-    
-    /**
-     * S3 객체에 대한 서명된 URL 생성
-     * 
-     * @param objectKey 객체 키 (파일명 포함 경로)
-     * @param expirationMinutes URL 유효 시간(분)
-     * @return 서명된 URL
-     */
-    private suspend fun getSignedUrl(objectKey: String, expirationMinutes: Int = 60): String = withContext(Dispatchers.IO) {
-        try {
-            Log.d(TAG, "S3 서명된 URL 생성 시작: $objectKey")
-            Log.d(TAG, "URL 유효 기간: $expirationMinutes 분")
-            
-            // 마지막 안전 장치: 따옴표 제거 확인
-            val finalAccessKey = accessKey?.replace("\"", "")?.replace("'", "")?.trim() ?: ""
-            val finalSecretKey = secretKey?.replace("\"", "")?.replace("'", "")?.trim() ?: ""
-            
-            // S3 클라이언트 생성
-            val credentials = BasicAWSCredentials(finalAccessKey, finalSecretKey)
-            val s3Client = AmazonS3Client(credentials)
-            
-            // 리전 설정
-            s3Client.setRegion(Region.getRegion(Regions.valueOf(REGION.replace("-", "_").uppercase())))
-            
-            // 만료 시간 설정
-            val expiration = java.util.Date()
-            val msec = expiration.time + (expirationMinutes * 60 * 1000)
-            expiration.time = msec
-            Log.d(TAG, "URL 만료 시간: $expiration")
-            
-            // 서명된 URL 생성
-            val url = s3Client.generatePresignedUrl(BUCKET_NAME, objectKey, expiration)
-            Log.d(TAG, "서명된 URL 생성 완료: ${url.toString()}")
-            
-            // URL 검증을 위한 디버깅 정보
-            val urlString = url.toString()
-            Log.d(TAG, "URL 길이: ${urlString.length}")
-            Log.d(TAG, "URL 일부: ${urlString.take(50)}...")
-            
-            // URL에 특수 문자가 포함되어 있는지 확인
-            if (urlString.contains(" ")) {
-                Log.w(TAG, "주의: URL에 공백 문자가 포함되어 있습니다. URL을 인코딩해야 할 수 있습니다.")
-                // 공백을 %20으로 변환
-                return@withContext urlString.replace(" ", "%20")
-            }
-            
-            urlString
-        } catch (e: Exception) {
-            Log.e(TAG, "서명된 URL 생성 오류: ${e.message}")
-            e.printStackTrace()
-            throw e
-        }
-    }
+
 }
