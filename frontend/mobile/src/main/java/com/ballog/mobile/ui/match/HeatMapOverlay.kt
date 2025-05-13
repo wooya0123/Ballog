@@ -1,40 +1,55 @@
 package com.ballog.mobile.ui.match
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import com.ballog.mobile.ui.theme.Primary
 
 @Composable
 fun HeatMapOverlay(
     heatData: List<List<Int>>,
-    color: Color = Primary,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color = Color(0xFF20E9F5)
 ) {
-    if (heatData.isEmpty() || heatData[0].isEmpty()) return
+    val cols = 15
+    val rows = 10
+    val alphaMap = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 0.9f)
 
-    val gridX = heatData.size
-    val gridY = heatData[0].size
-    val maxCount = heatData.flatten().maxOrNull()?.takeIf { it > 0 } ?: 1
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val spacingRatio = 0.2f  // 셀 대비 spacing 비율 (20%)
 
-    Canvas(modifier = modifier) {
-        val cellWidth = size.width / gridX
-        val cellHeight = size.height / gridY
+        // 가로 기준으로 셀+간격 전체 너비 계산
+        val unitWidth = size.width / (cols + spacingRatio * (cols - 1))
+        val cellWidth = unitWidth
+        val spacingX = unitWidth * spacingRatio
 
-        for (i in 0 until gridX) {
-            for (j in 0 until gridY) {
-                val count = heatData[i][j]
-                if (count > 0) {
-                    val alpha = (count.toFloat() / maxCount).coerceIn(0.2f, 1f)
-                    drawRect(
-                        color = color.copy(alpha = alpha),
-                        topLeft = Offset(i * cellWidth, j * cellHeight),
-                        size = Size(cellWidth, cellHeight)
-                    )
-                }
+        // 세로 기준 동일 계산
+        val unitHeight = size.height / (rows + spacingRatio * (rows - 1))
+        val cellHeight = unitHeight
+        val spacingY = unitHeight * spacingRatio
+
+        val totalWidth = cellWidth * cols + spacingX * (cols - 1)
+        val totalHeight = cellHeight * rows + spacingY * (rows - 1)
+
+        val offsetX = (size.width - totalWidth) / 2
+        val offsetY = (size.height - totalHeight) / 2
+
+        for (x in 0 until cols) {
+            for (y in 0 until rows) {
+                val intensity = heatData.getOrNull(x)?.getOrNull(y) ?: 0
+                val alpha = alphaMap.getOrElse(intensity.coerceIn(0, 5)) { 0f }
+
+                val left = offsetX + x * (cellWidth + spacingX)
+                val top = offsetY + y * (cellHeight + spacingY)
+
+                drawRoundRect(
+                    color = color.copy(alpha = alpha),
+                    topLeft = Offset(left, top),
+                    size = Size(cellWidth, cellHeight)
+                )
             }
         }
     }
