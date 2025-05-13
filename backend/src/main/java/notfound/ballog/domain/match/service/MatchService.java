@@ -22,6 +22,7 @@ import notfound.ballog.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -74,7 +75,7 @@ public class MatchService {
     public MatchDetailResponse getMatchDetail(UUID userId, Integer matchId){
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.BAD_REQUEST));
-        List<ParticipantDto> participantDtos = null;
+        List<ParticipantDto> participantDtos = new ArrayList<>();
 
         if(match.getTeamId() != null) {
             participantDtos = teamRepository.findParticipantsByUserIdAndMatchId(userId, matchId);
