@@ -15,6 +15,6 @@ public class MatchDetailResponse {
 
     private List<ParticipantDto> participantList;
 
-    private List<GameReportDto> quaterList;
+    private List<GameReportDto> quarterList;
 
 }
