@@ -29,14 +29,12 @@ class MatchReportService(
     /**
      * 삼성 헬스 데이터를 가져와 경기 리포트를 생성하고 서버에 전송합니다.
      *
-     * @param matchId 경기 ID
      * @param matchDate 경기 날짜 (yyyy-MM-dd 형식)
      * @param quarterData 쿼터 정보 리스트 (쿼터 번호, 사이드, 시작/종료 시간 등)
      * @param token 토큰
      * @return 성공 여부
      */
     suspend fun createAndSendMatchReport(
-        matchId: String,
         matchDate: String,
         quarterData: List<QuarterData>,
         token: String
@@ -69,15 +67,34 @@ class MatchReportService(
 
             // 4. JSON 객체 생성
             val requestBody = createRequestBody(matchDate, reportDataList)
+            Log.d(TAG, "요청 데이터: $requestBody")
 
             // 5. 서버에 전송
-            val response = matchApi.sendMatchReport(matchId, requestBody, token)
+            val response = matchApi.sendMatchReport(
+                requestBody = requestBody,
+                token = token
+            )
 
             Log.d(TAG, "리포트 전송 결과: ${response.isSuccessful}")
-            return@withContext response.isSuccessful
+            if (!response.isSuccessful) {
+                Log.e(TAG, "서버 응답 코드: ${response.code()}")
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "서버 응답 메시지: $errorBody")
+                return@withContext false
+            }
+
+            val body = response.body()
+            if (body?.isSuccess == true) {
+                Log.d(TAG, "리포트 전송 성공")
+                return@withContext true
+            } else {
+                Log.e(TAG, "리포트 전송 실패: ${body?.message}")
+                return@withContext false
+            }
 
         } catch (e: Exception) {
             Log.e(TAG, "리포트 생성 및 전송 실패: ${e.message}")
+            e.printStackTrace()
             return@withContext false
         }
     }

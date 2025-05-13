@@ -44,10 +44,9 @@ interface MatchApi {
     ): Response<ApiResponse<Unit>>
 
     // 매치 리포트 전송
-    @POST("matches/{matchId}/report")
+    @POST("v1/quarter")
     suspend fun sendMatchReport(
-        @Path("matchId") matchId: String,
         @Body requestBody: JSONObject,
         @Header("Authorization") token: String
-    ): Response<Unit>
+    ): Response<ApiResponse<Unit>>
 }
