@@ -1,4 +1,4 @@
-package com.ballog.watch.ui.main
+package notfound.ballog.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -19,7 +19,7 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import notfound.ballog.R
-import com.ballog.watch.ui.theme.WatchTheme
+import notfound.ballog.presentation.theme.WatchTheme
 import androidx.navigation.NavHostController
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable

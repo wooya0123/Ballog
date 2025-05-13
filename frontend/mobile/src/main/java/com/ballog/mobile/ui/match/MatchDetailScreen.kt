@@ -1,6 +1,5 @@
 package com.ballog.mobile.ui.match
 
-import android.app.Activity
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -8,8 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,14 +30,7 @@ import com.ballog.mobile.ui.theme.pretendard
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.data.model.MatchState
-import com.ballog.mobile.ui.video.VideoTab
-import com.ballog.mobile.data.service.SamsungHealthDataService
-import com.samsung.android.sdk.health.data.HealthDataStore
-import com.samsung.android.sdk.health.data.HealthDataService
-import com.samsung.android.sdk.health.data.permission.AccessType
-import com.samsung.android.sdk.health.data.permission.Permission
-import com.samsung.android.sdk.health.data.request.DataTypes
-import androidx.compose.ui.platform.LocalContext
+import com.ballog.mobile.ui.video.MatchVideoTab
 
 private const val TAG = "MatchDetailScreen"
 
@@ -53,62 +51,9 @@ fun MatchDetailScreen(
     val isLoading = matchState is MatchState.Loading
     val match = (matchState as? MatchState.Success)?.matches?.find { it.id == matchId }
 
-    // 삼성 헬스 데이터 관련 상태
-    var healthDataStore by remember { mutableStateOf<HealthDataStore?>(null) }
-    var samsungHealthDataService by remember { mutableStateOf<SamsungHealthDataService?>(null) }
-    var isHealthDataLoading by remember { mutableStateOf(false) }
-    var healthDataError by remember { mutableStateOf<String?>(null) }
-    
-    // 컨텍스트 저장
-    val context = LocalContext.current
-
-    // 삼성 헬스 초기화
-    LaunchedEffect(Unit) {
-        try {
-            healthDataStore = HealthDataService.getStore(context)
-            samsungHealthDataService = SamsungHealthDataService(context)
-            Log.d(TAG, "Samsung Health 초기화 성공")
-        } catch (e: Exception) {
-            Log.e(TAG, "Samsung Health 초기화 실패: ${e.message}")
-            healthDataError = "삼성 헬스 초기화 실패: ${e.message}"
-        }
-    }
-
-    // 권한 요청 및 데이터 로드
-    LaunchedEffect(healthDataStore, samsungHealthDataService) {
-        if (healthDataStore != null && samsungHealthDataService != null) {
-            isHealthDataLoading = true
-            try {
-                // TODO: 권한 요청 부분 - 추후 제거 가능
-                val permissions = setOf(
-                    Permission.of(DataTypes.EXERCISE, AccessType.READ),
-                    Permission.of(DataTypes.HEART_RATE, AccessType.READ),
-                    Permission.of(DataTypes.EXERCISE_LOCATION, AccessType.READ)
-                )
-
-                val grantedPermissions = healthDataStore?.requestPermissions(
-                    permissions,
-                    context as Activity
-                )
-
-                if (grantedPermissions?.containsAll(permissions) == true) {
-                    // TODO: 권한 요청 부분 끝
-                    val exerciseData = samsungHealthDataService?.getExercise()
-                    Log.d(TAG, "운동 데이터 로딩 완료: ${exerciseData?.size ?: 0}개")
-                } else {
-                    healthDataError = "필요한 권한이 부여되지 않았습니다"
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "데이터 로딩 실패: ${e.message}")
-                healthDataError = "데이터 로딩 실패: ${e.message}"
-            } finally {
-                isHealthDataLoading = false
-            }
-        }
-    }
-
-    // 화면이 처음 표시될 때 매치 리스트 요청
+    // 화면이 처음 표시될 때 매치 리스트(혹은 단일 매치) 요청
     LaunchedEffect(matchId) {
+        // NOTE: 단일 매치 API가 없으므로, 임시로 이번달 매치 전체를 불러와서 id로 찾음
         val month = java.time.LocalDate.now().toString().substring(0, 7) // yyyy-MM
         viewModel.fetchMyMatches(month)
     }
@@ -130,7 +75,7 @@ fun MatchDetailScreen(
             onTabSelected = { selectedTab = it }
         )
         when {
-            isLoading || isHealthDataLoading -> {
+            isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -138,7 +83,7 @@ fun MatchDetailScreen(
                     CircularProgressIndicator()
                 }
             }
-            error != null || healthDataError != null -> {
+            error != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -146,7 +91,7 @@ fun MatchDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = error ?: healthDataError ?: "알 수 없는 오류가 발생했습니다",
+                        text = error ?: "알 수 없는 오류가 발생했습니다",
                         fontSize = 16.sp,
                         fontFamily = pretendard,
                         fontWeight = FontWeight.Medium,

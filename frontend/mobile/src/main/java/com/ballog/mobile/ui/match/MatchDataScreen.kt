@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import com.ballog.mobile.ui.theme.pretendard
+import androidx.compose.ui.tooling.preview.Preview
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
 import androidx.compose.runtime.*
@@ -189,25 +190,16 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
             }
         }
     }
-
-    // 에러 메시지 표시
-    errorMessage?.let { message ->
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        errorMessage = null
-    }
 }
 
 @Composable
 fun MatchDataModal(
     data: MatchDataCardInfo,
-    heatData: List<List<Int>>,
-    onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
+    onDismiss: () -> Unit
 ) {
     var quarter by remember { mutableStateOf("") }
-    var selectedSide by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
-    var isLoading by remember { mutableStateOf(false) }
+    var heatData by remember { mutableStateOf(List(15) { List(10) { (0..5).random() } }) }
+    var selectedSide by remember { mutableStateOf<String?>("LEFT") } // "LEFT" or "RIGHT"
 
     Box(
         Modifier
@@ -329,21 +321,10 @@ fun MatchDataModal(
                 Spacer(Modifier.height(24.dp))
                 // 저장 버튼
                 BallogButton(
-                    onClick = {
-                        if (quarter.isBlank()) {
-                            Toast.makeText(context, "쿼터 정보를 입력해주세요", Toast.LENGTH_SHORT).show()
-                            return@BallogButton
-                        }
-                        if (selectedSide == null) {
-                            Toast.makeText(context, "진영을 선택해주세요", Toast.LENGTH_SHORT).show()
-                            return@BallogButton
-                        }
-
-                        onSave(quarter, selectedSide!!)
-                    },
+                    onClick = { /* TODO: 저장 동작 구현 */ },
                     type = ButtonType.LABEL_ONLY,
-                    buttonColor = ButtonColor.PRIMARY,
-                    label = if (isLoading) "전송 중..." else "저장",
+                    buttonColor = ButtonColor.BLACK,
+                    label = "저장",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
