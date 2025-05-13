@@ -17,7 +17,7 @@ data class VideoListResult(
 
 data class VideoResponseDto(
     val videoId: Int?,
-    val quarterNumber: Int,
+    val quarterNumber: Int?,
     val videoUrl: String?,
     val uploadSuccess: Boolean,
     val highlightList: List<HighlightDto>

@@ -10,9 +10,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.UUID
+
 
 object S3Utils {
     private const val TAG = "S3Utils" // 로그 태그 추가
@@ -230,12 +233,17 @@ object S3Utils {
     suspend fun putFileToPresignedUrl(url: String, file: File): Boolean = withContext(Dispatchers.IO) {
         try {
             val client = okhttp3.OkHttpClient()
+            val mediaType = "video/mp4".toMediaType() // ✅ 명시적으로 설정
+            val requestBody = file.asRequestBody(mediaType)
+
             val request = okhttp3.Request.Builder()
                 .url(url)
-                .put(okhttp3.RequestBody.create(null, file))
+                .put(requestBody)
                 .build()
+
             Log.d(TAG, "📡 Presigned URL로 PUT 업로드 요청 시작: $url")
             val response = client.newCall(request).execute()
+
             Log.d(TAG, "📬 응답 코드: ${response.code}")
             val success = response.isSuccessful
             if (!success) {

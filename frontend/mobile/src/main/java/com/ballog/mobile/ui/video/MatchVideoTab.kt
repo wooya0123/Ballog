@@ -17,8 +17,6 @@ import com.ballog.mobile.util.FileUtils
 import com.ballog.mobile.util.VideoUtils
 import com.ballog.mobile.viewmodel.VideoViewModel
 import android.util.Log
-import com.ballog.mobile.ui.video.QuarterVideoData
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,16 +30,15 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
     var expanded by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
-    var editingHighlight by remember { mutableStateOf(HighlightUiState("", "", "", "", "")) }
+    var editingHighlight by remember { mutableStateOf(HighlightUiState()) }
     val videoViewModel: VideoViewModel = viewModel()
     val videoUiState by videoViewModel.videoUiState.collectAsState()
 
-    val quarterOptions = remember(totalQuarters) {
-        (1..totalQuarters).map { "$it 쿼터" }
+    val quarterOptions = remember(videoUiState.totalQuarters) {
+        (1..videoUiState.totalQuarters).map { "$it 쿼터" }
     }
 
     val context = LocalContext.current
-
 
     val quarterData = remember(quarterOptions) {
         mutableStateMapOf<String, QuarterVideoData>().apply {
@@ -51,34 +48,49 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
 
     fun currentData(): QuarterVideoData = quarterData[selectedQuarter] ?: QuarterVideoData()
 
+    LaunchedEffect(Unit) {
+        videoViewModel.getMatchVideos(matchId)
+    }
+
+    LaunchedEffect(videoUiState.quarterList) {
+        Log.d("MatchVideoTab", "🧩 API 응답 기반으로 quarterData 초기화")
+        videoUiState.quarterList.forEach { video ->
+            val quarter = "${video.quarterNumber ?: 1} 쿼터"
+            quarterData[quarter] = QuarterVideoData(
+                videoId = video.videoId ?: -1,
+                quarterNumber = video.quarterNumber ?: 1,
+                videoUrl = video.videoUrl ?: "",
+                highlights = video.highlights,
+                showPlayer = false
+            )
+            Log.d("MatchVideoTab", "🧩 $quarter → videoUrl=${video.videoUrl}, highlight=${video.highlights.size}개")
+        }
+    }
+
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             Log.d("MatchVideoTab", "📁 영상 URI 선택됨: $uri")
 
-            // 1. 쿼터 상태 갱신 (showPlayer false 처리)
-            Log.d("MatchVideoTab", "🔄 모든 쿼터의 showPlayer = false 설정")
+            // 모든 쿼터의 showPlayer false
             quarterData.forEach { (key, value) ->
                 quarterData[key] = value.copy(showPlayer = false)
             }
 
-            // 2. 쿼터 UI 상태 먼저 반영
             val currentQuarter = selectedQuarter
-            Log.d("MatchVideoTab", "🎞️ 선택된 쿼터: $currentQuarter")
+            val file = FileUtils.uriToFile(context, it)
+            val duration = VideoUtils.getVideoDurationString(context, it)
+            val quarterNumber = currentQuarter.filter { it.isDigit() }.toIntOrNull() ?: 1
+
+            // 임시 Uri로 반영
             quarterData[currentQuarter] = QuarterVideoData(
-                videoUri = it,
+                videoId = -1,
+                quarterNumber = quarterNumber,
+                videoUrl = it.toString(),
                 showPlayer = true,
                 highlights = quarterData[currentQuarter]?.highlights ?: emptyList()
             )
 
-            // 3. 업로드를 위한 File 및 duration 추출
-            val file = FileUtils.uriToFile(context, it)
-            val duration = VideoUtils.getVideoDurationString(context, it)
-            val quarterNumber = selectedQuarter.filter { it.isDigit() }.toIntOrNull() ?: 1
-
-            Log.d("MatchVideoTab", "📦 File name: ${file.name}, duration: $duration, quarter: $quarterNumber, matchId: $matchId")
-
-            // 4. presigned URL 요청 + S3 업로드 진행
-            Log.d("MatchVideoTab", "🚀 영상 업로드 API 호출 시작")
+            Log.d("MatchVideoTab", "🚀 영상 업로드 시작 → matchId=$matchId, quarter=$quarterNumber")
 
             videoViewModel.uploadQuarterVideo(
                 context = context,
@@ -87,54 +99,30 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
                 quarterNumber = quarterNumber,
                 duration = duration
             )
-
-            // 5. 디버깅 로그
-            Log.d("MatchVideoTab", "✅ 업로드 후 쿼터 상태 확인")
-            quarterData.forEach { (quarter, data) ->
-                Log.d("MatchVideoTab", "$quarter: videoUri=${data.videoUri}, showPlayer=${data.showPlayer}")
-            }
-        } ?: Log.w("MatchVideoTab", "⛔ 영상 URI가 null입니다. 선택 취소되었을 수 있음")
+        } ?: Log.w("MatchVideoTab", "⛔ 영상 URI가 null입니다.")
     }
-
 
     Column(modifier = Modifier.fillMaxSize()) {
         val current = currentData()
 
         HighlightContentSection(
-            videoUri = current.videoUri,
+            videoUri = current.videoUrl.takeIf { it.isNotBlank() }?.let { Uri.parse(it) },
             highlights = current.highlights,
             showPlayer = current.showPlayer,
-            onTogglePlayer = {
-                quarterData[selectedQuarter] = current.copy(showPlayer = !current.showPlayer)
-            },
             selectedQuarter = selectedQuarter,
             quarterOptions = quarterOptions,
             expanded = expanded,
+            onTogglePlayer = {
+                quarterData[selectedQuarter] = current.copy(showPlayer = !current.showPlayer)
+            },
             onQuarterChange = {
                 val prevQuarter = selectedQuarter
                 selectedQuarter = it
 
-                Log.d("MatchVideoTab", "🔄 쿼터 변경됨: 이전 : $prevQuarter, 현재 : $selectedQuarter")
-                
-                if (prevQuarter.isNotEmpty() && quarterData.containsKey(prevQuarter)) {
-                    val prevData = quarterData[prevQuarter]
-                    if (prevData != null) {
-                        quarterData[prevQuarter] = prevData.copy(showPlayer = false)
-                    }
-                }
-                
-                if (it.isNotEmpty() && quarterData.containsKey(it)) {
-                    val newQuarterData = quarterData[it]
-                    if (newQuarterData != null && newQuarterData.videoUri != null) {
-                        quarterData[it] = newQuarterData.copy(showPlayer = true)
-                    }
-                }
-                
-                println("=== 쿼터 변경 후 상태 ===")
-                println("이전 쿼터: $prevQuarter, 현재 쿼터: $it")
-                quarterData.forEach { (quarter, data) ->
-                    println("$quarter: videoUri=${data.videoUri}, showPlayer=${data.showPlayer}")
-                }
+                quarterData[prevQuarter] = quarterData[prevQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
+                quarterData[it] = quarterData[it]?.copy(showPlayer = true) ?: QuarterVideoData()
+
+                Log.d("MatchVideoTab", "🔄 쿼터 변경: $prevQuarter → $it")
             },
             onExpandedChange = { expanded = it },
             onAddClick = { showAddSheet = true },
@@ -152,14 +140,13 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
     }
 
     val confirmAction: () -> Unit = {
-        val current = currentData()
         val updatedHighlight = editingHighlight.copy(
             startHour = editingHighlight.startHour.padStart(2, '0'),
             startMin = editingHighlight.startMin.padStart(2, '0'),
             endHour = editingHighlight.endHour.padStart(2, '0'),
             endMin = editingHighlight.endMin.padStart(2, '0')
         )
-        editingHighlight = updatedHighlight
+        val current = currentData()
         val updatedList = when {
             showAddSheet -> current.highlights + updatedHighlight
             showEditSheet -> current.highlights.map {
@@ -183,13 +170,10 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
             highlightState = editingHighlight,
             onStateChange = { editingHighlight = it },
             onDismiss = {
-                coroutineScope.launch {
-                    sheetState.hide()
-                    showAddSheet = false
-                }
+                coroutineScope.launch { sheetState.hide(); showAddSheet = false }
             },
             onConfirm = confirmAction,
-            videoUri = currentData().videoUri
+            videoUri = currentData().videoUrl.let(Uri::parse)
         )
     }
 
@@ -200,10 +184,7 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
             highlightState = editingHighlight,
             onStateChange = { editingHighlight = it },
             onDismiss = {
-                coroutineScope.launch {
-                    sheetState.hide()
-                    showEditSheet = false
-                }
+                coroutineScope.launch { sheetState.hide(); showEditSheet = false }
             },
             onConfirm = confirmAction,
             onDelete = {
@@ -211,11 +192,10 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
                 val updatedList = current.highlights.filterNot { it == editingHighlight }
                 quarterData[selectedQuarter] = current.copy(highlights = updatedList)
                 coroutineScope.launch {
-                    sheetState.hide()
-                    showEditSheet = false
+                    sheetState.hide(); showEditSheet = false
                 }
             },
-            videoUri = currentData().videoUri,
+            videoUri = currentData().videoUrl.let(Uri::parse),
             confirmButtonText = "저장하기"
         )
     }

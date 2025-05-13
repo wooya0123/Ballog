@@ -1,7 +1,6 @@
 package com.ballog.mobile.viewmodel
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -51,6 +50,7 @@ class VideoViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     Log.d("VideoViewModel", "✅ 쿼터 영상 조회 성공 - 총 ${result.totalQuarters}쿼터")
+                    Log.d("VideoViewModel", "📋 quarterList: ${result.quarterList}")
                     _videoUiState.value = VideoUiState(
                         totalQuarters = result.totalQuarters,
                         quarterList = result.quarterList.map { it.toQuarterVideoData() }
@@ -59,6 +59,7 @@ class VideoViewModel : ViewModel() {
                     val msg = response.body()?.message ?: "쿼터별 영상 조회 실패"
                     Log.e("VideoViewModel", "❌ API 실패 - $msg")
                     _error.value = msg
+                    Log.e("VideoViewModel", "⚠️ raw error: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 Log.e("VideoViewModel", "🔥 예외 발생 (getMatchVideos)", e)
@@ -187,11 +188,14 @@ class VideoViewModel : ViewModel() {
 
     private fun VideoResponseDto.toQuarterVideoData(): QuarterVideoData {
         return QuarterVideoData(
-            videoUri = videoUrl?.let { Uri.parse(it) },
-            highlights = highlightList.map { dto ->
+            videoId = this.videoId ?: -1,
+            quarterNumber = this.quarterNumber ?: 1,
+            videoUrl = this.videoUrl?: "",
+            highlights = this.highlightList.map { dto ->
                 val (startHour, startMin) = dto.startTime.split(":").let { it[0] to it[1] }
                 val (endHour, endMin) = dto.endTime.split(":").let { it[0] to it[1] }
                 HighlightUiState(
+                    id = dto.highlightId.toString(),
                     title = dto.highlightName,
                     startHour = startHour,
                     startMin = startMin,
