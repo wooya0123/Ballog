@@ -126,7 +126,7 @@ fun TeamMatchTab(
                                 endTime = match.endTime,
                                 matchName = match.matchName,
                                 onClick = {
-                                    navController.navigate("match/detail/${match.id}")
+                                    navController.navigate("match/detail/${match.id}/${match.matchName}")
                                 }
                             )
                         }
