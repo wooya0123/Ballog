@@ -15,16 +15,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
-
-// 커스텀 컴포넌트
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.components.BallogButton
-import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.ButtonColor
+import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.DropDown
 import com.ballog.mobile.ui.theme.Gray
-import com.ballog.mobile.ui.video.HighlightCard
-import com.ballog.mobile.ui.video.HighlightUiState
 
 @Composable
 fun HighlightContentSection(
@@ -39,7 +35,8 @@ fun HighlightContentSection(
     onEditClick: (HighlightUiState) -> Unit,
     onDeleteVideo: () -> Unit,
     onUploadClick: () -> Unit,
-    onTogglePlayer: () -> Unit
+    onTogglePlayer: () -> Unit,
+    quarterOptions: List<String>
 ) {
     Column {
         VideoPlaceholderBox(
@@ -56,7 +53,8 @@ fun HighlightContentSection(
                 selectedQuarter = selectedQuarter,
                 expanded = expanded,
                 onQuarterChange = onQuarterChange,
-                onExpandedChange = onExpandedChange
+                onExpandedChange = onExpandedChange,
+                quarterOptions = quarterOptions
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -68,7 +66,9 @@ fun HighlightContentSection(
                     buttonColor = ButtonColor.GRAY,
                     icon = painterResource(id = R.drawable.ic_upload),
                     label = "영상 업로드",
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
                 )
             } else {
                 highlights.forEach { highlight ->
@@ -127,30 +127,27 @@ fun VideoPlaceholderBox(
     var isLoading by remember { mutableStateOf(true) }
     var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
 
-    // 컴포넌트 생명주기에 따라 ExoPlayer 관리
     val exoPlayer = remember(selectedQuarter) {
         ExoPlayer.Builder(context).build().apply {
             playWhenReady = false
         }
     }
 
-    // ExoPlayer 해제를 보장
     DisposableEffect(selectedQuarter) {
         onDispose {
             exoPlayer.release()
         }
     }
 
-    // videoUri가 변경될 때 미디어 설정
     LaunchedEffect(videoUri, selectedQuarter) {
         isLoading = true
         thumbnailUri = videoUri
-        
-        if (videoUri != null) {
+
+        videoUri?.let {
             exoPlayer.apply {
                 stop()
                 clearMediaItems()
-                setMediaItem(MediaItem.fromUri(videoUri))
+                setMediaItem(MediaItem.fromUri(it))
                 prepare()
             }
         }
@@ -173,9 +170,7 @@ fun VideoPlaceholderBox(
                         }
                     },
                     modifier = Modifier.fillMaxSize(),
-                    update = { playerView ->
-                        playerView.player = exoPlayer
-                    }
+                    update = { it.player = exoPlayer }
                 )
             } else {
                 AsyncImage(
@@ -196,10 +191,11 @@ private fun QuarterDropDown(
     selectedQuarter: String,
     expanded: Boolean,
     onQuarterChange: (String) -> Unit,
-    onExpandedChange: (Boolean) -> Unit
+    onExpandedChange: (Boolean) -> Unit,
+    quarterOptions: List<String>
 ) {
     DropDown(
-        items = listOf("1 쿼터", "2 쿼터", "3 쿼터", "4 쿼터"),
+        items = quarterOptions,
         selectedItem = selectedQuarter,
         onItemSelected = onQuarterChange,
         expanded = expanded,

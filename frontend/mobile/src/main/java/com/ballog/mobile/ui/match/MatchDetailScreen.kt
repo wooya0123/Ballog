@@ -99,9 +99,15 @@ fun MatchDetailScreen(
             }
 
             else -> {
+                val quarterList = matchDetail!!.quarterList
+                val totalQuarters = quarterList.size
+
                 when (selectedTab) {
                     0 -> MatchReportTab(matchDetail = matchDetail!!)
-                    1 -> MatchVideoTab()
+                    1 -> MatchVideoTab(
+                        matchId = matchId,
+                        totalQuarters = totalQuarters
+                    )
                 }
             }
         }

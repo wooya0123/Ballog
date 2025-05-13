@@ -173,5 +173,80 @@ object S3Utils {
             throw e
         }
     }
+    
+    /**
+     * S3 객체에 대한 서명된 URL 생성
+     * 
+     * @param objectKey 객체 키 (파일명 포함 경로)
+     * @param expirationMinutes URL 유효 시간(분)
+     * @return 서명된 URL
+     */
+    private suspend fun getSignedUrl(objectKey: String, expirationMinutes: Int = 60): String = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "S3 서명된 URL 생성 시작: $objectKey")
+            Log.d(TAG, "URL 유효 기간: $expirationMinutes 분")
+            
+            // 마지막 안전 장치: 따옴표 제거 확인
+            val finalAccessKey = accessKey?.replace("\"", "")?.replace("'", "")?.trim() ?: ""
+            val finalSecretKey = secretKey?.replace("\"", "")?.replace("'", "")?.trim() ?: ""
+            
+            // S3 클라이언트 생성
+            val credentials = BasicAWSCredentials(finalAccessKey, finalSecretKey)
+            val s3Client = AmazonS3Client(credentials)
+            
+            // 리전 설정
+            s3Client.setRegion(Region.getRegion(Regions.valueOf(REGION.replace("-", "_").uppercase())))
+            
+            // 만료 시간 설정
+            val expiration = java.util.Date()
+            val msec = expiration.time + (expirationMinutes * 60 * 1000)
+            expiration.time = msec
+            Log.d(TAG, "URL 만료 시간: $expiration")
+            
+            // 서명된 URL 생성
+            val url = s3Client.generatePresignedUrl(BUCKET_NAME, objectKey, expiration)
+            Log.d(TAG, "서명된 URL 생성 완료: ${url.toString()}")
+            
+            // URL 검증을 위한 디버깅 정보
+            val urlString = url.toString()
+            Log.d(TAG, "URL 길이: ${urlString.length}")
+            Log.d(TAG, "URL 일부: ${urlString.take(50)}...")
+            
+            // URL에 특수 문자가 포함되어 있는지 확인
+            if (urlString.contains(" ")) {
+                Log.w(TAG, "주의: URL에 공백 문자가 포함되어 있습니다. URL을 인코딩해야 할 수 있습니다.")
+                // 공백을 %20으로 변환
+                return@withContext urlString.replace(" ", "%20")
+            }
+            
+            urlString
+        } catch (e: Exception) {
+            Log.e(TAG, "서명된 URL 생성 오류: ${e.message}")
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    suspend fun putFileToPresignedUrl(url: String, file: File): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val client = okhttp3.OkHttpClient()
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .put(okhttp3.RequestBody.create(null, file))
+                .build()
+            Log.d(TAG, "📡 Presigned URL로 PUT 업로드 요청 시작: $url")
+            val response = client.newCall(request).execute()
+            Log.d(TAG, "📬 응답 코드: ${response.code}")
+            val success = response.isSuccessful
+            if (!success) {
+                Log.e(TAG, "S3 Presigned URL 업로드 실패: ${response.code}")
+            }
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Presigned URL 업로드 중 오류 발생: ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
 
 }
