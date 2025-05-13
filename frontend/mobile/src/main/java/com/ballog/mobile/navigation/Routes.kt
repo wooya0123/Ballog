@@ -25,4 +25,6 @@ object Routes {
 
     // 그 외 다른 route 상수들도 여기에 추가 예정
     const val PERMISSION_CHECK = "permission_check"
+    const val PERMISSION_REQUEST = "permission_request"
+    const val SAMSUNG_HEALTH_GUIDE = "samsung_health_guide"
 }

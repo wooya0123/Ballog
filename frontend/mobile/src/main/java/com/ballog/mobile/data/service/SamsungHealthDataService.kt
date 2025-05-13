@@ -35,6 +35,7 @@ class SamsungHealthDataService(private val context: Context) {
 
     /** 삼성 헬스 데이터 저장소 */
     private val healthDataStore: HealthDataStore = HealthDataService.getStore(context)
+    private val metricsCalculator = ExerciseMetricsCalculator(context)
 
     companion object {
         /** 시간 형식 (시:분) */
@@ -70,29 +71,34 @@ class SamsungHealthDataService(private val context: Context) {
             }
 
             // 운동 데이터 읽기
-            readExercise()
+            val exerciseList = readExercise()
+            if(exerciseList.isEmpty()){
+                return@withContext emptyList()
+            }
+            Log.d(TAG, "운동 데이터 ${exerciseList.size}개 불러옴")
+
+            // 히트맵 계산
+            val heatmapDataList = mutableListOf<Exercise>()
+            for (exercise in exerciseList) {
+                Log.d(TAG, "운동 ID: ${exercise.id}, GPS 포인트 수: ${exercise.gpsPoints.size}")
+                if (exercise.gpsPoints.isNotEmpty()) {
+                    Log.d(TAG, "히트맵 새로 계산 시작 - 운동 ID: ${exercise.id}")
+                    // 기존 히트맵 데이터를 무시하고 새로 계산
+                    val heatmapData = metricsCalculator.calculateHeatmap(exercise.gpsPoints)
+                    Log.d(TAG, "히트맵 새로 계산 완료 - 운동 ID: ${exercise.id}")
+                    heatmapDataList.add(exercise.copy(heatmapData = heatmapData))
+                } else {
+                    Log.d(TAG, "GPS 포인트 없음 - 히트맵 계산 생략 - 운동 ID: ${exercise.id}")
+                    heatmapDataList.add(exercise)
+                }
+            }
+
+            Log.d(TAG, "총 ${heatmapDataList.size}개의 Ballog 운동 데이터 변환 완료")
+            return@withContext heatmapDataList
         } catch (e: Exception) {
             Log.e(TAG, "운동 데이터 조회 실패: ${e.message}")
             emptyList()
         }
-    }
-
-    /**
-     * 필요한 권한이 있는지 확인합니다.
-     *
-     * @return 모든 필요한 권한이 있으면 true, 아니면 false
-     */
-    private suspend fun checkPermissions(): Boolean {
-        // 필요한 권한 목록
-        val permissions = setOf(
-            Permission.of(DataTypes.EXERCISE, AccessType.READ),
-            Permission.of(DataTypes.HEART_RATE, AccessType.READ),
-            Permission.of(DataTypes.EXERCISE_LOCATION, AccessType.READ)
-        )
-
-        // 부여된 권한 확인
-        val grantedPermissions = healthDataStore.getGrantedPermissions(permissions)
-        return grantedPermissions.containsAll(permissions)
     }
 
     /**
@@ -102,9 +108,9 @@ class SamsungHealthDataService(private val context: Context) {
      * @return Ballog 앱의 운동 데이터 목록
      */
     private suspend fun readExercise(): List<Exercise> {
-        // 최근 30일 데이터 조회를 위한 시간 설정
+        // 최근 7일 데이터 조회를 위한 시간 설정
         val endTime = LocalDateTime.now()
-        val startTime = endTime.minusDays(30)
+        val startTime = endTime.minusDays(2)
 
         try {
             // 데이터 요청 객체 생성
@@ -157,11 +163,7 @@ class SamsungHealthDataService(private val context: Context) {
 
                     sessions?.firstOrNull()?.let { session ->
                         // 운동 데이터 객체 생성
-                        val exercise = createExercise(
-                            session = session,
-                            uid = dataPoint.uid,
-                            customName = exerciseName
-                        )
+                        val exercise = createExercise(session = session, uid = dataPoint.uid, customName = exerciseName)
                         exerciseList.add(exercise)
                     }
                 } catch (e: Exception) {
@@ -206,36 +208,58 @@ class SamsungHealthDataService(private val context: Context) {
      * @return 생성된 운동 데이터 객체
      */
     private fun createExercise(session: Any, uid: String, customName: String?): Exercise {
-        // 세션 헬퍼 생성
-        val sessionHelper = SessionHelper(session)
-        val timeInfo = TimeInfo(sessionHelper.getStartTime(), sessionHelper.getEndTime())
+        try {
+            Log.e("DEBUG", "createExercise() 진입 - ID: $uid")
+            // 세션 헬퍼 생성
+            val sessionHelper = SessionHelper(session)
+            val timeInfo = TimeInfo(sessionHelper.getStartTime(), sessionHelper.getEndTime())
 
-        // 실시간 데이터 추출
-        val liveDataSegments = extractLiveData(session)
+            // 실시간 데이터 추출
+            val liveDataSegments = extractLiveData(session)
 
-        // 스프린트 횟수 계산
-        val sprintCount = calculateSprintCount(liveDataSegments)
-        Log.d(TAG, "스프린트 횟수: $sprintCount")
+            // 스프린트 횟수 계산
+            val sprintCount = calculateSprintCount(liveDataSegments)
+            Log.d(TAG, "스프린트 횟수: $sprintCount")
 
-        // 운동 데이터 객체 생성 및 반환
-        return Exercise(
-            id = uid,
-            exerciseType = customName ?: APP_NAME, // 항상 "Ballog"로 설정
-            date = timeInfo.dateString,
-            startTime = timeInfo.startTimeString,
-            endTime = timeInfo.endTimeString,
-            duration = (sessionHelper.getDuration()?.toMinutes() ?: 0L).toString(),
-            distance = sessionHelper.getDistance(),
-            avgSpeed = sessionHelper.getAvgSpeed(),
-            maxSpeed = sessionHelper.getMaxSpeed(),
-            calories = sessionHelper.getCalories(),
-            avgHeartRate = sessionHelper.getAvgHeartRate().toInt(),
-            maxHeartRate = sessionHelper.getMaxHeartRate().toInt(),
-            gpsPoints = extractGpsPoints(session),
-            liveDataSegments = liveDataSegments,
-            timestamp = sessionHelper.getStartTime()?.toEpochMilli() ?: 0L,
-            sprintCount = sprintCount // 스프린트 횟수 추가
-        )
+            // GPS 포인트 추출
+            val gpsPoints = extractGpsPoints(session)
+            Log.d(TAG, "GPS 포인트 추출 완료 - ID: $uid, 포인트 수: ${gpsPoints.size}")
+
+            // GPS 포인트가 있는 경우에만 히트맵 계산
+            val heatmapData = if (gpsPoints.isNotEmpty()) {
+                Log.d(TAG, "히트맵 계산 시작 - ID: $uid")
+                val result = metricsCalculator.calculateHeatmap(gpsPoints)
+                Log.d(TAG, "히트맵 계산 완료 - ID: $uid")
+                result
+            } else {
+                Log.d(TAG, "GPS 포인트 없음 - 히트맵 계산 생략 - ID: $uid")
+                List(10) { List(16) { 0 } }
+            }
+
+            // 운동 데이터 객체 생성 및 반환
+            return Exercise(
+                id = uid,
+                exerciseType = customName ?: APP_NAME,
+                date = timeInfo.dateString,
+                startTime = timeInfo.startTimeString,
+                endTime = timeInfo.endTimeString,
+                duration = (sessionHelper.getDuration()?.toMinutes() ?: 0L).toString(),
+                distance = sessionHelper.getDistance(),
+                avgSpeed = sessionHelper.getAvgSpeed(),
+                maxSpeed = sessionHelper.getMaxSpeed(),
+                calories = sessionHelper.getCalories(),
+                avgHeartRate = sessionHelper.getAvgHeartRate().toInt(),
+                maxHeartRate = sessionHelper.getMaxHeartRate().toInt(),
+                gpsPoints = gpsPoints,
+                liveDataSegments = liveDataSegments,
+                timestamp = sessionHelper.getStartTime()?.toEpochMilli() ?: 0L,
+                sprintCount = sprintCount,
+                heatmapData = heatmapData
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "운동 데이터 변환 실패 - ID: $uid", e)
+            throw e
+        }
     }
 
     /**
@@ -415,28 +439,33 @@ class SamsungHealthDataService(private val context: Context) {
      * @return GPS 위치 데이터 목록
      */
     private fun extractGpsPoints(session: Any): List<GpsPoint> {
+        Log.e("DEBUG", "extractGpsPoints() 진입")
         val gpsPoints = mutableListOf<GpsPoint>()
-
         try {
-            // getRoute 메서드 호출하여 경로 데이터 가져오기
-            val route = session::class.java.getMethod("getRoute").invoke(session) as? List<*>
-            route?.forEach { location ->
-                if (location != null) {
-                    try {
-                        val locationHelper = LocationHelper(location)
-                        val gpsPoint = locationHelper.toGpsPoint()
-                        if (gpsPoint != null) {
-                            gpsPoints.add(gpsPoint)
+
+            val getRouteMethod = session::class.java.methods.find { it.name == "getRoute" }
+            if (getRouteMethod != null) {
+                val route = getRouteMethod.invoke(session) as? List<*>
+                route?.forEach { location ->
+                    if (location != null) {
+                        try {
+                            val locationHelper = LocationHelper(location)
+                            val gpsPoint = locationHelper.toGpsPoint()
+                            if (gpsPoint != null) {
+                                gpsPoints.add(gpsPoint)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "GPS 포인트 추출 실패: ${e.message}")
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "GPS 포인트 추출 실패: ${e.message}")
                     }
                 }
+            } else {
+                Log.e(TAG, "getRoute 메서드가 session 객체에 없습니다.")
             }
         } catch (e: Exception) {
-            Log.d(TAG, "Route 메서드 없음")
+            Log.e("DEBUG", "extractGpsPoints 오류: ${e.message}")
         }
-
+        Log.e("DEBUG", "최종 추출된 gpsPoints 개수: ${gpsPoints.size}")
         return gpsPoints
     }
 
@@ -535,5 +564,23 @@ class SamsungHealthDataService(private val context: Context) {
             endTimeString = endDateTime?.format(timeFormatter) ?: "00:00"
             dateString = startDateTime?.format(dateFormatter) ?: "날짜 없음"
         }
+    }
+
+    /**
+     * 필요한 권한이 있는지 확인합니다.
+     *
+     * @return 모든 필요한 권한이 있으면 true, 아니면 false
+     */
+    private suspend fun checkPermissions(): Boolean {
+        // 필요한 권한 목록
+        val permissions = setOf(
+            Permission.of(DataTypes.EXERCISE, AccessType.READ),
+            Permission.of(DataTypes.HEART_RATE, AccessType.READ),
+            Permission.of(DataTypes.EXERCISE_LOCATION, AccessType.READ)
+        )
+
+        // 부여된 권한 확인
+        val grantedPermissions = healthDataStore.getGrantedPermissions(permissions)
+        return grantedPermissions.containsAll(permissions)
     }
 }

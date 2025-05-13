@@ -21,6 +21,9 @@ import com.ballog.mobile.ui.profile.ProfileEditScreen
 import com.ballog.mobile.viewmodel.AuthViewModel
 import com.ballog.mobile.navigation.Routes.MATCH_DATA
 import com.ballog.mobile.ui.match.MatchDataScreen
+import com.ballog.mobile.ui.auth.PermissionRequestScreen
+import com.ballog.mobile.ui.auth.SamsungHealthGuideScreen
+import com.ballog.mobile.ui.home.HomeScreen
 
 @Composable
 fun AppNavHost(
@@ -95,6 +98,26 @@ fun AppNavHost(
                 initialTeamId = teamId?.toIntOrNull()
             )
         }
-        // (메인 밖에서 접근 가능한 화면만 남김)
+        composable(Routes.PERMISSION_REQUEST) {
+            PermissionRequestScreen(
+                onConnectClick = {
+                    navController.navigate(Routes.SAMSUNG_HEALTH_GUIDE) {
+                        popUpTo(Routes.PERMISSION_REQUEST) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Routes.SAMSUNG_HEALTH_GUIDE) {
+            SamsungHealthGuideScreen(
+                onConnectClick = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.SAMSUNG_HEALTH_GUIDE) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Routes.HOME) {
+            HomeScreen()
+        }
     }
 }

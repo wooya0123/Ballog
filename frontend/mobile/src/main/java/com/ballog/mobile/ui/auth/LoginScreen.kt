@@ -26,6 +26,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.ballog.mobile.data.model.AuthResult
 import com.ballog.mobile.navigation.Routes
 import kotlinx.coroutines.launch
+import android.app.Activity
+import android.content.Intent
+import com.ballog.mobile.MainActivity
 
 private fun isValidEmail(email: String): Boolean {
     val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$"
@@ -76,9 +79,12 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthResult.Success -> {
-                navController.navigate(Routes.MAIN) {
-                    popUpTo(Routes.LOGIN) { inclusive = true }
-                }
+                // MainActivity를 재실행하여 분기 로직을 항상 타도록
+                val context = navController.context
+                val intent = Intent(context, MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                context.startActivity(intent)
+                (context as? Activity)?.finish()
             }
             is AuthResult.Error -> {
                 when ((authState as AuthResult.Error).message) {

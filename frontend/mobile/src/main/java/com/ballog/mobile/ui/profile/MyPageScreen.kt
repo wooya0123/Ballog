@@ -29,6 +29,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.ballog.mobile.data.util.OnboardingPrefs
 
 @Composable
 fun MyPageScreen(navController: NavHostController, rootNavController: NavHostController, viewModel: AuthViewModel = viewModel()) {
@@ -36,8 +38,9 @@ fun MyPageScreen(navController: NavHostController, rootNavController: NavHostCon
     val signOutState by viewModel.signOutState.collectAsState()
     val authState by viewModel.authState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    // 로그아웃/회원탈퇴 성공 시 온보딩으로 이동
+    // 로그아웃/회원탈퇴 성공 시 온보딩 플래그 초기화 및 온보딩으로 이동
     if (
         (authState is com.ballog.mobile.data.model.AuthResult.Error && (authState as com.ballog.mobile.data.model.AuthResult.Error).message == "로그인이 필요합니다") ||
         (signOutState is com.ballog.mobile.data.model.AuthResult.Success)
@@ -79,13 +82,19 @@ fun MyPageScreen(navController: NavHostController, rootNavController: NavHostCon
             Divider(color = Gray.Gray200, thickness = 1.dp)
             MyPageMenuRow(
                 text = "로그아웃",
-                onClick = { coroutineScope.launch { viewModel.logout() } }
+                onClick = {
+                    OnboardingPrefs.clearAll(context)
+                    coroutineScope.launch { viewModel.logout() }
+                }
             )
             Divider(color = Gray.Gray200, thickness = 1.dp)
             MyPageMenuRow(
                 text = "회원 탈퇴",
                 isWarning = true,
-                onClick = { viewModel.signOut() }
+                onClick = {
+                    OnboardingPrefs.clearAll(context)
+                    viewModel.signOut()
+                }
             )
         }
         Spacer(modifier = Modifier.weight(1f))

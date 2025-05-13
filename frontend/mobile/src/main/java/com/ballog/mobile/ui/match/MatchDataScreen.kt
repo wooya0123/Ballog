@@ -36,12 +36,19 @@ import com.ballog.mobile.viewmodel.MatchUiState
 import androidx.compose.animation.core.*
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.shape.CircleShape
 import com.ballog.mobile.data.model.MatchDataCardInfo
 
 @Composable
 fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // 최초 진입 시 SharedPreferences 값만 확인
+    LaunchedEffect(Unit) {
+        android.util.Log.d("MatchDataScreen", "uiState: $uiState")
+        viewModel.checkFieldCorners()
+    }
 
     when (uiState) {
         is MatchUiState.WaitingForStadiumData -> {
@@ -100,7 +107,6 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                     type = TopNavType.MAIN_BASIC
                 )
                 Spacer(modifier = Modifier.height(180.dp))
-                // 삼성헬스 이미지
                 Image(
                     painter = painterResource(id = R.drawable.samsung_health_144x144),
                     contentDescription = "삼성헬스 아이콘",
@@ -108,7 +114,7 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "삼성헬스 데이터가 없습니다.",
+                    text = "삼성 헬스 데이터가 없습니다.",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = pretendard,
@@ -116,7 +122,7 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "삼성헬스에서 운동 데이터를 연동해 주세요.",
+                    text = "삼성 헬스에서 운동 데이터를 연동해 주세요.",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = pretendard,
@@ -169,7 +175,7 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .height(48.dp)
-                        .background(Color(0xFF1B1B1D), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                        .background(Color(0xFF1B1B1D), shape = RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -186,6 +192,53 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                 MatchDataModal(
                     data = modalData!!,
                     onDismiss = { showModal = false }
+                )
+            }
+        }
+        is MatchUiState.Error -> {
+            val message = (uiState as? MatchUiState.Error)?.message ?: "알 수 없는 에러"
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "에러 발생: $message",
+                    color = Color.Red,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        else -> {
+            // StadiumDataSuccess 등 미처리 상태 → 삼성헬스 데이터 없음 UI
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TopNavItem(
+                    title = "매치 데이터 연동",
+                    type = TopNavType.MAIN_BASIC
+                )
+                Spacer(modifier = Modifier.height(180.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.samsung_health_144x144),
+                    contentDescription = "삼성헬스 아이콘",
+                    modifier = Modifier.size(80.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "삼성 헬스 데이터가 없습니다.",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = pretendard,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "삼성 헬스에서 운동 데이터를 연동해 주세요.",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    color = Color.Gray
                 )
             }
         }

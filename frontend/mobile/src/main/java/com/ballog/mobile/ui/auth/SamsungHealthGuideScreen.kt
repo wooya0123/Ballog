@@ -26,11 +26,14 @@ import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import com.ballog.mobile.data.util.OnboardingPrefs
 
 @Composable
 fun SamsungHealthGuideScreen(
     onConnectClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -117,7 +120,7 @@ fun SamsungHealthGuideScreen(
             }
             Spacer(modifier = Modifier.height(32.dp))
             BallogButton(
-                onClick = onConnectClick,
+                onClick = {/* 설정하러 가기 동작(필요시 구현) */},
                 type = ButtonType.LABEL_ONLY,
                 buttonColor = ButtonColor.GRAY,
                 label = "설정하러 가기",
@@ -126,7 +129,10 @@ fun SamsungHealthGuideScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             BallogButton(
-                onClick = onConnectClick,
+                onClick = {
+                    OnboardingPrefs.setGuideCompleted(context, true)
+                    onConnectClick()
+                },
                 type = ButtonType.LABEL_ONLY,
                 buttonColor = ButtonColor.BLACK,
                 label = "다음",
