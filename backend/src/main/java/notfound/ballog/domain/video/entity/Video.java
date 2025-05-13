@@ -50,7 +50,7 @@ public class Video {
     private boolean uploadSuccess;
 
     @Column(columnDefinition = "boolean default false")
-    private boolean isDeleted;
+    private boolean deleted;
 
     public static Video of(Match match, Integer quarterNumber, String videoUrl, Duration duration) {
         return Video.builder()
