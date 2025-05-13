@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
 import com.ballog.mobile.data.dto.UserInfoResponse
+import com.ballog.mobile.data.dto.UserStatisticsDto
 import com.ballog.mobile.data.dto.UserUpdateRequest
 import com.ballog.mobile.util.ImageUtils
 import com.ballog.mobile.util.S3Utils
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class ProfileViewModel : ViewModel() {
@@ -113,6 +115,31 @@ class ProfileViewModel : ViewModel() {
             } finally {
                 _isLoading.value = false
                 println("[updateUserInfo] 종료, isLoading=false")
+            }
+        }
+    }
+
+    // 홈화면 사용자 통계 불러오기
+    private val _userStatistics = MutableStateFlow<UserStatisticsDto?>(null)
+    val userStatistics: StateFlow<UserStatisticsDto?> = _userStatistics.asStateFlow()
+
+    fun fetchUserStatistics() {
+        viewModelScope.launch {
+            val token = tokenManager.getAccessToken().firstOrNull() ?: return@launch
+            try {
+                val response = userApi.getUserStatistics("Bearer $token")
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    android.util.Log.d("ProfileViewModel", "✅ 사용자 통계 응답 성공: $result")
+                    _userStatistics.value = result
+                } else {
+                    android.util.Log.e(
+                        "ProfileViewModel",
+                        "❌ 통계 불러오기 실패: response=${response}, code=${response.code()}, message=${response.body()?.message}"
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "❌ 네트워크 오류: ${e.localizedMessage}", e)
             }
         }
     }
