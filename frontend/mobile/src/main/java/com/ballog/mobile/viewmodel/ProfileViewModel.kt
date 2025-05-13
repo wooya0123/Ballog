@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
-import com.ballog.mobile.data.dto.UserInfoResponse
 import com.ballog.mobile.data.dto.UserStatisticsDto
 import com.ballog.mobile.data.dto.UserUpdateRequest
 import com.ballog.mobile.util.ImageUtils

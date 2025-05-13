@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.ButtonColor
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.res.painterResource
 import com.ballog.mobile.ui.components.StatCard
 import com.ballog.mobile.ui.match.HeatMap
