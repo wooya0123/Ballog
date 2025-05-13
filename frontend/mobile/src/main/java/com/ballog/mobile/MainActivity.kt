@@ -36,25 +36,26 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     
     // 딥 링크 데이터 저장
     private var pendingDeepLinkData: DeepLinkData? = null
-    
+
     // 앱이 이미 실행중일 때 딥 링크 처리를 위한 상태 업데이트 트리거
     private val _deepLinkEvent = MutableStateFlow<Boolean>(false)
     val deepLinkEvent: StateFlow<Boolean> = _deepLinkEvent.asStateFlow()
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Wearable Data API 리스너 등록
         Wearable.getDataClient(this).addListener(this)
         
+
         // 시스템 바 설정
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        
+
         // Intent에서 딥 링크 데이터 처리
         println("MainActivity - onCreate with intent: ${intent?.action}, data: ${intent?.data}")
         handleIntent(intent)
         println("MainActivity - After handleIntent in onCreate, pendingDeepLinkData: $pendingDeepLinkData")
-        
+
         setContent {
             val navController = rememberNavController()
             val tokenManager = (application as BallogApplication).tokenManager
@@ -63,16 +64,16 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
             val authState by authViewModel.authState.collectAsState()
             val coroutineScope = rememberCoroutineScope()
             val deepLinkTrigger by deepLinkEvent.collectAsState()
-            
+
             BallogTheme {
                 AppNavHost(navController)
-                
+
                 // 토큰 존재 여부에 따라 화면 전환
                 LaunchedEffect(Unit) {
                     try {
                         val hasTokens = tokenManager.hasTokens().first()
                         println("MainActivity - Token check result: $hasTokens")
-                        
+
                         if (hasTokens) {
                             handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
                         } else {
@@ -95,7 +96,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                         }
                     }
                 }
-                
+
                 // 로그인 상태가 변경될 때마다 실행
                 LaunchedEffect(authState) {
                     if (authState is AuthResult.Success) {
@@ -103,7 +104,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                         handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
                     }
                 }
-                
+
                 // 딥 링크 이벤트가 발생했을 때 실행
                 LaunchedEffect(deepLinkTrigger) {
                     if (deepLinkTrigger) {
@@ -161,7 +162,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         coroutineScope: kotlinx.coroutines.CoroutineScope
     ) {
         println("MainActivity - handleNavigationAfterLogin called, pendingDeepLinkData: $pendingDeepLinkData")
-        
+
         // 딥 링크가 있으면 팀원 추가 후 TeamDetail 화면으로 이동
         if (pendingDeepLinkData != null && pendingDeepLinkData?.type == DeepLinkType.TEAM_INVITE) {
             val teamId = pendingDeepLinkData?.teamId ?: run {
@@ -169,31 +170,31 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                 navController.navigate(Routes.MAIN) { popUpTo(0) { inclusive = true } }
                 return
             }
-            
+
             val inviteCode = pendingDeepLinkData?.inviteCode ?: run {
                 println("MainActivity - InviteCode is null, navigating to main")
                 navController.navigate(Routes.MAIN) { popUpTo(0) { inclusive = true } }
                 return
             }
-            
+
             println("MainActivity - Processing deep link after login: Team Invite, teamId=$teamId, code=$inviteCode")
-            
+
             // 로딩 표시 설정
             teamViewModel.setLoading(true)
-            
+
             // 팀원 추가 처리
             coroutineScope.launch {
                 try {
                     println("MainActivity - Starting addTeamMember for teamId: $teamId")
                     val result = teamViewModel.addTeamMember(teamId)
-                    
+
                     if (result.isSuccess) {
                         println("MainActivity - Successfully added to team: $teamId, navigating to team detail")
-                        
+
                         // 팀 탭으로 이동하기 위해 메인 화면으로 먼저 이동
                         // 이후 TeamTab으로 자동 선택되도록 팀 ID를 전달
                         println("MainActivity - Navigating to main screen with teamId: $teamId")
-                        
+
                         try {
                             // 메인 화면으로 이동하며 팀 ID를 함께 전달
                             navController.navigate("${Routes.MAIN}?teamId=$teamId") {
@@ -237,11 +238,11 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
             }
         }
     }
-    
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // 현재 Activity의 Intent를 업데이트
-        
+
         // 앱이 이미 실행 중일 때 딥 링크를 처리합니다.
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             handleIntent(intent)
@@ -249,40 +250,40 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
             _deepLinkEvent.value = true
         }
     }
-    
+
     private fun handleIntent(intent: Intent?) {
         if (intent == null) {
             println("MainActivity - handleIntent called with null intent")
             return
         }
-        
+
         val appLinkAction = intent.action
         val appLinkData: Uri? = intent.data
-        
+
         println("MainActivity - handleIntent called with action: $appLinkAction, data: $appLinkData")
-        
+
         if (Intent.ACTION_VIEW == appLinkAction && appLinkData != null) {
             println("MainActivity - Received deep link: $appLinkData")
             println("MainActivity - URI Scheme: ${appLinkData.scheme}, Host: ${appLinkData.host}")
             println("MainActivity - Path: ${appLinkData.path}, Query: ${appLinkData.query}")
             println("MainActivity - Full URI components: scheme=${appLinkData.scheme}, host=${appLinkData.host}, path=${appLinkData.path}, query=${appLinkData.query}")
-            
+
             // Query 파라미터 모두 출력
             appLinkData.queryParameterNames.forEach { name ->
                 val value = appLinkData.getQueryParameter(name)
                 println("MainActivity - Query parameter: $name = $value")
             }
-            
+
             when {
                 // 팀 초대 링크 처리 - 커스텀 URL 스킴만 확인
                 appLinkData.scheme == "ballog" && appLinkData.host == "team-invite" -> {
                     println("MainActivity - Detected team invite deep link")
-                    
+
                     val teamId = appLinkData.getQueryParameter("teamId")?.toIntOrNull()
                     val inviteCode = appLinkData.getQueryParameter("code")
-                    
+
                     println("MainActivity - Extracted teamId: $teamId, code: $inviteCode")
-                    
+
                     if (teamId != null && !inviteCode.isNullOrEmpty()) {
                         pendingDeepLinkData = DeepLinkData(
                             type = DeepLinkType.TEAM_INVITE,

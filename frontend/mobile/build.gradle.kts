@@ -20,7 +20,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
+
         // 빈 AWS 키 설정 - 실제 키는 S3Utils에서 assets/aws.properties에서 로드
         buildConfigField("String", "AWS_ACCESS_KEY", "\"\"")
         buildConfigField("String", "AWS_SECRET_KEY", "\"\"")
@@ -112,4 +112,10 @@ dependencies {
 
     // Wearable API
     implementation(libs.play.services.wearable.v1810)
+
+    // Media3 (ExoPlayer 최신 버전)
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-ui:1.2.1")
+
 }
+

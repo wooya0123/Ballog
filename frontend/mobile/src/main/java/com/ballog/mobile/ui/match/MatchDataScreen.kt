@@ -19,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.Immutable
 import com.ballog.mobile.ui.components.Input
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonType
@@ -29,196 +28,166 @@ import com.ballog.mobile.ui.theme.Primary
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.painterResource
 import com.ballog.mobile.R
-import com.ballog.mobile.data.service.SamsungHealthDataService
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.launch
-import android.widget.Toast
-import android.util.Log
-import com.ballog.mobile.BallogApplication
-import com.ballog.mobile.data.api.RetrofitInstance.matchApi
-import com.ballog.mobile.data.model.Exercise
-import kotlinx.coroutines.flow.firstOrNull
-import java.text.SimpleDateFormat
-import java.util.*
-import com.ballog.mobile.data.service.MatchReportService
-import com.ballog.mobile.ui.components.HeatMapWithSideSelection
-import com.ballog.mobile.data.service.ExerciseMetricsCalculator
-
-
-private const val TAG = "MatchDataScreen"
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.MatchViewModel
+import com.ballog.mobile.viewmodel.MatchUiState
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
+import com.ballog.mobile.data.model.MatchDataCardInfo
 
 @Composable
-fun MatchDataScreen() {
-    var showModal by remember { mutableStateOf(false) }
-    var modalData by remember { mutableStateOf<MatchDataCardInfo?>(null) }
-    var modalHeatData by remember { mutableStateOf<List<List<Int>>?>(null) }
-    val context = LocalContext.current
-    val samsungHealthService = remember { SamsungHealthDataService(context) }
-    val matchReportService = remember {
-        MatchReportService(
-            context = context,
-            matchApi = matchApi,
-            samsungHealthDataService = samsungHealthService
-        )
-    }
-    val scope = rememberCoroutineScope()
-    var matchData by remember { mutableStateOf<List<MatchDataCardInfo>>(emptyList()) }
-    var exerciseDataMap by remember { mutableStateOf<Map<String, Exercise>>(emptyMap()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 선택된 데이터들의 쿼터 정보를 저장할 맵
-    var selectedDataMap by remember { mutableStateOf<Map<String, QuarterInfo>>(emptyMap()) }
-
-    // 데이터 로드
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                isLoading = true
-                // 매번 새로운 데이터 로드
-                val exerciseData = samsungHealthService.getExercise()
-                matchData = exerciseData.map { exercise ->
-                    MatchDataCardInfo(
-                        id = exercise.id,
-                        date = exercise.date,
-                        startTime = exercise.startTime,
-                        endTime = exercise.endTime,
-                        buttonText = "정보 입력하기"
-                    )
+    when (uiState) {
+        is MatchUiState.WaitingForStadiumData -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    WatchWithAnimatedCircles()
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "경기장 데이터를 기다리고 있습니다",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = pretendard,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "워치를 연동해주세요",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = pretendard,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
                 }
-                // Exercise 데이터를 Map으로 저장 (새로 계산된 히트맵 포함)
-                exerciseDataMap = exerciseData.associateBy { it.id }
-            } catch (e: Exception) {
-                Log.e(TAG, "데이터 로드 실패: ${e.message}")
-                errorMessage = "데이터 로드 실패: ${e.message}"
-            } finally {
-                isLoading = false
             }
         }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-    ) {
-        TopNavItem(
-            title = "매치 데이터 연동",
-            type = TopNavType.MAIN_BASIC
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            matchData.forEach { data ->
-                MatchDataCard(
-                    date = data.date,
-                    startTime = data.startTime,
-                    endTime = data.endTime,
-                    buttonText = data.buttonText,
-                    onButtonClick = {
-                        modalData = data
-                        modalHeatData = exerciseDataMap[data.id]?.heatmapData
-                        showModal = true
-                    }
+        is MatchUiState.Loading -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = "데이터 로딩 중입니다",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = pretendard,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+        }
+        is MatchUiState.NoData -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TopNavItem(
+                    title = "매치 데이터 연동",
+                    type = TopNavType.MAIN_BASIC
+                )
+                Spacer(modifier = Modifier.height(180.dp))
+                // 삼성헬스 이미지
+                Image(
+                    painter = painterResource(id = R.drawable.samsung_health_144x144),
+                    contentDescription = "삼성헬스 아이콘",
+                    modifier = Modifier.size(80.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "삼성헬스 데이터가 없습니다.",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = pretendard,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "삼성헬스에서 운동 데이터를 연동해 주세요.",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    color = Color.Gray
                 )
             }
         }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .height(48.dp)
-                .background(Color(0xFF1B1B1D), shape = RoundedCornerShape(8.dp))
-                .clickable {
-                    if (selectedDataMap.isEmpty()) {
-                        Toast.makeText(context, "선택된 데이터가 없습니다.", Toast.LENGTH_SHORT).show()
-                        return@clickable
-                    }
-
-                    scope.launch {
-                        try {
-                            isLoading = true
-                            errorMessage = null
-
-                            // 토큰 가져오기
-                            val token = BallogApplication.getInstance().tokenManager.getAccessToken().firstOrNull()
-                                ?: throw Exception("토큰이 없습니다.")
-
-                            // 현재 날짜를 yyyy-MM-dd 형식으로 변환
-                            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val matchDate = dateFormat.format(Date())
-
-                            // 쿼터 데이터 생성
-                            val quarterData = selectedDataMap.map { (id, quarterInfo) ->
-                                // 선택된 데이터의 실제 시작/종료 시간 사용
-                                val selectedData = matchData.find { it.id == id }
-                                    ?: throw Exception("선택된 데이터를 찾을 수 없습니다.")
-
-                                MatchReportService.QuarterData(
-                                    quarterNumber = quarterInfo.quarter.toInt(),
-                                    gameSide = quarterInfo.side,
-                                    startTime = selectedData.startTime,
-                                    endTime = selectedData.endTime
-                                )
-                            }
-
-                            // 리포트 전송
-                            val success = matchReportService.createAndSendMatchReport(
-                                matchDate = matchDate,
-                                quarterData = quarterData,
-                                token = token
-                            )
-
-                            if (success) {
-                                // 데이터 목록에서 해당 항목 제거
-                                matchData = matchData.filter { it.id !in selectedDataMap.keys }
-                                // 선택된 데이터 맵 초기화
-                                selectedDataMap = emptyMap()
-                                Toast.makeText(context, "데이터가 성공적으로 전송되었습니다.", Toast.LENGTH_SHORT).show()
-                            } else {
-                                throw Exception("서버 전송 실패")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("MatchDataScreen", "데이터 전송 실패: ${e.message}")
-                            errorMessage = "데이터 전송 실패: ${e.message}"
-                        } finally {
-                            isLoading = false
-                        }
-                    }
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "저장하기",
-                fontSize = 16.sp,
-                color = Color(0xFF7EE4EA),
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = pretendard
+        is MatchUiState.Success -> {
+            var showModal by remember { mutableStateOf(false) }
+            var modalData by remember { mutableStateOf<MatchDataCardInfo?>(null) }
+            val cardList = listOf(
+                MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기"),
+                MatchDataCardInfo("2025.05.09", "16:00", "16:45", "정보 입력하기"),
+                MatchDataCardInfo("2025.05.10", "17:10", "17:55", "정보 입력하기"),
+                MatchDataCardInfo("2025.05.11", "18:20", "19:05", "정보 입력하기")
             )
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-    }
-
-    if (showModal && modalData != null) {
-        MatchDataModal(
-            data = modalData!!,
-            heatData = modalHeatData ?: List(10) { List(16) { 0 } },
-            onDismiss = { showModal = false },
-            onSave = { quarter, side ->
-                selectedDataMap = selectedDataMap + (modalData!!.id to QuarterInfo(quarter, side))
-                showModal = false
-                Toast.makeText(context, "데이터가 선택되었습니다. 저장하기 버튼을 눌러 전송해주세요.", Toast.LENGTH_SHORT).show()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                TopNavItem(
+                    title = "매치 데이터 연동",
+                    type = TopNavType.MAIN_BASIC
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    cardList.forEach { card ->
+                        MatchDataCard(
+                            date = card.date,
+                            startTime = card.startTime,
+                            endTime = card.endTime,
+                            buttonText = card.buttonText,
+                            onButtonClick = {
+                                modalData = card
+                                showModal = true
+                            }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(48.dp)
+                        .background(Color(0xFF1B1B1D), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "저장하기",
+                        fontSize = 16.sp,
+                        color = Color(0xFF7EE4EA),
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = pretendard
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
-        )
+            if (showModal && modalData != null) {
+                MatchDataModal(
+                    data = modalData!!,
+                    onDismiss = { showModal = false }
+                )
+            }
+        }
     }
 
     // 에러 메시지 표시
@@ -227,22 +196,6 @@ fun MatchDataScreen() {
         errorMessage = null
     }
 }
-
-@Immutable
-data class MatchDataCardInfo(
-    val id: String,
-    val date: String,
-    val startTime: String,
-    val endTime: String,
-    val buttonText: String
-)
-
-// 쿼터 정보를 저장하는 데이터 클래스
-data class QuarterInfo(
-    val quarter: String,
-    val side: String
-)
-
 
 @Composable
 fun MatchDataModal(
@@ -317,11 +270,61 @@ fun MatchDataModal(
                         color = Gray.Gray800,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    HeatMapWithSideSelection(
-                        heatData = heatData,
-                        selectedSide = selectedSide,
-                        onSideSelect = { selectedSide = it }
-                    )
+                    // 진영 선택 HeatMap + Overlay
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(168.dp)
+                    ) {
+                        HeatMap(
+                            heatData = heatData,
+                            modifier = Modifier.matchParentSize()
+                        )
+                        Row(Modifier.matchParentSize()) {
+                            // 왼쪽 영역
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable { selectedSide = "LEFT" }
+                            ) {
+                                if (selectedSide == "LEFT") {
+                                    Box(
+                                        Modifier
+                                            .fillMaxSize()
+                                            .background(Gray.Gray700.copy(alpha = 0.85f))
+                                    )
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_team),
+                                        contentDescription = "왼쪽 선택됨",
+                                        tint = Primary,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                            // 오른쪽 영역
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable { selectedSide = "RIGHT" }
+                            ) {
+                                if (selectedSide == "RIGHT") {
+                                    Box(
+                                        Modifier
+                                            .fillMaxSize()
+                                            .background(Gray.Gray700.copy(alpha = 0.85f))
+                                    )
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_team),
+                                        contentDescription = "오른쪽 선택됨",
+                                        tint = Primary,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
                 Spacer(Modifier.height(24.dp))
                 // 저장 버튼
@@ -349,3 +352,81 @@ fun MatchDataModal(
         }
     }
 }
+
+@Preview
+@Composable
+fun PreviewMatchDataModal() {
+    MatchDataModal(
+        data = MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기"),
+        onDismiss = {}
+    )
+}
+
+@Preview
+@Composable
+fun PreviewMatchDataScreen() {
+    MatchDataScreen()
+}
+
+@Composable
+fun WatchWithAnimatedCircles() {
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale1 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    val scale2 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    val scale3 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(280.dp)) {
+        Box(
+            modifier = Modifier
+                .size(260.dp)
+                .graphicsLayer(scaleX = scale3, scaleY = scale3)
+                .background(
+                    color = Primary.copy(alpha = 0.15f),
+                    shape = CircleShape
+                )
+        )
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .graphicsLayer(scaleX = scale2, scaleY = scale2)
+                .background(
+                    color = Primary.copy(alpha = 0.30f),
+                    shape = CircleShape
+                )
+        )
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .graphicsLayer(scaleX = scale1, scaleY = scale1)
+                .background(
+                    color = Primary.copy(alpha = 0.5f),
+                    shape = CircleShape
+                )
+        )
+        Image(
+            painter = painterResource(id = R.drawable.ic_watch),
+            contentDescription = "워치 아이콘",
+            modifier = Modifier.size(110.dp)
+        )
+    }
+} 
