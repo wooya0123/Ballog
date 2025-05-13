@@ -23,4 +23,6 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Integer>
     @Modifying
     void deleteAllByTeamId(Integer teamId);
 
+    Integer countTeamMembersByTeamId(Integer teamId);
+
 }

@@ -1,5 +1,6 @@
 package notfound.ballog.domain.team.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,8 @@ public class TeamMemberAddRequest {
 
     private Integer teamId;
 
-    // '운영진', '멤버' ,'용병'
+    // 'MANAGER', 'MEMBER' ,'GUEST'
+    @NotBlank(message = "팀 역할을 입력해주세요")
     private String role;
 
 }

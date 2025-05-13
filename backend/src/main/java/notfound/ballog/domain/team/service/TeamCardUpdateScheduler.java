@@ -19,4 +19,5 @@ public class TeamCardUpdateScheduler {
         teamService.updateAllTeamCards();
         log.info("팀 카드 주간 업데이트 스케줄러 완료");
     }
+
 }
