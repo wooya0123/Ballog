@@ -21,7 +21,6 @@ import com.ballog.mobile.ui.profile.ProfileEditScreen
 import com.ballog.mobile.viewmodel.AuthViewModel
 import com.ballog.mobile.navigation.Routes.MATCH_DATA
 import com.ballog.mobile.ui.match.MatchDataScreen
-import com.ballog.mobile.ui.permission.PermissionCheckScreen
 
 @Composable
 fun AppNavHost(
@@ -95,9 +94,6 @@ fun AppNavHost(
                 viewModel = authViewModel,
                 initialTeamId = teamId?.toIntOrNull()
             )
-        }
-        composable(Routes.PERMISSION_CHECK) {
-            PermissionCheckScreen(navController = navController)
         }
         // (메인 밖에서 접근 가능한 화면만 남김)
     }
