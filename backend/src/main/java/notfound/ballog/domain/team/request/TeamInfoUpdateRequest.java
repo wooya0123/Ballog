@@ -1,5 +1,6 @@
 package notfound.ballog.domain.team.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ public class TeamInfoUpdateRequest {
 
     private Integer teamId;
 
+    @NotBlank(message = "팀 이름을 입력해주세요")
     private String teamName;
 
     private LocalDate foundationDate;
