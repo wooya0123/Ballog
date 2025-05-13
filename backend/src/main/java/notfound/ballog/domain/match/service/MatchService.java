@@ -18,6 +18,7 @@ import notfound.ballog.domain.quarter.repository.QuarterRepository;
 import notfound.ballog.domain.team.repository.TeamMemberRepository;
 import notfound.ballog.domain.team.repository.TeamRepository;
 import notfound.ballog.exception.InternalServerException;
+import notfound.ballog.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,7 +72,13 @@ public class MatchService {
     }
 
     public MatchDetailResponse getMatchDetail(UUID userId, Integer matchId){
-        List<ParticipantDto> participantDtos = teamRepository.findParticipantsByUserIdAndMatchId(userId, matchId);
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.BAD_REQUEST));
+        List<ParticipantDto> participantDtos = null;
+
+        if(match.getTeamId() != null) {
+            participantDtos = teamRepository.findParticipantsByUserIdAndMatchId(userId, matchId);
+        }
 
         List<GameReportDto> gameReportDtos = quarterRepository.findGameReportByUserIdAndMatchId(userId, matchId);
 
