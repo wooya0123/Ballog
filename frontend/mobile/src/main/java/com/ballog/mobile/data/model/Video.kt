@@ -3,15 +3,15 @@ package com.ballog.mobile.data.model
 import com.ballog.mobile.data.dto.HighlightDto
 import com.ballog.mobile.data.dto.VideoResponseDto
 
-// 쿼터 영상 단위 모델
+// 도메인 모델
 data class Video(
-    val id: Int,
-    val url: String,
+    val id: Int?, // videoId
+    val url: String?,
     val quarter: Int,
+    val uploadSuccess: Boolean,
     val highlights: List<Highlight>
 )
 
-// 하이라이트 구간 모델
 data class Highlight(
     val id: Int,
     val title: String,
@@ -19,17 +19,22 @@ data class Highlight(
     val endTime: String
 )
 
-// 확장 함수: DTO → Model 변환
-fun VideoResponseDto.toVideo() = Video(
-    id = videoId,
-    url = videoUrl,
-    quarter = quarter,
-    highlights = highlightList.map { it.toHighlight() }
-)
+// DTO → Model 변환
+fun VideoResponseDto.toVideo(): Video {
+    return Video(
+        id = videoId,
+        url = videoUrl,
+        quarter = quarterNumber,
+        uploadSuccess = uploadSuccess,
+        highlights = highlightList.map { it.toHighlight() }
+    )
+}
 
-fun HighlightDto.toHighlight() = Highlight(
-    id = highlightId,
-    title = title,
-    startTime = startTime,
-    endTime = endTime
-)
+fun HighlightDto.toHighlight(): Highlight {
+    return Highlight(
+        id = highlightId,
+        title = highlightName,
+        startTime = startTime,
+        endTime = endTime
+    )
+}

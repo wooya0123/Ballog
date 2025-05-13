@@ -17,16 +17,14 @@ import com.ballog.mobile.util.FileUtils
 import com.ballog.mobile.util.VideoUtils
 import com.ballog.mobile.viewmodel.VideoViewModel
 import android.util.Log
+import com.ballog.mobile.ui.video.QuarterVideoData
 
-data class QuarterVideoData(
-    val videoUri: Uri? = null,
-    val highlights: List<HighlightUiState> = emptyList(),
-    val showPlayer: Boolean = false
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MatchVideoTab(matchId: Int) {
+fun MatchVideoTab(matchId: Int, matchName: String) {
+    Log.d("MatchVideoTab", "🟦 $matchId 번 $matchName 매치의 영상 탭 접속")
+
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -35,16 +33,19 @@ fun MatchVideoTab(matchId: Int) {
     var showAddSheet by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
     var editingHighlight by remember { mutableStateOf(HighlightUiState("", "", "", "", "")) }
+    val videoViewModel: VideoViewModel = viewModel()
+    val videoUiState by videoViewModel.videoUiState.collectAsState()
 
-    val quarterList = listOf("1 쿼터", "2 쿼터", "3 쿼터", "4 쿼터")
+    val quarterOptions = remember(videoUiState.totalQuarters) {
+        (1..videoUiState.totalQuarters).map { "$it 쿼터" }
+    }
 
     val context = LocalContext.current
 
-    val videoViewModel: VideoViewModel = viewModel()
 
-    val quarterData = remember {
+    val quarterData = remember(quarterOptions) {
         mutableStateMapOf<String, QuarterVideoData>().apply {
-            quarterList.forEach { this[it] = QuarterVideoData() }
+            quarterOptions.forEach { this[it] = QuarterVideoData() }
         }
     }
 
@@ -70,18 +71,15 @@ fun MatchVideoTab(matchId: Int) {
             )
 
             // 3. 업로드를 위한 File 및 duration 추출
-            Log.d("MatchVideoTab", "📦 File 변환 및 duration 추출 시작")
             val file = FileUtils.uriToFile(context, it)
             val duration = VideoUtils.getVideoDurationString(context, it)
-            Log.d("MatchVideoTab", "⏱️ 추출된 duration: $duration")
-//            val quarterNumber = currentQuarter.filter { ch -> ch.isDigit() }.toIntOrNull() ?: 1
-            val quarterNumber = 1  // TODO ⚠️ 실제 quarterNumber 교체 필요
-            val matchId = 29 // TODO ⚠️ 실제 matchId로 교체 필요
+            val quarterNumber = selectedQuarter.filter { it.isDigit() }.toIntOrNull() ?: 1
 
             Log.d("MatchVideoTab", "📦 File name: ${file.name}, duration: $duration, quarter: $quarterNumber, matchId: $matchId")
 
             // 4. presigned URL 요청 + S3 업로드 진행
             Log.d("MatchVideoTab", "🚀 영상 업로드 API 호출 시작")
+
             videoViewModel.uploadQuarterVideo(
                 context = context,
                 file = file,
@@ -110,10 +108,13 @@ fun MatchVideoTab(matchId: Int) {
                 quarterData[selectedQuarter] = current.copy(showPlayer = !current.showPlayer)
             },
             selectedQuarter = selectedQuarter,
+            quarterOptions = quarterOptions,
             expanded = expanded,
             onQuarterChange = {
                 val prevQuarter = selectedQuarter
                 selectedQuarter = it
+
+                Log.d("MatchVideoTab", "🔄 쿼터 변경됨: 이전 : $prevQuarter, 현재 : $selectedQuarter")
                 
                 if (prevQuarter.isNotEmpty() && quarterData.containsKey(prevQuarter)) {
                     val prevData = quarterData[prevQuarter]
@@ -224,6 +225,6 @@ fun MatchVideoTab(matchId: Int) {
 @Composable
 fun MatchVideoTabPreview() {
     BallogTheme {
-        MatchVideoTab(matchId = 29)
+        MatchVideoTab(matchId = 29, matchName = "친선매치")
     }
 }
