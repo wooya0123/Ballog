@@ -13,10 +13,6 @@ public class PlayerCardDto {
 
     private String nickName;
 
-    private String playStyle;
-
-    private String rank;
-
     private String role;
 
     private String cardImageUrl;
