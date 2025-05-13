@@ -15,6 +15,10 @@ import notfound.ballog.domain.video.service.HighlightService;
 import notfound.ballog.domain.video.service.VideoService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
 @Tag(
         name = "Video"
 )
@@ -37,6 +41,15 @@ public class VideoController {
     }
 
     @Operation(
+            summary = "영상 업로드 체크"
+    )
+    @PostMapping("/status")
+    public BaseResponse<Void> updateVideo(@Valid @RequestBody UpdateVideoRequest request) {
+        videoService.updateVideo(request);
+        return BaseResponse.ok();
+    }
+
+    @Operation(
             summary = "매치 영상 조회"
     )
     @GetMapping("/{matchId}")
@@ -55,6 +68,15 @@ public class VideoController {
     @DeleteMapping()
     public BaseResponse<Void> deleteVideo(@Valid @RequestBody DeleteVideoRequest request) {
         videoService.deleteVideo(request);
+        return BaseResponse.ok();
+    }
+
+    @PostMapping("/highlight/auto")
+    public BaseResponse<Void> extractHighlight(
+            @RequestPart("json") ExtractHighlightRequest request,
+            @RequestPart("file") MultipartFile file
+    ) throws IOException {
+        highlightService.extractHighlight(request, file);
         return BaseResponse.ok();
     }
 

@@ -47,7 +47,7 @@ public class Highlight {
     private LocalDateTime createdAt;
 
     @Column(columnDefinition = "boolean default false")
-    private boolean isDeleted;
+    private boolean deleted;
 
     public static Highlight of(Video video, HighlightDto highlightDto) {
         return Highlight.builder()

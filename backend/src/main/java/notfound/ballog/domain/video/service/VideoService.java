@@ -14,6 +14,7 @@ import notfound.ballog.domain.video.repository.HighlightRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
 import notfound.ballog.domain.video.request.DeleteVideoRequest;
 import notfound.ballog.domain.video.request.AddVideoRequest;
+import notfound.ballog.domain.video.request.UpdateVideoRequest;
 import notfound.ballog.domain.video.response.AddVideoResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.exception.NotFoundException;
@@ -39,7 +40,10 @@ public class VideoService {
         // 업로드한 영상 있는지 확인
         Optional<Video> existingVideo = videoRepository.findByMatch_MatchIdAndQuarterNumber(request.getMatchId(), request.getQuarterNumber());
         if (existingVideo.isPresent()) {
-            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
+            Video video = existingVideo.get();
+            if (video.isUploadSuccess()) {
+                throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
+            }
         }
 
         Match match = matchRepository.findById(request.getMatchId())
@@ -60,6 +64,21 @@ public class VideoService {
         Video video = Video.of(match, request.getQuarterNumber(), presignedUrl, videoDuration);
         Video savedVideo = videoRepository.save(video);
         return AddVideoResponse.of(savedVideo.getVideoUrl());
+    }
+
+    @Transactional
+    public void updateVideo(UpdateVideoRequest request) {
+        // 영상 조회
+        Video video = videoRepository.
+                findByMatch_MatchIdAndQuarterNumber(request.getMatchId(), request.getQuarterNumber())
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
+
+        // 이미 업로드 체크를 했다면 예외처리
+        if (video.isUploadSuccess()) {
+            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
+        }
+        video.updateUploadSuccess();
+        videoRepository.save(video);
     }
 
     @Transactional
@@ -85,8 +104,6 @@ public class VideoService {
             }
             // 4. 쿼터 dto 생성
             VideoDto videoDto = VideoDto.of(video, highlightDtoList);
-
-            // 5. 쿼터 리스트 dto에 추가
             videoDtoList.add(videoDto);
         }
         Integer totalQuarters = videoDtoList.size();
