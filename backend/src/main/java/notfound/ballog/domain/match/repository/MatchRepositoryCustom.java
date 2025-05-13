@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public interface MatchRepositoryCustom {
 
-    List<MatchDto> findMatchesByUserIdAndMonth(UUID userId, String month);
+    List<MatchDto> findMatchesByUserIdAndMonth(UUID userId, LocalDate startOfMonth, LocalDate endOfMonth);
 
-    List<MatchDto> findMatchesByTeamIdAndMonth(Integer teamId, String month);
+    List<MatchDto> findMatchesByTeamIdAndMonth(Integer teamId, LocalDate startOfMonth, LocalDate endOfMonth);
 
     Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate);
 

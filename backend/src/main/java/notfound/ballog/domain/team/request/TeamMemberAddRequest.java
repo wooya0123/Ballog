@@ -1,6 +1,7 @@
 package notfound.ballog.domain.team.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TeamMemberAddRequest {
 
+    @NotNull
     private Integer teamId;
 
     // 'MANAGER', 'MEMBER' ,'GUEST'
