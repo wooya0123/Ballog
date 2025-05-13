@@ -1,33 +1,53 @@
 package com.ballog.mobile.ui.video
 
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import coil.compose.AsyncImage
+
+// 커스텀 컴포넌트
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.components.BallogButton
-import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
+import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.DropDown
 import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.video.HighlightCard
+import com.ballog.mobile.ui.video.HighlightUiState
 
 @Composable
 fun HighlightContentSection(
+    videoUri: Uri?,
     highlights: List<HighlightUiState>,
+    showPlayer: Boolean,
     selectedQuarter: String,
     expanded: Boolean,
     onQuarterChange: (String) -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (HighlightUiState) -> Unit,
-    onDeleteVideo: () -> Unit
+    onDeleteVideo: () -> Unit,
+    onUploadClick: () -> Unit,
+    onTogglePlayer: () -> Unit
 ) {
     Column {
-        // 공통: 영상 자리
-        VideoPlaceholderBox()
+        VideoPlaceholderBox(
+            videoUri = videoUri,
+            showPlayer = showPlayer,
+            onTogglePlayer = onTogglePlayer,
+            selectedQuarter = selectedQuarter
+        )
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             Spacer(modifier = Modifier.height(20.dp))
@@ -41,9 +61,9 @@ fun HighlightContentSection(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            if (highlights.isEmpty()) {
+            if (videoUri == null) {
                 BallogButton(
-                    onClick = { /* TODO: 영상 업로드 */ },
+                    onClick = onUploadClick,
                     type = ButtonType.BOTH,
                     buttonColor = ButtonColor.GRAY,
                     icon = painterResource(id = R.drawable.ic_upload),
@@ -88,7 +108,7 @@ fun HighlightContentSection(
                     type = ButtonType.BOTH,
                     buttonColor = ButtonColor.ALERT,
                     icon = painterResource(id = R.drawable.ic_trash),
-                    label = "구간 삭제",
+                    label = "영상 삭제",
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -97,13 +117,78 @@ fun HighlightContentSection(
 }
 
 @Composable
-private fun VideoPlaceholderBox() {
+fun VideoPlaceholderBox(
+    videoUri: Uri?,
+    showPlayer: Boolean,
+    onTogglePlayer: () -> Unit,
+    selectedQuarter: String
+) {
+    val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(true) }
+    var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
+
+    // 컴포넌트 생명주기에 따라 ExoPlayer 관리
+    val exoPlayer = remember(selectedQuarter) {
+        ExoPlayer.Builder(context).build().apply {
+            playWhenReady = false
+        }
+    }
+
+    // ExoPlayer 해제를 보장
+    DisposableEffect(selectedQuarter) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    // videoUri가 변경될 때 미디어 설정
+    LaunchedEffect(videoUri, selectedQuarter) {
+        isLoading = true
+        thumbnailUri = videoUri
+        
+        if (videoUri != null) {
+            exoPlayer.apply {
+                stop()
+                clearMediaItems()
+                setMediaItem(MediaItem.fromUri(videoUri))
+                prepare()
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
             .background(Gray.Gray300)
-    )
+            .clickable(enabled = videoUri != null) { onTogglePlayer() }
+    ) {
+        if (videoUri != null) {
+            if (showPlayer) {
+                AndroidView(
+                    factory = {
+                        PlayerView(it).apply {
+                            player = exoPlayer
+                            useController = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    update = { playerView ->
+                        playerView.player = exoPlayer
+                    }
+                )
+            } else {
+                AsyncImage(
+                    model = thumbnailUri,
+                    contentDescription = "Video Thumbnail",
+                    modifier = Modifier.fillMaxSize(),
+                    onLoading = { isLoading = true },
+                    onSuccess = { isLoading = false },
+                    onError = { isLoading = false }
+                )
+            }
+        }
+    }
 }
 
 @Composable

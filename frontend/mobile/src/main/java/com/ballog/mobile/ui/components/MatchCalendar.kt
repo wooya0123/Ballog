@@ -35,8 +35,9 @@ fun MatchCalendar(
 
     Surface(
         modifier = modifier
-            .width(312.dp)
-            .height(344.dp),
+            .padding(horizontal = 24.dp)
+            .fillMaxWidth()
+            .wrapContentHeight(),
         shape = RoundedCornerShape(16.dp),
         color = Gray.Gray700
     ) {
@@ -87,7 +88,7 @@ fun MatchCalendar(
                         fontWeight = FontWeight.Normal,
                         fontFamily = pretendard,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.width(40.dp),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
