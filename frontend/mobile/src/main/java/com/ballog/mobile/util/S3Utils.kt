@@ -44,23 +44,10 @@ object S3Utils {
     fun init(context: Context) {
         try {
             Log.d(TAG, "S3 Utils 초기화 시작")
-            
-            // 인터넷 연결 확인
-            try {
-                val runtime = Runtime.getRuntime()
-                val ipProcess = runtime.exec("ping -c 1 8.8.8.8")
-                val exitValue = ipProcess.waitFor()
-                val connectedToInternet = (exitValue == 0)
-                Log.d(TAG, "인터넷 연결 상태: ${if(connectedToInternet) "연결됨" else "연결 안됨"}")
-            } catch (e: Exception) {
-                Log.w(TAG, "인터넷 연결 확인 실패: ${e.message}")
-            }
-            
             // assets에서 aws.properties 파일 직접 읽기
             try {
                 val fileContents = context.assets.open("aws.properties").bufferedReader().use { it.readText() }
                 Log.d(TAG, "aws.properties 파일 읽기 성공 (${fileContents.length} 바이트)")
-                
                 // 파일 내용에서 키 값을 추출
                 fileContents.lines().forEach { line ->
                     when {
@@ -74,13 +61,11 @@ object S3Utils {
                         }
                     }
                 }
-                
                 Log.d(TAG, "AWS 자격 증명 로드 완료")
             } catch (e: Exception) {
                 Log.e(TAG, "aws.properties 파일 읽기 실패: ${e.message}")
                 e.printStackTrace()
             }
-            
             // 키가 설정되어 있지 않으면 로그로 경고
             if (accessKey.isNullOrEmpty() || secretKey.isNullOrEmpty()) {
                 Log.e(TAG, "WARNING: AWS credentials not properly configured!")

@@ -1,9 +1,11 @@
 package com.ballog.mobile.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
+import com.ballog.mobile.data.dto.MatchDetailResponseDto
 import com.ballog.mobile.data.dto.MatchItemDto
 import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
@@ -11,20 +13,73 @@ import com.ballog.mobile.data.dto.TeamMember
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
 import com.ballog.mobile.ui.components.DateMarkerState
+import com.google.android.gms.wearable.Wearable
+import com.google.android.gms.wearable.Node
+import com.google.android.gms.wearable.NodeClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.isActive
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import com.ballog.mobile.data.model.MatchDataCardInfo
 
-class MatchViewModel : ViewModel() {
+sealed class MatchUiState {
+    object WaitingForStadiumData : MatchUiState() // 경기장 데이터 대기
+    object Loading : MatchUiState()
+    object NoData : MatchUiState()
+    data class Success(val data: List<MatchDataCardInfo>) : MatchUiState()
+}
+
+class MatchViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = BallogApplication.getInstance().tokenManager
     private val matchApi = RetrofitInstance.matchApi
 
     // 매치 상태 (로딩 / 성공 / 에러)
     private val _matchState = MutableStateFlow<MatchState>(MatchState.Loading)
     val matchState: StateFlow<MatchState> = _matchState
+
+    private val _uiState = MutableStateFlow<MatchUiState>(
+        MatchUiState.WaitingForStadiumData
+    )
+    val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
+
+    private var pollingJob: Job? = null
+
+    private fun startWatchConnectionPolling() {
+        if (pollingJob?.isActive == true) return
+        pollingJob = viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            val nodeClient = Wearable.getNodeClient(context)
+            try {
+                while (isActive) {
+                    val nodes = getConnectedNodesSuspend(nodeClient)
+                    if (nodes.isNotEmpty()) {
+                        setWatchConnected()
+                    } else {
+                        setWatchNotConnected()
+                    }
+                    delay(2000)
+                }
+            } catch (e: CancellationException) {
+                // 폴링 취소 시 무시
+            }
+        }
+    }
+
+    private suspend fun getConnectedNodesSuspend(nodeClient: NodeClient): List<Node> =
+        suspendCancellableCoroutine { cont ->
+            nodeClient.connectedNodes
+                .addOnSuccessListener { nodes -> cont.resume(nodes) }
+                .addOnFailureListener { cont.resume(emptyList()) }
+        }
 
     /**
      * 내 매치 리스트 불러오기
@@ -194,7 +249,85 @@ class MatchViewModel : ViewModel() {
         }
     }
 
+    /* 매치 상세 조회 */
+    private val _matchDetail = MutableStateFlow<MatchDetailResponseDto?>(null)
+    val matchDetail: StateFlow<MatchDetailResponseDto?> = _matchDetail
 
+    fun fetchMatchDetail(matchId: Int) {
+        viewModelScope.launch {
+            try {
+                val token = tokenManager.getAccessToken().firstOrNull() ?: return@launch
+                val response = matchApi.getMatchDetail("Bearer $token", matchId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    android.util.Log.d("MatchViewModel", "✅ 매치 상세 조회 성공: $result")
+                    _matchDetail.value = result
+                } else {
+                    android.util.Log.e("MatchViewModel", "❌ 매치 상세 조회 실패: ${response.body()?.message}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MatchViewModel", "❌ 예외 발생: ${e.localizedMessage}")
+            }
+        }
+    }
+    
+    // 샘플: 상태 전환 메서드 (나중에 실제 연동 로직으로 대체)
+    fun setWatchChecking() {
+        android.util.Log.d("MatchViewModel", "상태 전환: WatchChecking")
+        _uiState.value = MatchUiState.WaitingForStadiumData
+    }
+    fun setWatchNotConnected() {
+        android.util.Log.d("MatchViewModel", "상태 전환: WatchNotConnected")
+        _uiState.value = MatchUiState.WaitingForStadiumData
+    }
+    fun setWatchConnected() {
+        android.util.Log.d("MatchViewModel", "상태 전환: WatchConnected")
+        _uiState.value = MatchUiState.WaitingForStadiumData
+    }
+    fun setLoading() {
+        android.util.Log.d("MatchViewModel", "상태 전환: Loading")
+        _uiState.value = MatchUiState.Loading
+    }
+    fun setNoData() {
+        android.util.Log.d("MatchViewModel", "상태 전환: NoData")
+        _uiState.value = MatchUiState.NoData
+    }
+    fun setSuccess(data: List<MatchDataCardInfo>) {
+        android.util.Log.d("MatchViewModel", "상태 전환: Success($data)")
+        _uiState.value = MatchUiState.Success(data)
+    }
+
+    // 샘플: 데이터 연동 (2초 후 랜덤으로 데이터 있음/없음)
+    fun loadDataFromWatch() {
+        viewModelScope.launch {
+            setLoading()
+            kotlinx.coroutines.delay(2000)
+            val hasData = (0..1).random() == 1
+            if (hasData) {
+                setSuccess(emptyList())
+            } else {
+                setNoData()
+            }
+        }
+    }
+
+    // 워치에서 데이터가 오면 호출
+    fun onWatchDataReceived(data: List<MatchDataCardInfo>?) {
+        _uiState.value = MatchUiState.Loading
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(1000) // 데이터 처리/계산 시간 시뮬레이션
+            if (data.isNullOrEmpty()) {
+                _uiState.value = MatchUiState.NoData
+            } else {
+                _uiState.value = MatchUiState.Success(data)
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        pollingJob?.cancel()
+    }
 }
 
 /**

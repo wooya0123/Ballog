@@ -109,7 +109,12 @@ dependencies {
 
     androidTestImplementation("androidx.compose.ui:ui-test-junit4") // ✅ BOM 적용됨
 
+    // Wearable
+    implementation("com.google.android.gms:play-services-wearable:18.0.0")
+
     // Media3 (ExoPlayer 최신 버전)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
+    
 }
+

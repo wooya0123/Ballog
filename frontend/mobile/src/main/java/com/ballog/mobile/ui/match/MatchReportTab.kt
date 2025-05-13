@@ -2,7 +2,6 @@ package com.ballog.mobile.ui.match
 
 import android.util.Log
 import androidx.compose.runtime.Composable
-import com.ballog.mobile.data.model.Match
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -12,35 +11,31 @@ import com.ballog.mobile.ui.components.SectionHeader
 import com.ballog.mobile.ui.components.PlayerCard
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.ballog.mobile.data.dto.MatchDetailResponseDto
+import com.ballog.mobile.ui.theme.Gray
+import com.ballog.mobile.ui.theme.pretendard
 
 private const val TAG = "MatchReportTab"
 
 @Composable
-fun MatchReportTab(match: Match) {
+fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
+    val quarters = matchDetail.quarterList
+    val participants = matchDetail.participantList
+
     // DropDown 상태
-    var selectedQuarter by remember { mutableStateOf("1 쿼터") }
+    var selectedQuarterIndex by remember { mutableIntStateOf(0) }
     var dropDownExpanded by remember { mutableStateOf(false) }
 
     // SectionHeader 상태
     var myRecordExpanded by remember { mutableStateOf(true) }
     var playerListExpanded by remember { mutableStateOf(true) }
 
-    // 샘플 데이터
-    val heatMapData = List(15) { List(10) { (0..5).random() } }
-    val reportCards = listOf(
-        Triple("분석시간", "29.47", "분"),
-        Triple("이동거리", "2.87", "km"),
-        Triple("최고 속도", "22.79", "km/h"),
-        Triple("평균 속도", "5.82", "km/h"),
-        Triple("스프린트", "13", "회"),
-        Triple("활동 범위", "62.04", "%"),
-        Triple("스프린트거리", "625.18", "m"),
-        Triple("어질리티", "16.18", "%")
-    )
-    val playerList = listOf(
-        Pair("김가희", true),
-        Pair("김가희", false)
-    )
+    val quarterOptions = quarters.map { "${it.quarterNumber} 쿼터" }
+    val selectedQuarter = quarters.getOrNull(selectedQuarterIndex)
 
     Column(
         modifier = Modifier
@@ -50,16 +45,28 @@ fun MatchReportTab(match: Match) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // DropDown
-        DropDown(
-            items = listOf("1 쿼터", "2 쿼터", "3 쿼터", "4 쿼터"),
-            selectedItem = selectedQuarter,
-            onItemSelected = { selectedQuarter = it },
-            expanded = dropDownExpanded,
-            onExpandedChange = { dropDownExpanded = it },
-            modifier = Modifier
-        )
+        if (quarterOptions.isNotEmpty()) {
+            DropDown(
+                items = quarterOptions,
+                selectedItem = quarterOptions.getOrNull(selectedQuarterIndex) ?: "",
+                onItemSelected = { selectedLabel ->
+                    selectedQuarterIndex = quarterOptions.indexOf(selectedLabel)
+                },
+                expanded = dropDownExpanded,
+                onExpandedChange = { dropDownExpanded = it },
+                modifier = Modifier
+            )
+        }
+
         // HeatMap
-        HeatMap(heatData = heatMapData, modifier = Modifier)
+        if (selectedQuarter?.reportData != null) {
+            HeatMap(heatData = selectedQuarter.reportData.heatmap, modifier = Modifier)
+        } else {
+            // 빈 heatmap 보여주기 (예: 전부 0)
+            val emptyHeat = List(10) { List(16) { 0 } }
+            HeatMap(heatData = emptyHeat, modifier = Modifier)
+        }
+
         // 내 기록 Section
         SectionHeader(
             title = "내 기록",
@@ -67,27 +74,78 @@ fun MatchReportTab(match: Match) {
             onToggle = { myRecordExpanded = !myRecordExpanded },
             modifier = Modifier
         )
+
         if (myRecordExpanded) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                reportCards.forEach { (label, value, unit) ->
-                    MatchReportCard(label = label, value = value, unit = unit)
+            if (selectedQuarter?.reportData != null) {
+                val report = selectedQuarter.reportData
+                val reportCards = listOf(
+                    Triple("분석시간", calculateDuration(report.startTime, report.endTime), "분"),
+                    Triple("이동거리", "%.2f".format(report.distance), "km"),
+                    Triple("최고 속도", report.maxSpeed.toString(), "km/h"),
+                    Triple("평균 속도", report.avgSpeed.toString(), "km/h"),
+                    Triple("스프린트", report.sprint.toString(), "회"),
+                    Triple("소모 칼로리", report.calories.toString(), "kcal"),
+                    Triple("평균 심박수", report.avgHeartRate.toString(), "bpm"),
+                    Triple("최대 심박수", report.maxHeartRate.toString(), "bpm")
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    reportCards.forEach { (label, value, unit) ->
+                        MatchReportCard(label = label, value = value, unit = unit)
+                    }
+                }
+            } else {
+                // 경기 기록이 없는 경우
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "아직 경기 기록이 등록되지 않았어요",
+                        fontSize = 14.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        color = Gray.Gray400
+                    )
                 }
             }
         }
-        // 참여 인원 Section
-        SectionHeader(
-            title = "참여 인원",
-            isExpanded = playerListExpanded,
-            onToggle = { playerListExpanded = !playerListExpanded },
-            modifier = Modifier
-        )
-        if (playerListExpanded) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                playerList.forEach { (name, isManager) ->
-                    PlayerCard(name = name, isManager = isManager)
+
+        // 참여 인원 Section (개인 경기에서는 표시 안 함)
+        if (participants.isNotEmpty()) {
+            SectionHeader(
+                title = "참여 인원",
+                isExpanded = playerListExpanded,
+                onToggle = { playerListExpanded = !playerListExpanded },
+                modifier = Modifier
+            )
+            if (playerListExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    participants.forEach { player ->
+                        PlayerCard(
+                            name = player.nickName,
+                            isManager = player.role.uppercase() == "MANAGER"
+                        )
+                    }
                 }
             }
         }
     }
-    Log.d(TAG, "$match")
+
+    Log.d(TAG, "선택된 쿼터: ${selectedQuarter?.quarterNumber}")
 }
+
+
+fun calculateDuration(start: String, end: String): String {
+    return try {
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+        val startTime = java.time.LocalTime.parse(start, formatter)
+        val endTime = java.time.LocalTime.parse(end, formatter)
+        val duration = java.time.Duration.between(startTime, endTime).toMinutes()
+        duration.toString()
+    } catch (e: Exception) {
+        "-"
+    }
+}
+
