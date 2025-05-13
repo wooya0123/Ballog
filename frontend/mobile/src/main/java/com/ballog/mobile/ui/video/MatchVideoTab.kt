@@ -22,8 +22,8 @@ import com.ballog.mobile.ui.video.QuarterVideoData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MatchVideoTab(matchId: Int, matchName: String) {
-    Log.d("MatchVideoTab", "🟦 $matchId 번 $matchName 매치의 영상 탭 접속")
+fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
+    Log.d("MatchVideoTab", "🟦 $matchId 번 매치의 영상 탭 접속")
 
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -36,8 +36,8 @@ fun MatchVideoTab(matchId: Int, matchName: String) {
     val videoViewModel: VideoViewModel = viewModel()
     val videoUiState by videoViewModel.videoUiState.collectAsState()
 
-    val quarterOptions = remember(videoUiState.totalQuarters) {
-        (1..videoUiState.totalQuarters).map { "$it 쿼터" }
+    val quarterOptions = remember(totalQuarters) {
+        (1..totalQuarters).map { "$it 쿼터" }
     }
 
     val context = LocalContext.current
@@ -225,6 +225,6 @@ fun MatchVideoTab(matchId: Int, matchName: String) {
 @Composable
 fun MatchVideoTabPreview() {
     BallogTheme {
-        MatchVideoTab(matchId = 29, matchName = "친선매치")
+        MatchVideoTab(matchId = 29, totalQuarters = 4)
     }
 }

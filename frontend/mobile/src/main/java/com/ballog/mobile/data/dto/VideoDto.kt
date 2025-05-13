@@ -92,14 +92,3 @@ data class BaseResponse(
     val message: String,
     val result: Any? = null
 )
-
-data class VideoUiState(
-    val totalQuarters: Int = 1,
-    val quarterList: List<QuarterVideoData> = emptyList()
-)
-
-data class QuarterVideoData(
-    val videoUri: Uri? = null,
-    val highlights: List<HighlightUiState> = emptyList(),
-    val showPlayer: Boolean = false
-)
