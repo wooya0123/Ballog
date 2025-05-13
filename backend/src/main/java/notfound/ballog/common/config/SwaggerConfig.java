@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,10 @@ import org.springframework.context.annotation.Configuration;
                 description = "Ballog API 문서",
                 version = "v1.0.0"
         ),
-        security = @SecurityRequirement(name = "bearerAuth")
+        security = @SecurityRequirement(name = "bearerAuth"),
+        servers = {
+                @Server(url = "https://k12a404.p.ssafy.io/api", description = "HTTPS Server")
+        }
 )
 
 @SecurityScheme(
@@ -27,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
         in = SecuritySchemeIn.HEADER
 )
 
-/** 모든 api 경로 공개 */
+/* 모든 api 경로 공개 */
 @Configuration
 public class SwaggerConfig {
     @Bean
