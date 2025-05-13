@@ -5,12 +5,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
+import com.ballog.mobile.data.dto.GpsLocation
 import com.ballog.mobile.data.dto.MatchItemDto
 import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMember
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
+import com.ballog.mobile.data.repository.MatchRepository
+import com.ballog.mobile.data.service.MatchReportService
+import com.ballog.mobile.data.service.SamsungHealthDataService
 import com.ballog.mobile.ui.components.DateMarkerState
 import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.Node
@@ -40,6 +44,9 @@ sealed class MatchUiState {
 class MatchViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = BallogApplication.getInstance().tokenManager
     private val matchApi = RetrofitInstance.matchApi
+    private val context = BallogApplication.getInstance().applicationContext
+    private val matchRepository = MatchRepository(context)
+    private val samsungHealthService = SamsungHealthDataService(context)
 
     // 매치 상태 (로딩 / 성공 / 에러)
     private val _matchState = MutableStateFlow<MatchState>(MatchState.Loading)
@@ -194,7 +201,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
             val response = matchApi.registerMyMatch("Bearer $token", request)
             android.util.Log.d("MatchViewModel", "📤 요청 내용: $request")
-
 
             if (response.isSuccessful && response.body()?.isSuccess == true) {
                 onSuccess()

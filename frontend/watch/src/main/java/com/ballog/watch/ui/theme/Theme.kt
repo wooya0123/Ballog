@@ -1,4 +1,4 @@
-package notfound.ballog.presentation.theme
+package com.ballog.watch.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.MaterialTheme

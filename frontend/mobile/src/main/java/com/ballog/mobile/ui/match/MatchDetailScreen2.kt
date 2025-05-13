@@ -37,7 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 private const val TAG = "MatchDetailScreen"
 
 @Composable
-fun MatchDetailScreen(
+fun MatchDetailScreen2(
     navController: NavController,
     matchId: Int,
     viewModel: MatchViewModel = viewModel()
@@ -58,7 +58,7 @@ fun MatchDetailScreen(
     var samsungHealthDataService by remember { mutableStateOf<SamsungHealthDataService?>(null) }
     var isHealthDataLoading by remember { mutableStateOf(false) }
     var healthDataError by remember { mutableStateOf<String?>(null) }
-    
+
     // 컨텍스트 저장
     val context = LocalContext.current
 
@@ -158,7 +158,7 @@ fun MatchDetailScreen(
             match != null -> {
                 when (selectedTab) {
                     0 -> MatchReportTab(match = match)
-                    1 -> MatchVideoTab()
+                    1 -> VideoTab()
                 }
             }
             else -> {

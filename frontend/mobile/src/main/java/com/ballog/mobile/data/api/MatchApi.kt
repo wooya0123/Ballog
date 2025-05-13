@@ -4,6 +4,7 @@ import com.ballog.mobile.data.dto.MatchListResponse
 import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
 import com.ballog.mobile.data.model.ApiResponse
+import org.json.JSONObject
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -42,4 +43,10 @@ interface MatchApi {
         @Body request: TeamMatchRegisterRequest
     ): Response<ApiResponse<Unit>>
 
+    // 매치 리포트 전송
+    @POST("v1/quarter")
+    suspend fun sendMatchReport(
+        @Body requestBody: JSONObject,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<Unit>>
 }

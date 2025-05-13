@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
@@ -20,11 +22,12 @@ fun HomeScreen(onMeasureClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 축구공 이미지
-        Image(
-            painter = painterResource(id = R.drawable.soccer_ball),
-            contentDescription = "축구공",
-            modifier = Modifier.size(80.dp)
+        // 축구공 이모지
+        Text(
+            text = "⚽",
+            fontSize = 36.sp,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 32.dp)
         )
         
         Spacer(modifier = Modifier.height(16.dp))
