@@ -8,37 +8,37 @@ import retrofit2.http.*
 
 interface VideoApi {
 
-    @GET("api/v1/videos/{matchId}")
+    @GET("v1/videos/{matchId}")
     suspend fun getMatchVideo(
         @Header("Authorization") token: String,
         @Path("matchId") matchId: Int
     ): Response<ApiResponse<VideoResponseDto>>
 
-    @POST("/api/v1/videos")
+    @POST("v1/videos")
     suspend fun getPresignedVideoUploadUrl(
         @Header("Authorization") token: String,
         @Body request: PresignedVideoUploadRequest
     ): Response<PresignedVideoUploadResponseWrapper>
 
-    @DELETE("api/v1/videos")
+    @DELETE("v1/videos")
     suspend fun deleteQuarterVideo(
         @Header("Authorization") token: String,
         @Query("videoId") videoId: Int
     ): Response<ApiResponse<Unit>>
 
-    @POST("api/v1/videos/highlight")
+    @POST("v1/videos/highlight")
     suspend fun addHighlight(
         @Header("Authorization") token: String,
         @Body request: HighlightAddRequest
     ): Response<ApiResponse<Unit>>
 
-    @PATCH("api/v1/videos/highlight")
+    @PATCH("v1/videos/highlight")
     suspend fun updateHighlight(
         @Header("Authorization") token: String,
         @Body request: HighlightUpdateRequest
     ): Response<ApiResponse<Unit>>
 
-    @DELETE("api/v1/videos/highlight")
+    @DELETE("v1/videos/highlight")
     suspend fun deleteHighlight(
         @Header("Authorization") token: String,
         @Query("highlightId") highlightId: Int
