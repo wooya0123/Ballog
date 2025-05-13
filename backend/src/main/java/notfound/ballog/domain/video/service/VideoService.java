@@ -104,8 +104,6 @@ public class VideoService {
             }
             // 4. 쿼터 dto 생성
             VideoDto videoDto = VideoDto.of(video, highlightDtoList);
-
-            // 5. 쿼터 리스트 dto에 추가
             videoDtoList.add(videoDto);
         }
         Integer totalQuarters = videoDtoList.size();
