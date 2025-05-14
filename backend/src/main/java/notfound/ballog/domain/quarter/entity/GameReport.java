@@ -41,10 +41,10 @@ public class GameReport {
 
     private LocalDateTime createdAt;
 
-    public GameReport(UUID userId, Integer quarterId, Map<String, Object> jsonData, String matchSide) {
+    public GameReport(UUID userId, Integer quarterId, Map<String, Object> reportData, String matchSide) {
         this.userId = userId;
         this.quarterId = quarterId;
-        this.reportData = jsonData;
+        this.reportData = reportData;
         this.matchSide = matchSide;
         this.createdAt = LocalDateTime.now();
     }

@@ -7,7 +7,9 @@ import java.util.Collection;
 import java.util.List;
 
 public interface QuarterRepository extends JpaRepository<Quarter, Integer>, QuarterRepositoryCustom {
+
     List<Quarter> findAllByMatchId(Integer matchId);
 
     List<Quarter> findAllByMatchIdAndQuarterNumberIn(Integer matchId, Collection<Integer> quarterNumbers);
+
 }
