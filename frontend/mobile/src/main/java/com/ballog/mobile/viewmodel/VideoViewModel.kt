@@ -30,12 +30,21 @@ class VideoViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    // ExoPlayer 상태를 관리하기 위한 상태 추가
+    private val _shouldReleasePlayer = MutableStateFlow(false)
+    val shouldReleasePlayer: StateFlow<Boolean> = _shouldReleasePlayer.asStateFlow()
+
     fun setError(message: String?) {
         _error.value = message
     }
 
     fun setLoading(loading: Boolean) {
         _isLoading.value = loading
+    }
+
+    // ExoPlayer 해제 상태 초기화
+    fun resetPlayerRelease() {
+        _shouldReleasePlayer.value = false
     }
 
     /**
@@ -164,12 +173,30 @@ class VideoViewModel : ViewModel() {
     fun deleteVideo(videoId: Int, matchId: Int) {
         viewModelScope.launch {
             try {
-                Log.d("VideoViewModel", "🗑️ 영상 삭제 요청: $videoId")
-                videoApi.deleteVideo(videoId)  // Path 파라미터로 변경
-                getMatchVideos(matchId)
+                Log.d("VideoViewModel", "🗑️ 영상 삭제 시작")
+                Log.d("VideoViewModel", "📋 삭제할 영상 ID: $videoId")
+                Log.d("VideoViewModel", "📋 매치 ID: $matchId")
+                
+                val response = videoApi.deleteVideo(videoId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    Log.d("VideoViewModel", "✅ 영상 삭제 성공")
+                    // ExoPlayer 해제 신호 전송
+                    _shouldReleasePlayer.value = true
+                    Log.d("VideoViewModel", "🎵 ExoPlayer 해제 신호 전송")
+                    
+                    Log.d("VideoViewModel", "🔄 영상 목록 새로고침 시작")
+                    getMatchVideos(matchId)
+                    Log.d("VideoViewModel", "✅ 영상 목록 새로고침 완료")
+                } else {
+                    val errorMessage = response.body()?.message ?: "영상 삭제 실패"
+                    Log.e("VideoViewModel", "❌ 영상 삭제 실패 - $errorMessage")
+                    Log.e("VideoViewModel", "⚠️ 에러 응답: ${response.errorBody()?.string()}")
+                    _error.value = errorMessage
+                }
             } catch (e: Exception) {
-                Log.e("VideoViewModel", "🔥 영상 삭제 실패", e)
-                _error.value = e.message
+                Log.e("VideoViewModel", "🔥 영상 삭제 중 예외 발생", e)
+                Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
+                _error.value = "영상 삭제 중 오류가 발생했습니다: ${e.message}"
             }
         }
     }

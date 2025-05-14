@@ -1,6 +1,7 @@
 package com.ballog.mobile.ui.video
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,8 @@ import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.DropDown
 import com.ballog.mobile.ui.theme.Gray
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.VideoViewModel
 
 @Composable
 fun HighlightContentSection(
@@ -38,14 +41,16 @@ fun HighlightContentSection(
     onDeleteVideo: () -> Unit,
     onUploadClick: () -> Unit,
     onTogglePlayer: () -> Unit,
-    quarterOptions: List<String>
+    quarterOptions: List<String>,
+    viewModel: VideoViewModel = viewModel()
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         VideoPlaceholderBox(
             videoUri = videoUri,
             showPlayer = showPlayer,
             onTogglePlayer = onTogglePlayer,
-            selectedQuarter = selectedQuarter
+            selectedQuarter = selectedQuarter,
+            viewModel = viewModel
         )
 
         Column(
@@ -130,11 +135,14 @@ fun VideoPlaceholderBox(
     videoUri: Uri?,
     showPlayer: Boolean,
     onTogglePlayer: () -> Unit,
-    selectedQuarter: String
+    selectedQuarter: String,
+    viewModel: VideoViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
     var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
+
+    val shouldReleasePlayer by viewModel.shouldReleasePlayer.collectAsState()
 
     val exoPlayer = remember(selectedQuarter) {
         ExoPlayer.Builder(context).build().apply {
@@ -145,6 +153,18 @@ fun VideoPlaceholderBox(
     DisposableEffect(selectedQuarter) {
         onDispose {
             exoPlayer.release()
+        }
+    }
+
+    LaunchedEffect(shouldReleasePlayer) {
+        if (shouldReleasePlayer) {
+            exoPlayer.apply {
+                stop()
+                clearMediaItems()
+                release()
+            }
+            viewModel.resetPlayerRelease()
+            Log.d("VideoPlaceholderBox", "🎵 ExoPlayer 해제 완료")
         }
     }
 
