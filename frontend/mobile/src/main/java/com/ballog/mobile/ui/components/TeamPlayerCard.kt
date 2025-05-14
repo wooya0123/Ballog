@@ -1,6 +1,6 @@
 package com.ballog.mobile.ui.components
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ballog.mobile.R
@@ -21,10 +20,11 @@ import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.pretendard
 
 @Composable
-fun PlayerCard(
+fun TeamPlayerCard(
     name: String,
     isManager: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCardClick: (() -> Unit)? = null // nullable 처리
 ) {
     Surface(
         modifier = modifier
@@ -51,7 +51,7 @@ fun PlayerCard(
                     fontWeight = FontWeight.Medium,
                     color = Gray.Gray800
                 )
-                
+
                 if (isManager) {
                     Box(modifier = Modifier.padding(top = 2.dp)) {
                         Surface(
@@ -70,34 +70,23 @@ fun PlayerCard(
                     }
                 }
             }
-            
-            // Card Icon
-            Icon(
-                painter = painterResource(id = R.drawable.ic_card),
-                contentDescription = "카드",
-                tint = Gray.Gray800,
-                modifier = Modifier.size(24.dp)
-            )
+
+            // 카드 아이콘: 클릭 리스너가 주어졌을 때만 표시
+            if (onCardClick != null) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp) // 터치 영역 확보
+                        .clickable(onClick = onCardClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_card),
+                        contentDescription = "카드",
+                        tint = Gray.Gray800,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun PlayerCardPreview() {
-    Column(
-        modifier = Modifier
-            .background(Color.White)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        PlayerCard(
-            name = "김가희",
-            isManager = true
-        )
-        PlayerCard(
-            name = "김가희",
-            isManager = false
-        )
-    }
-} 

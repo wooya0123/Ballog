@@ -2,16 +2,19 @@ package com.ballog.mobile.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.RetrofitInstance
+import com.ballog.mobile.data.dto.PlayerCardResponseDto
 import com.ballog.mobile.data.dto.UserStatisticsDto
 import com.ballog.mobile.data.dto.UserUpdateRequest
 import com.ballog.mobile.util.ImageUtils
 import com.ballog.mobile.util.S3Utils
 import com.ballog.mobile.data.model.User
 import com.ballog.mobile.data.dto.toUser
+import com.ballog.mobile.data.model.PlayerCardInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -129,16 +132,84 @@ class ProfileViewModel : ViewModel() {
                 val response = userApi.getUserStatistics("Bearer $token")
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
-                    android.util.Log.d("ProfileViewModel", "✅ 사용자 통계 응답 성공: $result")
+                    Log.d("ProfileViewModel", "✅ 사용자 통계 응답 성공: $result")
                     _userStatistics.value = result
                 } else {
-                    android.util.Log.e(
+                    Log.e(
                         "ProfileViewModel",
                         "❌ 통계 불러오기 실패: response=${response}, code=${response.code()}, message=${response.body()?.message}"
                     )
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ProfileViewModel", "❌ 네트워크 오류: ${e.localizedMessage}", e)
+                Log.e("ProfileViewModel", "❌ 네트워크 오류: ${e.localizedMessage}", e)
+            }
+        }
+    }
+
+    // 내 카드 조회
+    fun PlayerCardResponseDto.toDomain(): PlayerCardInfo {
+        return PlayerCardInfo(
+            nickname = nickname,
+            profileImageUrl = profileImageUrl ?: "",
+            stats = listOf(
+                "Speed" to cardStats.speed.toString(),
+                "Stamina" to cardStats.stamina.toString(),
+                "Attack" to cardStats.attack.toString(),
+                "Defense" to cardStats.defense.toString(),
+                "Recovery" to cardStats.recovery.toString()
+            )
+        )
+    }
+
+    private val _playerCardInfo = MutableStateFlow<PlayerCardInfo?>(null)
+    val playerCardInfo: StateFlow<PlayerCardInfo?> = _playerCardInfo
+
+    private val _playerCardFetched = MutableStateFlow(false)
+    val playerCardFetched: StateFlow<Boolean> = _playerCardFetched
+
+    var lastPlayerCardFetchTime: Long = 0L
+
+    fun shouldForceRefresh(): Boolean {
+        val now = System.currentTimeMillis()
+        return now - lastPlayerCardFetchTime > 60 * 60 * 1000 // 1시간 경과 시 강제 새로고침
+    }
+
+    fun fetchPlayerCardInfoIfNeeded() {
+        if (_playerCardFetched.value && !shouldForceRefresh()) return
+        fetchPlayerCardInfo()
+    }
+
+    fun refreshPlayerCardInfo() {
+        fetchPlayerCardInfo(force = true)
+    }
+
+    private fun fetchPlayerCardInfo(force: Boolean = false) {
+        viewModelScope.launch {
+            val token = tokenManager.getAccessToken().firstOrNull()
+            if (token == null) {
+                Log.e("PlayerCard", "로그인 필요")
+                return@launch
+            }
+
+            try {
+                val response = userApi.getPlayerCard("Bearer $token")
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body?.isSuccess == true && body.result != null) {
+                        val domain = body.result.toDomain()
+                        _playerCardInfo.value = domain
+                        _playerCardFetched.value = true
+                        lastPlayerCardFetchTime = System.currentTimeMillis() // ✅ 마지막 호출 시간 기록
+                        Log.d("PlayerCard", "✅ 카드 불러오기 성공: $domain")
+                    } else {
+                        Log.e("PlayerCard", "❌ 실패: 코드=${body?.code}, 메시지=${body?.message}, 본문=${body}")
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("PlayerCard", "❌ 응답 실패: code=${response.code()}, errorBody=$errorBody")
+                }
+            } catch (e: Exception) {
+                Log.e("PlayerCard", "❌ 네트워크 오류: ${e.localizedMessage}", e)
             }
         }
     }

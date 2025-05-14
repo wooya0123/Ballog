@@ -30,3 +30,19 @@ data class UserStatisticsDto(
     val sprint: List<Int>,
     val heartRate: List<Int>
 )
+
+// 내 선수카드 보기
+data class PlayerCardResponseDto(
+    val nickname: String,
+    val profileImageUrl: String,
+    val cardStats: PlayerCardStatsDto
+)
+
+data class PlayerCardStatsDto(
+    val speed: Int,
+    val stamina: Int,
+    val attack: Int,
+    val defense: Int,
+    val recovery: Int
+)
+

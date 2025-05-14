@@ -16,16 +16,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ballog.mobile.R
+import com.ballog.mobile.data.model.Player
 import com.ballog.mobile.data.model.TeamDetail
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
-import com.ballog.mobile.ui.components.PlayerCard
+import com.ballog.mobile.ui.components.TeamPlayerCard
 import com.ballog.mobile.ui.components.TabMenu
 import com.ballog.mobile.ui.components.TeamInfoCard
 import com.ballog.mobile.ui.components.TeamStats
+import com.ballog.mobile.ui.home.PlayerCardDialog
 import com.ballog.mobile.ui.match.TeamMatchTab
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
@@ -40,12 +41,15 @@ fun TeamDetailScreen(
     viewModel: TeamViewModel
 ) {
     Log.d(TAG, "TeamDetailScreen 시작: teamId=$teamId")
-    
+
     var selectedTab by remember { mutableIntStateOf(0) }
     val teamDetail by viewModel.teamDetail.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
-    
+
+    // 선수카드 보기를 위한 변수
+    var selectedPlayer by remember { mutableStateOf<Player?>(null) }
+
     Log.d(TAG, "상태 - isLoading: $isLoading, error: $error, teamDetail: ${teamDetail != null}")
 
     // 화면이 처음 표시될 때 팀 상세 정보 요청
@@ -100,37 +104,40 @@ fun TeamDetailScreen(
                     TopNavItem(
                         title = detail.name,
                         type = TopNavType.DETAIL_WITH_BACK_SETTINGS,
-                        onBackClick = { 
+                        onBackClick = {
                             Log.d(TAG, "뒤로가기 클릭")
-                            navController.popBackStack() 
+                            navController.popBackStack()
                         },
-                        onActionClick = { 
+                        onActionClick = {
                             Log.d(TAG, "설정 클릭")
                             // Navigate to TeamSettingScreen with teamId
                             Log.d(TAG, "팀 설정 화면으로 이동 - teamId: $teamId")
-                            
+
                             // 중첩된 NavHost에 맞는 경로 사용
                             val settingsRoute = "team/settings/$teamId"
                             Log.d(TAG, "팀 설정 화면으로 이동: $settingsRoute")
                             navController.navigate(settingsRoute)
                         }
                     )
-                    
+
                     TabMenu(
                         leftTabText = "팀 정보",
                         rightTabText = "매치",
                         selectedTab = selectedTab,
-                        onTabSelected = { 
+                        onTabSelected = {
                             Log.d(TAG, "탭 선택: $it")
-                            selectedTab = it 
+                            selectedTab = it
                         }
                     )
-                    
+
                     when (selectedTab) {
                         0 -> {
                             Log.d(TAG, "팀 정보 탭 표시")
                             TeamInfoTab(
-                                teamDetail = detail
+                                teamDetail = detail,
+                                selectedPlayer = selectedPlayer,
+                                onDismiss = { selectedPlayer = null },
+                                onPlayerSelected = { selectedPlayer = it }
                             )
                         }
                         1 -> {
@@ -160,7 +167,22 @@ fun TeamDetailScreen(
             }
         }
     }
-    
+
+    selectedPlayer?.let { p ->
+        PlayerCardDialog(
+            name = p.nickname,
+            imageUrl = p.cardImageUrl,
+            stats = listOf(
+                "Speed" to p.stats.speed.toString(),
+                "Stamina" to p.stats.stamina.toString(),
+                "Attack" to p.stats.attack.toString(),
+                "Defense" to p.stats.defense.toString(),
+                "Recovery" to p.stats.recovery.toString()
+            ),
+            onDismiss = { selectedPlayer = null }
+        )
+    }
+
     // 화면이 종료될 때 실행되는 DisposableEffect
     DisposableEffect(Unit) {
         Log.d(TAG, "TeamDetailScreen 진입")
@@ -172,10 +194,12 @@ fun TeamDetailScreen(
 
 @Composable
 private fun TeamInfoTab(
-    teamDetail: TeamDetail
+    teamDetail: TeamDetail,
+    selectedPlayer: Player?,
+    onDismiss: () -> Unit,
+    onPlayerSelected: (Player) -> Unit
 ) {
     Log.d(TAG, "TeamInfoTab 시작")
-    
     // 유효하지 않은 팀 데이터 확인
     if (teamDetail.name.isEmpty() && teamDetail.players.isEmpty()) {
         Log.e(TAG, "유효하지 않은 팀 데이터")
@@ -194,7 +218,7 @@ private fun TeamInfoTab(
         }
         return
     }
-    
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -211,7 +235,7 @@ private fun TeamInfoTab(
                 Log.d(TAG, "TeamInfoCard 표시")
                 val stats = teamDetail.stats
                 Log.d(TAG, "팀 스탯 처리: attack=${stats.attack}, defense=${stats.defense}, speed=${stats.speed}")
-                
+
                 TeamInfoCard(
                     stats = TeamStats(
                         attack = stats.attack,
@@ -222,11 +246,11 @@ private fun TeamInfoTab(
                     )
                 )
             }
-            
+
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
-            
+
             item {
                 Log.d(TAG, "멤버 수 아이콘 표시")
                 Row(
@@ -250,19 +274,23 @@ private fun TeamInfoTab(
                     )
                 }
             }
-            
+
             item {
                 Spacer(modifier = Modifier.height(8.dp))
             }
-            
+
             if (teamDetail.players.isNotEmpty()) {
                 Log.d(TAG, "플레이어 목록 표시: ${teamDetail.players.size}명")
                 items(teamDetail.players) { player ->
                     Log.d(TAG, "플레이어 카드 표시: ${player.nickname}")
-                    PlayerCard(
+                    TeamPlayerCard(
                         name = player.nickname,
                         isManager = player.role == "MANAGER",
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        onCardClick = {
+                            Log.d("PlayerCard", "🔥 카드 클릭됨: ${player.nickname}")
+                            onPlayerSelected(player)
+                        }
                     )
                 }
             } else {

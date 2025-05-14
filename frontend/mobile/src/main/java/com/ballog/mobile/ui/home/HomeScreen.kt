@@ -1,60 +1,46 @@
 package com.ballog.mobile.ui.home
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.painterResource
+import com.ballog.mobile.R
+import com.ballog.mobile.ui.components.*
+import com.ballog.mobile.ui.match.HeatMap
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.pretendard
-import androidx.compose.ui.text.font.FontWeight
-import com.ballog.mobile.ui.components.BallogButton
-import com.ballog.mobile.ui.components.ButtonType
-import com.ballog.mobile.ui.components.ButtonColor
-import androidx.compose.ui.res.painterResource
-import com.ballog.mobile.ui.components.StatCard
-import com.ballog.mobile.ui.match.HeatMap
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.shadow
-import com.ballog.mobile.ui.components.PlayerCardFigma
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.ProfileViewModel
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
-import com.ballog.mobile.viewmodel.ProfileViewModel
 
-/**
- * 홈 화면을 담당하는 Composable입니다.
- */
 @Composable
 fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
     val statistics by viewModel.userStatistics.collectAsState()
+    val playerCardInfo by viewModel.playerCardInfo.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchUserStatistics()
+        if (viewModel.shouldForceRefresh()) {
+            viewModel.refreshPlayerCardInfo()
+        } else {
+            viewModel.fetchPlayerCardInfoIfNeeded()
+        }
     }
+
 
     var showPlayerCard by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // 기본값
     val nickname = statistics?.nickname ?: "불러오는 중..."
     val heatmap = statistics?.heatmap ?: emptyList()
 
@@ -63,13 +49,11 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
     val sprintList = statistics?.sprint?.map { it.toFloat() } ?: emptyList()
     val heartRateList = statistics?.heartRate?.map { it.toFloat() } ?: emptyList()
 
-    // 평균값 (소수점 1자리)
     val distanceText = distanceList.average().format1f()
     val speedText = speedList.average().format1f()
     val sprintText = sprintList.average().format1f()
     val heartRateText = heartRateList.average().format1f()
 
-    // 정규화
     val distanceNorm = normalize(distanceList.map { it.toFloat() })
     val speedNorm = normalize(speedList.map { it.toFloat() })
     val sprintNorm = normalize(sprintList)
@@ -91,10 +75,13 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
             Spacer(modifier = Modifier.height(24.dp))
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 BallogButton(
-                    onClick = { showPlayerCard = true },
+                    onClick = {
+                        viewModel.fetchPlayerCardInfoIfNeeded()
+                        showPlayerCard = true
+                    },
                     type = ButtonType.BOTH,
                     buttonColor = ButtonColor.BLACK,
-                    icon = painterResource(id = com.ballog.mobile.R.drawable.ic_card),
+                    icon = painterResource(id = R.drawable.ic_card),
                     label = "선수 카드 보기",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -177,8 +164,13 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
             }
         }
 
-        if (showPlayerCard) {
-            PlayerCardDialog(onDismiss = { showPlayerCard = false })
+        if (showPlayerCard && playerCardInfo != null) {
+            PlayerCardDialog(
+                name = playerCardInfo!!.nickname,
+                imageUrl = playerCardInfo!!.profileImageUrl,
+                stats = playerCardInfo!!.stats,
+                onDismiss = { showPlayerCard = false }
+            )
         }
     }
 }
@@ -189,207 +181,3 @@ fun normalize(list: List<Float>): List<Float> {
 }
 
 fun Double.format1f(): String = String.format("%.1f", this)
-
-@Composable
-fun PlayerCardDialog(onDismiss: () -> Unit) {
-    // 카드 플립 애니메이션 상태
-    var flipped by remember { mutableStateOf(false) }
-
-    // 회전 애니메이션 상태
-    val rotationY by animateFloatAsState(
-        targetValue = if (flipped) 180f else 0f,
-        animationSpec = tween(durationMillis = 600),
-        label = "flip"
-    )
-
-    // 다이얼로그가 진입하면 자동으로 애니메이션 실행
-    LaunchedEffect(Unit) {
-        flipped = true
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.7f))
-    ) {
-        // X 버튼
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 32.dp, end = 24.dp)
-        ) {
-            androidx.compose.material3.IconButton(onClick = onDismiss) {
-                androidx.compose.material3.Icon(
-                    painter = painterResource(id = com.ballog.mobile.R.drawable.ic_close),
-                    contentDescription = "닫기",
-                    tint = Color.Unspecified
-                )
-            }
-        }
-
-        // 중앙 카드 + Flip 애니메이션
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .graphicsLayer {
-                    this.rotationY = rotationY
-                    cameraDistance = 12 * density
-                }
-                .drawBehind {
-                    drawRoundRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Primary.copy(alpha = 0.35f),
-                                Primary.copy(alpha = 0.0f)
-                            ),
-                            center = center,
-                            radius = size.maxDimension * 0.7f
-                        ),
-                        size = size,
-                    )
-                }
-                .shadow(
-                    elevation = 24.dp,
-                    shape = RoundedCornerShape(22.dp)
-                )
-        ) {
-            if (rotationY <= 90f) {
-                PlayerCardFigma(
-                    name = "KIM GAHEE",
-                    stats = listOf(
-                        "Speed" to "78",
-                        "Stamina" to "80",
-                        "Attack" to "64",
-                        "Defense" to "80",
-                        "Recovery" to "76"
-                    )
-                )
-            } else {
-                // 뒷면이 있는 경우 이곳에 다른 컴포저블 넣기 가능
-                Box(
-                    modifier = Modifier
-                        .graphicsLayer { this.rotationY = 180f } // 반전 처리
-                ) {
-                    PlayerCardFigma(
-                        name = "KIM GAHEE",
-                        stats = listOf(
-                            "Speed" to "78",
-                            "Stamina" to "80",
-                            "Attack" to "64",
-                            "Defense" to "80",
-                            "Recovery" to "76"
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewPlayerCardDialog() {
-//    PlayerCardDialog(onDismiss = {})
-//}
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewHomeScreenWithPlayerCard() {
-//    var showPlayerCard by remember { mutableStateOf(true) }
-//    Box(modifier = Modifier.fillMaxSize()) {
-//        HomeScreen()
-//        if (showPlayerCard) {
-//            PlayerCardDialog(onDismiss = { showPlayerCard = false })
-//        }
-//    }
-//}
-
-//@Composable
-//fun HomeScreenWithPlayerCardPreview(showPlayerCard: Boolean, onDismiss: () -> Unit) {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(Gray.Gray100)
-//            .padding(horizontal = 24.dp)
-//    ) {
-//        Column(
-//            modifier = Modifier.fillMaxSize(),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Spacer(modifier = Modifier.height(32.dp))
-//            Text(
-//                text = "김볼록님, 안녕하세요!",
-//                fontSize = 24.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = Gray.Gray700,
-//                fontFamily = pretendard,
-//                modifier = Modifier.fillMaxWidth()
-//            )
-//            Spacer(modifier = Modifier.height(24.dp))
-//            BallogButton(
-//                onClick = {},
-//                type = ButtonType.BOTH,
-//                buttonColor = ButtonColor.BLACK,
-//                icon = painterResource(id = com.ballog.mobile.R.drawable.ic_card),
-//                label = "선수 카드 보기",
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(48.dp)
-//            )
-//            Spacer(modifier = Modifier.height(24.dp))
-//            HeatMap(
-//                heatData = List(15) { List(10) { (0..5).random() } },
-//                modifier = Modifier.align(Alignment.CenterHorizontally)
-//            )
-//            Spacer(modifier = Modifier.height(24.dp))
-//            Column(
-//                modifier = Modifier.fillMaxWidth(),
-//                verticalArrangement = Arrangement.spacedBy(16.dp)
-//            ) {
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-//                ) {
-//                    StatCard(
-//                        title = "이동거리",
-//                        value = "5.2km",
-//                        bars = listOf(false, false, true),
-//                        barColor = Primary,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                    StatCard(
-//                        title = "평균속도",
-//                        value = "7.2km/h",
-//                        bars = listOf(false, true),
-//                        barColor = Primary,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                }
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-//                ) {
-//                    StatCard(
-//                        title = "스프린트",
-//                        value = "12회",
-//                        bars = listOf(false, true, true),
-//                        barColor = Primary,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                    StatCard(
-//                        title = "평균심박",
-//                        value = "135bpm",
-//                        bars = listOf(true),
-//                        barColor = Primary,
-//                        modifier = Modifier.weight(1f)
-//                    )
-//                }
-//            }
-//            Spacer(modifier = Modifier.weight(1f))
-//        }
-//        if (showPlayerCard) {
-//            PlayerCardDialog(onDismiss = onDismiss)
-//        }
-//    }
-//}
