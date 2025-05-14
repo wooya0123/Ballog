@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "notfound.ballog"
+    namespace = "com.ballog.watch"
     compileSdk = 35
 
     defaultConfig {

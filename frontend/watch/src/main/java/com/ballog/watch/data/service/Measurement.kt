@@ -1,4 +1,4 @@
-package notfound.ballog.presentation.screens
+package com.ballog.watch.data.service
 
 import android.Manifest
 import android.content.Context
@@ -13,7 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
@@ -30,6 +29,41 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.Priority
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.PutDataMapRequest
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import com.ballog.watch.ui.components.BallogButton
+import com.ballog.watch.ui.theme.BallogCyan
+import com.ballog.watch.ui.theme.BallogWhite
+
+fun saveLocationsToFile(context: Context, locations: List<Location>) {
+    try {
+        val file = File(context.filesDir, "field_corners.txt")
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val currentTime = dateFormat.format(Date())
+
+        val content = buildString {
+            appendLine("=== 경기장 모서리 좌표 ===")
+            appendLine("저장 시간: $currentTime")
+            appendLine()
+            locations.forEachIndexed { index, location ->
+                appendLine("모서리 ${index + 1}:")
+                appendLine("위도: ${location.latitude}")
+                appendLine("경도: ${location.longitude}")
+                appendLine()
+            }
+        }
+
+        file.writeText(content)
+        Log.d("FieldCorners", "좌표가 파일에 저장되었습니다: ${file.absolutePath}")
+    } catch (e: Exception) {
+        Log.e("FieldCorners", "파일 저장 실패: ${e.message}")
+    }
+}
 
 @Composable
 fun MeasurementScreen(onComplete: () -> Unit) {
@@ -43,6 +77,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
     var isCountingDown by remember { mutableStateOf(false) }
     var countdownValue by remember { mutableStateOf(3) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isMeasuring by remember { mutableStateOf(false) }  // 측정 중 상태 추가
     val corners = listOf("첫 번째", "두 번째", "세 번째", "네 번째")
     val locationsList = remember { mutableStateListOf<Location>() }
 
@@ -81,9 +116,10 @@ fun MeasurementScreen(onComplete: () -> Unit) {
         measurementCount++
         errorMessage = null
 
-        // 4개 모두 측정 완료시 완료 화면 표시
+        // 4개 모두 측정 완료시 완료 화면 표시 및 파일 저장
         if (measurementCount == 4) {
             showCompletionScreen = true
+            saveLocationsToFile(context, locationsList)
         }
     }
 
@@ -139,17 +175,34 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location ->
-                    if (location != null) {
-                        saveLocation(location)
-                    } else {
-                        errorMessage = "위치를 가져올 수 없습니다. GPS 신호를 확인하고 다시 시도해주세요."
+
+            isMeasuring = true  // 측정 시작
+            errorMessage = null
+
+            val locationRequest = LocationRequest.Builder(0)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .setMinUpdateIntervalMillis(0)
+                .setMaxUpdateDelayMillis(0)
+                .setMinUpdateDistanceMeters(0f)
+                .build()
+
+            fusedLocationClient.requestLocationUpdates(locationRequest,
+                object : com.google.android.gms.location.LocationCallback() {
+                    override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                        val location = locationResult.lastLocation
+                        if (location != null) {
+                            fusedLocationClient.removeLocationUpdates(this)
+                            saveLocation(location)
+                            isMeasuring = false  // 측정 완료
+                        } else {
+                            errorMessage = "위치를 가져올 수 없습니다. 다시 시도해주세요."
+                            fusedLocationClient.removeLocationUpdates(this)
+                            isMeasuring = false  // 측정 실패
+                        }
                     }
-                }
-                .addOnFailureListener { e ->
-                    errorMessage = "위치 측정 오류: ${e.message}"
-                }
+                },
+                null
+            )
         } else {
             errorMessage = "위치 권한이 필요합니다"
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -172,8 +225,9 @@ fun MeasurementScreen(onComplete: () -> Unit) {
         errorMessage = null
     }
 
-    // 카운트다운 UI
+    // 측정 화면 UI 부분 수정
     if (isCountingDown) {
+        // 카운트다운 UI
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -182,7 +236,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                 text = countdownValue.toString(),
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.primary
+                color = BallogCyan
             )
         }
 
@@ -196,6 +250,26 @@ fun MeasurementScreen(onComplete: () -> Unit) {
             isCountingDown = false
             attemptLocationMeasurement()
         }
+    } else if (isMeasuring) {
+        // 측정 중 UI
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "위치 측정 중...",
+                    color = BallogWhite,
+                    fontSize = 14.sp
+                )
+            }
+        }
     } else if (showCompletionScreen) {
         // 측정 완료 화면
         ScalingLazyColumn(
@@ -207,7 +281,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
             item {
                 Text(
                     text = if (isDataSent) "데이터 전송 완료!" else "측정 완료!",
-                    color = MaterialTheme.colors.primary,
+                    color = BallogWhite,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -222,7 +296,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                     ) {
                         Text(
                             text = "5초 후 삼성 헬스로 이동합니다",
-                            color = MaterialTheme.colors.secondary,
+                            color = BallogWhite,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 16.dp)
@@ -232,26 +306,18 @@ fun MeasurementScreen(onComplete: () -> Unit) {
 
                         Text(
                             text = "삼성 헬스에서 볼로그를\n선택해주세요",
-                            color = MaterialTheme.colors.primary,
+                            color = BallogCyan,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
 
-                        Text(
-                            text = "↓",
-                            color = MaterialTheme.colors.primary,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
                     }
                 } else {
                     Text(
                         text = "신나게 뛰세요\n볼로그가 측정해드릴게요!",
-                        color = MaterialTheme.colors.primary,
+                        color = BallogCyan,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -272,33 +338,17 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "데이터 전송 중...",
-                                color = MaterialTheme.colors.secondary,
+                                color = BallogWhite,
                                 fontSize = 14.sp
                             )
                         }
                     } else {
-                        Button(
+                        BallogButton(
+                            text = "데이터 전송",
                             onClick = { sendDataToPhone() },
                             modifier = Modifier.padding(top = 16.dp)
-                        ) {
-                            Text(
-                                text = "데이터 전송",
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colors.onPrimary
-                            )
-                        }
+                        )
                     }
-                }
-            } else {
-                // 체크 아이콘
-                item {
-                    Text(
-                        text = "✓",
-                        color = MaterialTheme.colors.primary,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
                 }
             }
 
@@ -327,7 +377,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                 item {
                     Text(
                         text = "${corners[measurementCount]} 모서리",
-                        color = MaterialTheme.colors.primary,
+                        color = BallogCyan,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
@@ -335,16 +385,11 @@ fun MeasurementScreen(onComplete: () -> Unit) {
 
                 // 측정 버튼
                 item {
-                    Button(
+                    BallogButton(
+                        text = "측정",
                         onClick = { onMeasureClick() },
                         modifier = Modifier.padding(top = 8.dp)
-                    ) {
-                        Text(
-                            text = "측정",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colors.onPrimary
-                        )
-                    }
+                    )
                 }
 
                 // 측정 상태 표시
@@ -352,7 +397,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                     Text(
                         text = "$measurementCount/4 측정 완료",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colors.secondary,
+                        color = BallogWhite,
                         modifier = Modifier.padding(top = 16.dp)
                     )
                 }
@@ -375,8 +420,8 @@ fun MeasurementScreen(onComplete: () -> Unit) {
 }
 
 // 핸드폰으로 위치 데이터 전송
-suspend fun sendLocationsToPhone(dataClient: com.google.android.gms.wearable.DataClient, locations: List<Location>) {
-    val request = com.google.android.gms.wearable.PutDataMapRequest.create("/field_corners").apply {
+suspend fun sendLocationsToPhone(dataClient: DataClient, locations: List<Location>) {
+    val request = PutDataMapRequest.create("/field_corners").apply {
         dataMap.putDouble("lat1", locations[0].latitude)
         dataMap.putDouble("lon1", locations[0].longitude)
         dataMap.putDouble("lat2", locations[1].latitude)
