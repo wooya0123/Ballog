@@ -1,8 +1,15 @@
 package com.ballog.mobile.data.api
 
+import androidx.lifecycle.viewModelScope
 import com.ballog.mobile.data.dto.UserInfoResponse
+import com.ballog.mobile.data.dto.UserStatisticsDto
 import com.ballog.mobile.data.dto.UserUpdateRequest
 import com.ballog.mobile.data.model.ApiResponse
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -22,4 +29,9 @@ interface UserApi {
         @Body request: UserUpdateRequest
     ): Response<ApiResponse<Unit>>
 
+    // 홈화면 사용자 통계 정보 가져오기
+    @GET("v1/users/statistics")
+    suspend fun getUserStatistics(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<UserStatisticsDto>>
 }

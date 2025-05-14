@@ -70,7 +70,6 @@ fun BallogButton(
     Surface(
         onClick = onClick,
         modifier = modifier
-            .padding(horizontal = 24.dp)
             .height(48.dp),
         enabled = enabled,
         shape = RoundedCornerShape(8.dp),

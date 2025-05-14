@@ -46,7 +46,6 @@ fun TopNavItem(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp)  // Reduced from 16.dp to 8.dp
         ) {
             when (type) {
                 TopNavType.MAIN_WITH_CREATE -> {
@@ -58,7 +57,7 @@ fun TopNavItem(
                         color = Gray.Gray700,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .padding(start = 8.dp)  // Added padding for main title
+                            .padding(start = 24.dp)  // Added padding for main title
                     )
                     IconButton(
                         onClick = { onActionClick?.invoke() },
@@ -80,7 +79,7 @@ fun TopNavItem(
                         color = Gray.Gray700,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .padding(start = 8.dp)  // Added padding for main title
+                            .padding(start = 24.dp)  // Added padding for main title
                     )
                     IconButton(
                         onClick = { onActionClick?.invoke() },
@@ -102,7 +101,7 @@ fun TopNavItem(
                         color = Gray.Gray700,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .padding(start = 8.dp)  // Added padding for main title
+                            .padding(start = 24.dp)  // Added padding for main title
                     )
                 }
                 TopNavType.DETAIL_WITH_BACK, TopNavType.DETAIL_WITH_BACK_CLOSE, TopNavType.DETAIL_WITH_BACK_SETTINGS -> {
