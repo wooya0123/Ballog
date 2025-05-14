@@ -20,7 +20,7 @@ import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
+fun MatchVideoTab(matchId: Int) {
     Log.d("MatchVideoTab", "🟦 $matchId 번 매치의 영상 탭 접속")
 
     val coroutineScope = rememberCoroutineScope()
@@ -33,7 +33,7 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
     var editingHighlight by remember { mutableStateOf(HighlightUiState()) }
     val videoViewModel: VideoViewModel = viewModel()
     val videoUiState by videoViewModel.videoUiState.collectAsState()
-
+    
     val quarterOptions = remember(videoUiState.totalQuarters) {
         (1..videoUiState.totalQuarters).map { "$it 쿼터" }
     }
@@ -52,8 +52,24 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
         videoViewModel.getMatchVideos(matchId)
     }
 
+    // 쿼터 옵션이 변경되었는데 현재 선택된 쿼터가 유효하지 않은 경우 첫 번째 쿼터로 변경
+    LaunchedEffect(quarterOptions) {
+        if (selectedQuarter !in quarterOptions && quarterOptions.isNotEmpty()) {
+            selectedQuarter = quarterOptions.first()
+        }
+    }
+
     LaunchedEffect(videoUiState.quarterList) {
         Log.d("MatchVideoTab", "🧩 API 응답 기반으로 quarterData 초기화")
+        // 기존 quarterData 초기화
+        quarterData.clear()
+        quarterOptions.forEach { quarter ->
+            quarterData[quarter] = QuarterVideoData(
+                quarterNumber = quarter.filter { it.isDigit() }.toIntOrNull() ?: 1
+            )
+        }
+        
+        // API 응답의 quarterList로 업데이트
         videoUiState.quarterList.forEach { video ->
             val quarter = "${video.quarterNumber ?: 1} 쿼터"
             quarterData[quarter] = QuarterVideoData(
@@ -131,7 +147,15 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
                 showEditSheet = true
             },
             onDeleteVideo = {
-                quarterData[selectedQuarter] = QuarterVideoData()
+                val videoId = current.videoId
+                if (videoId > 0) {
+                    videoViewModel.deleteVideo(videoId, matchId)
+                } else {
+                    // 유효한 videoId가 없는 경우 로컬 상태만 초기화
+                    quarterData[selectedQuarter] = QuarterVideoData(
+                        quarterNumber = selectedQuarter.filter { it.isDigit() }.toIntOrNull() ?: 1
+                    )
+                }
             },
             onUploadClick = {
                 launcher.launch("video/*")
@@ -205,6 +229,6 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
 @Composable
 fun MatchVideoTabPreview() {
     BallogTheme {
-        MatchVideoTab(matchId = 29, totalQuarters = 4)
+        MatchVideoTab(matchId = 29)
     }
 }

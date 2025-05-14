@@ -50,10 +50,14 @@ class VideoViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     Log.d("VideoViewModel", "✅ 쿼터 영상 조회 성공 - 총 ${result.totalQuarters}쿼터")
-                    Log.d("VideoViewModel", "📋 quarterList: ${result.quarterList}")
+                    
+                    // quarterList가 null인 경우 빈 리스트로 처리
+                    val quarterList = result.quarterList ?: emptyList()
+                    Log.d("VideoViewModel", "📋 quarterList: ${if (quarterList.isEmpty()) "비어 있음" else quarterList}")
+                    
                     _videoUiState.value = VideoUiState(
                         totalQuarters = result.totalQuarters,
-                        quarterList = result.quarterList.map { it.toQuarterVideoData() }
+                        quarterList = quarterList.map { it.toQuarterVideoData() }
                     )
                 } else {
                     val msg = response.body()?.message ?: "쿼터별 영상 조회 실패"
@@ -85,32 +89,55 @@ class VideoViewModel : ViewModel() {
                 _isLoading.value = true
 
                 val request = PresignedVideoUploadRequest(
-                    matchId = matchId,
-                    quarterNumber = quarterNumber,
-                    duration = duration,
                     fileName = file.name
                 )
 
                 val json = Gson().toJson(request)
                 Log.d("VideoViewModel", "📤 Presigned URL 요청 바디: $json")
 
+                // 1. Presigned URL 발급 요청
                 val response = videoApi.requestUploadUrl(request)
+                
+                Log.d("VideoViewModel", "📥 Presigned URL 응답: isSuccess=${response.body()?.isSuccess}, code=${response.body()?.code}")
+                Log.d("VideoViewModel", "📥 응답 메시지: ${response.body()?.message}")
+                Log.d("VideoViewModel", "📥 S3 URL: ${response.body()?.result?.s3Url}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val presignedUrl = response.body()?.result?.videoUrl
+                    val presignedUrl = response.body()?.result?.s3Url
                     if (!presignedUrl.isNullOrEmpty()) {
                         Log.d("VideoViewModel", "✅ Presigned URL 수신 성공: $presignedUrl")
                         Log.d("VideoViewModel", "📦 S3 업로드 시작")
 
+                        // 2. 파일을 S3에 업로드
                         val uploadSuccess = withContext(Dispatchers.IO) {
                             S3Utils.putFileToPresignedUrl(presignedUrl, file)
                         }
 
                         if (uploadSuccess) {
                             Log.d("VideoViewModel", "✅ S3 업로드 성공")
-                            videoApi.notifyUploadSuccess(
-                                UploadSuccessRequest(matchId, quarterNumber)
+                            
+                            // presigned URL에서 쿼리 파라미터 제거
+                            val baseS3Url = presignedUrl.split("?")[0]
+                            Log.d("VideoViewModel", "🔗 저장할 영상 URL: $baseS3Url")
+                            
+                            // 3. 영상 저장 요청
+                            val saveRequest = SaveVideoRequest(
+                                matchId = matchId,
+                                quarterNumber = quarterNumber,
+                                duration = duration,
+                                videoUrl = baseS3Url
                             )
+                            
+                            val saveResponse = videoApi.saveVideo(saveRequest)
+                            if (saveResponse.isSuccessful && saveResponse.body()?.isSuccess == true) {
+                                Log.d("VideoViewModel", "✅ 영상 저장 성공")
+                            } else {
+                                val errorMessage = saveResponse.body()?.message ?: "영상 저장 실패"
+                                Log.e("VideoViewModel", "❌ 영상 저장 실패 - $errorMessage")
+                                _error.value = errorMessage
+                            }
+                            
+                            // 4. 매치 비디오 목록 갱신
                             getMatchVideos(matchId)
                         } else {
                             Log.e("VideoViewModel", "⛔ S3 업로드 실패")
@@ -138,7 +165,7 @@ class VideoViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 Log.d("VideoViewModel", "🗑️ 영상 삭제 요청: $videoId")
-                videoApi.deleteVideo(DeleteVideoRequest(videoId))
+                videoApi.deleteVideo(videoId)  // Path 파라미터로 변경
                 getMatchVideos(matchId)
             } catch (e: Exception) {
                 Log.e("VideoViewModel", "🔥 영상 삭제 실패", e)
@@ -177,7 +204,7 @@ class VideoViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 Log.d("VideoViewModel", "❌ 하이라이트 삭제 요청: $highlightId")
-                videoApi.deleteHighlight(DeleteHighlightRequest(highlightId))
+                videoApi.deleteHighlight(highlightId)  // Path 파라미터로 변경
                 getMatchVideos(matchId)
             } catch (e: Exception) {
                 Log.e("VideoViewModel", "🔥 하이라이트 삭제 실패", e)
