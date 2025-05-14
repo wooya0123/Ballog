@@ -12,7 +12,9 @@ import java.util.List;
 @Builder
 public class VideoDto {
     private Integer videoId;
+
     private Integer quarterNumber;
+
     private String videoUrl;
 
     private List<HighlightDto> highlightList;

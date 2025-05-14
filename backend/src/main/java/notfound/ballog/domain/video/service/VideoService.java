@@ -18,7 +18,6 @@ import notfound.ballog.domain.video.request.AddVideoRequest;
 import notfound.ballog.domain.video.response.AddS3UrlResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.exception.NotFoundException;
-import notfound.ballog.exception.ValidationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -73,13 +72,16 @@ public class VideoService {
 
     @Transactional
     public GetVideoListResponse getVideo(Integer matchId) {
-        // 1. 쿼터 영상 조회 -> 없으면 예외처리
+        // 1. 총 쿼터 수 조회
+        Integer totalQuarters = quarterRepository.countByMatchId(matchId);
+
+        // 2. 쿼터 영상 조회 -> 없으면 null로 반환
         List<Video> videoList = videoRepository.findAllByMatch_MatchIdAndDeletedFalse(matchId);
         if (videoList.isEmpty()) {
-            throw new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND);
+            return GetVideoListResponse.emptyOf(totalQuarters);
         }
 
-        // 2. 응답 객체 구성
+        // 3. 응답 객체 구성
         List<VideoDto> videoDtoList = new ArrayList<>();
         for (Video video : videoList) {
             Integer videoId = video.getVideoId();
@@ -97,8 +99,6 @@ public class VideoService {
             videoDtoList.add(videoDto);
         }
 
-        // 5. 총 쿼터 수 조회
-        Integer totalQuarters = quarterRepository.countByMatchId(matchId);
         return GetVideoListResponse.of(totalQuarters, videoDtoList);
     }
 

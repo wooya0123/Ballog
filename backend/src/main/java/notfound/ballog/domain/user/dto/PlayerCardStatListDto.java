@@ -23,6 +23,7 @@ public class PlayerCardStatListDto {
                 .stamina(playerCard.getStamina())
                 .attack(playerCard.getAttack())
                 .defense(playerCard.getDefense())
+                .recovery(playerCard.getRecovery())
                 .build();
     }
 }
