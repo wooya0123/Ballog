@@ -24,116 +24,160 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
 
+enum class CardFace {
+    FRONT, BACK
+}
+
 @Composable
-fun PlayerCardFigma(
+fun PlayerCard(
     modifier: Modifier = Modifier,
     name: String,
-    imageRes: Int = R.drawable.ic_profile, // 임시 이미지
-    stats: List<Pair<String, String>>
+    imageRes: Int = R.drawable.ic_profile,
+    stats: List<Pair<String, String>>,
+    face: CardFace = CardFace.FRONT
 ) {
-    Box(
-        modifier = modifier
-            .width(280.dp)
-            .shadow(
-                elevation = 32.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = Primary.copy(alpha = 0.5f),
-                spotColor = Primary.copy(alpha = 0.7f)
-            )
-            .background(Color.White, shape = RoundedCornerShape(24.dp))
-            .border(6.dp, Gray.Gray500, shape = RoundedCornerShape(24.dp))
-            .padding(4.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            // 상단 이미지 영역 (전체 채우기)
+    when (face) {
+        CardFace.FRONT -> {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .background(Gray.Gray700),
-                contentAlignment = Alignment.Center
+                modifier = modifier
+                    .width(280.dp)
+                    .shadow(
+                        elevation = 32.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = Primary.copy(alpha = 0.5f),
+                        spotColor = Primary.copy(alpha = 0.7f)
+                    )
+                    .background(Color.White, shape = RoundedCornerShape(24.dp))
+                    .border(6.dp, Gray.Gray500, shape = RoundedCornerShape(24.dp))
+                    .padding(4.dp)
             ) {
-                Image(
-                    painter = painterResource(id = imageRes),
-                    contentDescription = "Player Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            // 이름
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Gray.Gray500)
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Primary,
-                    fontFamily = pretendard
-                )
-            }
-            // 스탯 리스트
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .background(Gray.Gray700)
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 12.dp,
-                        bottom = 16.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                stats.forEach { (statName, statValue) ->
-                    val valueInt = statValue.toIntOrNull() ?: 0
-                    val ratio = (valueInt.coerceIn(0, 100)) / 100f
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    // 상단 이미지 영역 (전체 채우기)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                            .background(Gray.Gray700),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = statName,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontFamily = pretendard,
-                            modifier = Modifier.width(64.dp)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(ratio)
-                                    .background(Primary, RoundedCornerShape(4.dp))
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = statValue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontFamily = pretendard,
-                            modifier = Modifier.width(32.dp),
-                            maxLines = 1,
-                            textAlign = TextAlign.Center
+                        Image(
+                            painter = painterResource(id = imageRes),
+                            contentDescription = "Player Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
                     }
+                    // 이름
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Gray.Gray500)
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = name,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Primary,
+                            fontFamily = pretendard
+                        )
+                    }
+                    // 스탯 리스트
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .background(Gray.Gray700)
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 12.dp,
+                                bottom = 16.dp
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        stats.forEach { (statName, statValue) ->
+                            val valueInt = statValue.toIntOrNull() ?: 0
+                            val ratio = (valueInt.coerceIn(0, 100)) / 100f
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = statName,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontFamily = pretendard,
+                                    modifier = Modifier.width(64.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(8.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .fillMaxWidth(ratio)
+                                            .background(Primary, RoundedCornerShape(4.dp))
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = statValue,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontFamily = pretendard,
+                                    modifier = Modifier.width(32.dp),
+                                    maxLines = 1,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        CardFace.BACK -> {
+            // 뒷면 카드 디자인
+            Box(
+                modifier = modifier
+                    .width(280.dp)
+                    .height(400.dp)
+                    .shadow(
+                        elevation = 32.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = Primary.copy(alpha = 0.5f),
+                        spotColor = Primary.copy(alpha = 0.7f)
+                    )
+                    .background(Gray.Gray700, shape = RoundedCornerShape(24.dp))
+                    .border(6.dp, Gray.Gray500, shape = RoundedCornerShape(24.dp))
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp)
+                ) {
+                    // 중앙 텍스트
+                    Text(
+                        text = "Ballog",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Primary,
+                        fontFamily = pretendard,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
             }
         }
@@ -143,7 +187,7 @@ fun PlayerCardFigma(
 @Preview(showBackground = true)
 @Composable
 fun PreviewPlayerCardFigma() {
-    PlayerCardFigma(
+    PlayerCard(
         name = "KIM GAHEE",
         stats = listOf(
             "Speed" to "78",
@@ -151,6 +195,24 @@ fun PreviewPlayerCardFigma() {
             "Attack" to "64",
             "Defense" to "80",
             "Recovery" to "76"
-        )
+        ),
+        face = CardFace.FRONT
+    )
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPlayerCardFigmaBack() {
+    PlayerCard(
+        name = "KIM GAHEE",
+        stats = listOf(
+            "Speed" to "78",
+            "Stamina" to "80",
+            "Attack" to "64",
+            "Defense" to "80",
+            "Recovery" to "76"
+        ),
+        face = CardFace.BACK
     )
 }

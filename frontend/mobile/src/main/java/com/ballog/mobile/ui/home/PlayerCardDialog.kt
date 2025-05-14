@@ -19,8 +19,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.ballog.mobile.R
 import com.ballog.mobile.ui.theme.Primary
-import com.ballog.mobile.ui.components.PlayerCardFigma
+import com.ballog.mobile.ui.components.PlayerCard
 import androidx.compose.ui.platform.LocalDensity
+import com.ballog.mobile.ui.components.CardFace
 
 @Composable
 fun PlayerCardDialog(
@@ -99,7 +100,7 @@ fun PlayerCardDialog(
         ) {
             // 앞면 카드: 회전이 90도 이하일 때 보여짐
             if (rotationY <= 90f) {
-                PlayerCardFigma(name = name, stats = stats)
+                PlayerCard(name = name, stats = stats, face= CardFace.FRONT)
 
                 // 뒷면 카드: 회전이 90도 이상일 때 보여짐
             } else {
@@ -108,7 +109,7 @@ fun PlayerCardDialog(
                         this.rotationY = 180f // 반전 처리 (뒤집힌 상태)
                     }
                 ) {
-                    PlayerCardFigma(name = name, stats = stats)
+                    PlayerCard(name = name, stats = stats, face= CardFace.BACK)
                 }
             }
         }
