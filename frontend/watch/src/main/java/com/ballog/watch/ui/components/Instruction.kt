@@ -6,9 +6,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.ballog.watch.ui.components.BallogButton
+import com.ballog.watch.ui.theme.BallogCyan
 
 @Composable
 fun InstructionScreen(onContinueClick: () -> Unit) {
@@ -22,19 +23,13 @@ fun InstructionScreen(onContinueClick: () -> Unit) {
         Text(
             text = "경기장을 한바퀴 돌면서 각 모서리에서 측정 버튼을 눌러주세요",
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colors.primary,
+            color = BallogCyan,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        
-        Button(
+        BallogButton(
+            text = "시작하기",
             onClick = onContinueClick,
             modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text(
-                text = "시작하기",
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colors.onPrimary
-            )
-        }
+        )
     }
 }

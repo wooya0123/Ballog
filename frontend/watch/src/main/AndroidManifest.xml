@@ -34,7 +34,7 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
         <activity
-            android:name=".presentation.MainActivity"
+            android:name="com.ballog.watch.ui.main.MainActivity"
             android:exported="true"
             android:theme="@style/MainActivityTheme.Starting">
             <intent-filter>
@@ -42,7 +42,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="false" />
