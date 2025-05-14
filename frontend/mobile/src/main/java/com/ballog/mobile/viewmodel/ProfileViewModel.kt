@@ -132,16 +132,16 @@ class ProfileViewModel : ViewModel() {
                 val response = userApi.getUserStatistics("Bearer $token")
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
-                    android.util.Log.d("ProfileViewModel", "✅ 사용자 통계 응답 성공: $result")
+                    Log.d("ProfileViewModel", "✅ 사용자 통계 응답 성공: $result")
                     _userStatistics.value = result
                 } else {
-                    android.util.Log.e(
+                    Log.e(
                         "ProfileViewModel",
                         "❌ 통계 불러오기 실패: response=${response}, code=${response.code()}, message=${response.body()?.message}"
                     )
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ProfileViewModel", "❌ 네트워크 오류: ${e.localizedMessage}", e)
+                Log.e("ProfileViewModel", "❌ 네트워크 오류: ${e.localizedMessage}", e)
             }
         }
     }
