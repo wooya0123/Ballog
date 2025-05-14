@@ -1,11 +1,11 @@
 package notfound.ballog.domain.quarter.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.quarter.request.AddQuarterAndGameReportRequest;
+import notfound.ballog.domain.quarter.response.AddQuarterAndGameReportResponse;
 import notfound.ballog.domain.quarter.service.QuarterService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,9 +25,8 @@ public class QuarterController {
 
     @PostMapping
     @Operation(summary = "쿼터 등록")
-    public BaseResponse<Void> addQuarterAndGameReport(@AuthenticationPrincipal UUID userId, @RequestBody AddQuarterAndGameReportRequest addQuarterAndGameReportRequest) {
-        quarterService.addQuarterAndGameReport(userId, addQuarterAndGameReportRequest);
-        return BaseResponse.ok();
+    public BaseResponse<AddQuarterAndGameReportResponse> addQuarterAndGameReport(@AuthenticationPrincipal UUID userId, @RequestBody AddQuarterAndGameReportRequest addQuarterAndGameReportRequest) {
+        return BaseResponse.ok(quarterService.addQuarterAndGameReport(userId, addQuarterAndGameReportRequest));
     }
 
 }

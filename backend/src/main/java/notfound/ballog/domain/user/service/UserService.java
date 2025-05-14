@@ -9,7 +9,6 @@ import notfound.ballog.domain.quarter.entity.GameReport;
 import notfound.ballog.domain.quarter.repository.GameReportRepository;
 import notfound.ballog.domain.user.entity.User;
 import notfound.ballog.domain.user.repository.UserRepository;
-import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
 import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
@@ -29,6 +28,7 @@ public class UserService {
     private final AuthRepository authRepository;
     private final GameReportRepository gameReportRepository;
     private final PlayerCardService playerCardService;
+    private final OpenAIService openAIService;
 
     // 회원가입
     @Transactional
@@ -143,5 +143,39 @@ public class UserService {
                                         sprintList,
                                         heartRateList);
     }
+
+     // 선수 추천 기능
+    public String getRecommendedPlayer(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
+        // 최대 5개의 쿼터 리포트 조회
+        List<GameReport> gameReportList = 
+                gameReportRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+        
+        if (gameReportList.isEmpty()) {
+            throw new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND);
+        }
+
+        // 게임 리포트 데이터를 JSON 형태로 변환
+        List<Map<String, Object>> gameDataList = new ArrayList<>();
+        for (GameReport gameReport : gameReportList) {
+            gameDataList.add((Map<String, Object>) gameReport.getReportData());
+        }
+
+        // GPT 프롬프트 구성
+        String prompt = "다음은 풋살 경기에서 얻은 5개의 게임 데이터입니다:\n\n" +
+                gameDataList.toString() + 
+                "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로축구선수를 추천해주세요. " +
+                "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " +
+                "distance는 이동 거리(m), avgHeartRate는 평균 심박수, " +
+                "heatmap은 경기장에서의 위치 히트맵입니다.";
+
+        // OpenAI API 호출하여 응답 받기
+        String recommendation = openAIService.getCompletionFromGPT(prompt);
+        
+        return recommendation;
+    }
+    
 }
 

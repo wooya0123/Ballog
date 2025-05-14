@@ -1,6 +1,7 @@
 package notfound.ballog.domain.match.repository;
 
 import notfound.ballog.domain.match.dto.MatchDto;
+import notfound.ballog.domain.quarter.response.AddQuarterAndGameReportResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,6 +13,6 @@ public interface MatchRepositoryCustom {
 
     List<MatchDto> findMatchesByTeamIdAndMonth(Integer teamId, LocalDate startOfMonth, LocalDate endOfMonth);
 
-    Integer findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate);
+    AddQuarterAndGameReportResponse findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate);
 
 }

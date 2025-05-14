@@ -9,6 +9,7 @@ import notfound.ballog.domain.quarter.entity.Quarter;
 import notfound.ballog.domain.quarter.repository.GameReportRepository;
 import notfound.ballog.domain.quarter.repository.QuarterRepository;
 import notfound.ballog.domain.quarter.request.AddQuarterAndGameReportRequest;
+import notfound.ballog.domain.quarter.response.AddQuarterAndGameReportResponse;
 import notfound.ballog.domain.user.entity.PlayerCard;
 import notfound.ballog.domain.user.repository.PlayerCardRepository;
 import notfound.ballog.exception.NotFoundException;
@@ -30,13 +31,15 @@ public class QuarterService {
     private final PlayerCardRepository playerCardRepository;
 
     @Transactional
-    public void addQuarterAndGameReport(UUID userId, AddQuarterAndGameReportRequest req){
-        Integer matchId = matchRepository.findMatchIdByUserIdAndMatchDate(userId, req.getMatchDate());
+    public AddQuarterAndGameReportResponse addQuarterAndGameReport(UUID userId, AddQuarterAndGameReportRequest req){
+        AddQuarterAndGameReportResponse resp = matchRepository.findMatchIdByUserIdAndMatchDate(userId, req.getMatchDate());
 
-        if(matchId == null){
+        if(resp.getMatchId() == null){
             // 원래 여기서 매치 추가하고 그 매치 아이디로 쿼터 등록하고 경기 기록 등록 (자동 등록 버전)
             throw new NotFoundException(BaseResponseStatus.QUARTER_MATCH_NOT_FOUND);
         }
+
+        Integer matchId = resp.getMatchId();
 
         // 쿼터 넘버 뭐가 있는지 확인하기 위해 쿼터 조회
         List<Quarter> existingQuarters = quarterRepository.findAllByMatchId(matchId);
@@ -99,6 +102,8 @@ public class QuarterService {
         updatePlayerCardAbilities(playerCard, abilities);
 
         playerCardRepository.save(playerCard);
+
+        return resp;
     }
     
     private Map<String, Integer> calculateAveragedAbilities(List<ReportData> reportDataList) {
