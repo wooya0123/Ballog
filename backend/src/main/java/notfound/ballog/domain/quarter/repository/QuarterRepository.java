@@ -10,4 +10,6 @@ public interface QuarterRepository extends JpaRepository<Quarter, Integer>, Quar
     List<Quarter> findAllByMatchId(Integer matchId);
 
     List<Quarter> findAllByMatchIdAndQuarterNumberIn(Integer matchId, Collection<Integer> quarterNumbers);
+
+    Integer countByMatchId(Integer matchId);
 }

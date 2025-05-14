@@ -27,6 +27,6 @@ public class AddVideoRequest {
     )
     private String duration;
 
-    @NotBlank(message = "영상 파일명을 입력해주세요.")
-    private String fileName;
+    @NotBlank(message = "영상 url을 입력하세요.")
+    private String videoUrl;
 }

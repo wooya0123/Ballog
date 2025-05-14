@@ -19,7 +19,6 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE highlight SET is_deleted = TRUE WHERE highlight_id = ?")
 public class Highlight {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "video_seq_generator")
@@ -71,5 +70,9 @@ public class Highlight {
         this.highlightName = request.getHighlightName();
         this.startTime = request.getStartTime();
         this.endTime = request.getEndTime();
+    }
+
+    public void delete() {
+        this.deleted = true;
     }
 }
