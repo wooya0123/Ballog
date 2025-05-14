@@ -18,14 +18,14 @@ fun getVideoDurationInSec(context: Context, uri: Uri): Int {
 }
 
 fun isValidHighlightTime(
-    startHour: String, startMin: String,
-    endHour: String, endMin: String,
+    startMin: String, startSec: String,
+    endMin: String, endSec: String,
     videoDurationSec: Int
 ): Boolean {
-    val sh = startHour.toIntOrNull()
-    val sm = startMin.toIntOrNull()
-    val eh = endHour.toIntOrNull()
-    val em = endMin.toIntOrNull()
+    val sh = startMin.toIntOrNull()
+    val sm = startSec.toIntOrNull()
+    val eh = endMin.toIntOrNull()
+    val em = endSec.toIntOrNull()
 
     if (sh == null || sm == null || eh == null || em == null) return false
     if (sm !in 0..59 || em !in 0..59) return false

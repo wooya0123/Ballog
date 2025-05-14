@@ -1,9 +1,12 @@
 package com.ballog.mobile.ui.video
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -21,6 +24,8 @@ import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.DropDown
 import com.ballog.mobile.ui.theme.Gray
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.viewmodel.VideoViewModel
 
 @Composable
 fun HighlightContentSection(
@@ -36,17 +41,24 @@ fun HighlightContentSection(
     onDeleteVideo: () -> Unit,
     onUploadClick: () -> Unit,
     onTogglePlayer: () -> Unit,
-    quarterOptions: List<String>
+    quarterOptions: List<String>,
+    viewModel: VideoViewModel = viewModel()
 ) {
-    Column {
+    Column(modifier = Modifier.fillMaxSize()) {
         VideoPlaceholderBox(
             videoUri = videoUri,
             showPlayer = showPlayer,
             onTogglePlayer = onTogglePlayer,
-            selectedQuarter = selectedQuarter
+            selectedQuarter = selectedQuarter,
+            viewModel = viewModel
         )
 
-        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
             Spacer(modifier = Modifier.height(20.dp))
 
             QuarterDropDown(
@@ -74,8 +86,8 @@ fun HighlightContentSection(
                 highlights.forEach { highlight ->
                     HighlightCard(
                         title = highlight.title,
-                        startTime = "${highlight.startHour}:${highlight.startMin}",
-                        endTime = "${highlight.endHour}:${highlight.endMin}",
+                        startTime = "${highlight.startMin}:${highlight.startSec}",
+                        endTime = "${highlight.endMin}:${highlight.endSec}",
                         onEdit = { onEditClick(highlight) },
                         onLike = { /* TODO */ }
                     )
@@ -111,6 +123,8 @@ fun HighlightContentSection(
                     label = "영상 삭제",
                     modifier = Modifier.fillMaxWidth()
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -121,11 +135,14 @@ fun VideoPlaceholderBox(
     videoUri: Uri?,
     showPlayer: Boolean,
     onTogglePlayer: () -> Unit,
-    selectedQuarter: String
+    selectedQuarter: String,
+    viewModel: VideoViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
     var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
+
+    val shouldReleasePlayer by viewModel.shouldReleasePlayer.collectAsState()
 
     val exoPlayer = remember(selectedQuarter) {
         ExoPlayer.Builder(context).build().apply {
@@ -136,6 +153,18 @@ fun VideoPlaceholderBox(
     DisposableEffect(selectedQuarter) {
         onDispose {
             exoPlayer.release()
+        }
+    }
+
+    LaunchedEffect(shouldReleasePlayer) {
+        if (shouldReleasePlayer) {
+            exoPlayer.apply {
+                stop()
+                clearMediaItems()
+                release()
+            }
+            viewModel.resetPlayerRelease()
+            Log.d("VideoPlaceholderBox", "🎵 ExoPlayer 해제 완료")
         }
     }
 

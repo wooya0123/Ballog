@@ -17,7 +17,7 @@ data class VideoListResult(
 
 data class VideoResponseDto(
     val videoId: Int?,
-    val quarterNumber: Int,
+    val quarterNumber: Int?,
     val videoUrl: String?,
     val uploadSuccess: Boolean,
     val highlightList: List<HighlightDto>
@@ -31,9 +31,6 @@ data class HighlightDto(
 )
 
 data class PresignedVideoUploadRequest(
-    val matchId: Int,
-    val quarterNumber: Int,
-    val duration: String,
     val fileName: String
 )
 
@@ -45,16 +42,15 @@ data class PresignedVideoUploadResponseWrapper(
 )
 
 data class PresignedVideoUploadResponse(
-    val videoUrl: String
+    val s3Url: String
 )
 
-data class UploadSuccessRequest(
+// 업로드 완료 후 영상 저장 요청 (기존 UploadSuccessRequest 대체)
+data class SaveVideoRequest(
     val matchId: Int,
-    val quarterNumber: Int
-)
-
-data class DeleteVideoRequest(
-    val videoId: Int
+    val quarterNumber: Int,
+    val duration: String,
+    val videoUrl: String
 )
 
 data class HighlightAddRequest(
@@ -69,6 +65,10 @@ data class HighlightUpdateRequest(
     val highlightName: String,
     val startTime: String,
     val endTime: String
+)
+
+data class DeleteVideoRequest(
+    val videoId: Int
 )
 
 data class DeleteHighlightRequest(

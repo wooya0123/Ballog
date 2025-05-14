@@ -105,8 +105,7 @@ fun MatchDetailScreen(
                 when (selectedTab) {
                     0 -> MatchReportTab(matchDetail = matchDetail!!)
                     1 -> MatchVideoTab(
-                        matchId = matchId,
-                        totalQuarters = totalQuarters
+                        matchId = matchId
                     )
                 }
             }

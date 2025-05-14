@@ -24,7 +24,7 @@ fun VideoResponseDto.toVideo(): Video {
     return Video(
         id = videoId,
         url = videoUrl,
-        quarter = quarterNumber,
+        quarter = quarterNumber ?: 1,
         uploadSuccess = uploadSuccess,
         highlights = highlightList.map { it.toHighlight() }
     )

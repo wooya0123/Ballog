@@ -36,9 +36,6 @@ fun HighlightBottomSheet(
     confirmButtonText: String = "저장하기"
 ) {
     val context = LocalContext.current
-    val videoDurationSec = remember(videoUri) {
-        if (videoUri != null) getVideoDurationInSec(context, videoUri) else 0
-    }
 
     BallogBottomSheet(
         title = title,
@@ -53,24 +50,57 @@ fun HighlightBottomSheet(
         Spacer(modifier = Modifier.height(24.dp))
 
         val confirmAction = {
+            // 저장할 때 패딩 처리
+            // MM:SS 형식으로 저장된 경우 처리
+            val startTime = if (highlightState.startMin.contains(":")) {
+                val parts = highlightState.startMin.split(":")
+                val min = parts.getOrNull(0)?.padStart(2, '0') ?: "00"
+                val sec = parts.getOrNull(1)?.padStart(2, '0') ?: "00"
+                "$min:$sec"
+            } else {
+                // 개별 필드로 저장된 경우
+                val min = highlightState.startMin.ifEmpty { "0" }.padStart(2, '0')
+                val sec = highlightState.startSec.ifEmpty { "0" }.padStart(2, '0')
+                "$min:$sec"
+            }
+            
+            val endTime = if (highlightState.endMin.contains(":")) {
+                val parts = highlightState.endMin.split(":")
+                val min = parts.getOrNull(0)?.padStart(2, '0') ?: "00"
+                val sec = parts.getOrNull(1)?.padStart(2, '0') ?: "00"
+                "$min:$sec"
+            } else {
+                // 개별 필드로 저장된 경우
+                val min = highlightState.endMin.ifEmpty { "0" }.padStart(2, '0')
+                val sec = highlightState.endSec.ifEmpty { "0" }.padStart(2, '0')
+                "$min:$sec"
+            }
+            
             val padded = highlightState.copy(
-                startHour = highlightState.startHour.padStart(2, '0'),
-                startMin = highlightState.startMin.padStart(2, '0'),
-                endHour = highlightState.endHour.padStart(2, '0'),
-                endMin = highlightState.endMin.padStart(2, '0')
+                startMin = startTime,
+                startSec = "",
+                endMin = endTime,
+                endSec = ""
             )
 
-            val isValid = isValidHighlightTime(
-                padded.startHour, padded.startMin,
-                padded.endHour, padded.endMin,
-                videoDurationSec
-            )
+            // 시간 유효성 검사 - 시작 시간이 종료 시간보다 작은지만 확인
+            val isValid = try {
+                val startParts = startTime.split(":")
+                val endParts = endTime.split(":")
+                
+                val startSec = startParts[0].toInt() * 60 + startParts[1].toInt()
+                val endSec = endParts[0].toInt() * 60 + endParts[1].toInt()
+                
+                startSec < endSec
+            } catch (e: Exception) {
+                false
+            }
 
             if (isValid) {
                 onStateChange(padded)
                 onConfirm()
             } else {
-                Toast.makeText(context, "시간 입력이 잘못되었거나 영상 길이를 초과했습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "시작 시간은 종료 시간보다 작아야 합니다.", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -125,12 +155,57 @@ fun HighlightForm(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // 시간 값 처리 - MM:SS 형식 또는 개별 필드
+        val startMinValue: String
+        val startSecValue: String
+        
+        if (state.startMin.contains(":")) {
+            // MM:SS 형식으로 저장된 경우
+            val parts = state.startMin.split(":")
+            startMinValue = parts.getOrNull(0) ?: ""
+            startSecValue = parts.getOrNull(1) ?: ""
+        } else {
+            // 개별 필드로 저장된 경우
+            startMinValue = state.startMin
+            startSecValue = state.startSec
+        }
+        
+        val endMinValue: String
+        val endSecValue: String
+        
+        if (state.endMin.contains(":")) {
+            // MM:SS 형식으로 저장된 경우
+            val parts = state.endMin.split(":")
+            endMinValue = parts.getOrNull(0) ?: ""
+            endSecValue = parts.getOrNull(1) ?: ""
+        } else {
+            // 개별 필드로 저장된 경우
+            endMinValue = state.endMin
+            endSecValue = state.endSec
+        }
+
         FormFieldWithLabel("시작 지점") {
             TimeInputFields(
-                hour = state.startHour,
-                onHourChange = { onStateChange(state.copy(startHour = it)) },
-                minute = state.startMin,
-                onMinuteChange = { onStateChange(state.copy(startMin = it)) }
+                min = startMinValue,
+                onMinChange = { 
+                    if (state.startMin.contains(":")) {
+                        // 분:초 형식으로 저장된 경우
+                        onStateChange(state.copy(startMin = "$it:$startSecValue"))
+                    } else {
+                        // 기존 방식
+                        onStateChange(state.copy(startMin = it)) 
+                    }
+                },
+                sec = startSecValue,
+                onSecChange = { 
+                    if (state.startMin.contains(":")) {
+                        // 분:초 형식으로 저장된 경우
+                        onStateChange(state.copy(startMin = "$startMinValue:$it"))
+                    } else {
+                        // 기존 방식
+                        onStateChange(state.copy(startSec = it)) 
+                    }
+                }
             )
         }
 
@@ -138,10 +213,26 @@ fun HighlightForm(
 
         FormFieldWithLabel("종료 지점") {
             TimeInputFields(
-                hour = state.endHour,
-                onHourChange = { onStateChange(state.copy(endHour = it)) },
-                minute = state.endMin,
-                onMinuteChange = { onStateChange(state.copy(endMin = it)) }
+                min = endMinValue,
+                onMinChange = { 
+                    if (state.endMin.contains(":")) {
+                        // 분:초 형식으로 저장된 경우
+                        onStateChange(state.copy(endMin = "$it:$endSecValue"))
+                    } else {
+                        // 기존 방식
+                        onStateChange(state.copy(endMin = it)) 
+                    }
+                },
+                sec = endSecValue,
+                onSecChange = { 
+                    if (state.endMin.contains(":")) {
+                        // 분:초 형식으로 저장된 경우
+                        onStateChange(state.copy(endMin = "$endMinValue:$it"))
+                    } else {
+                        // 기존 방식
+                        onStateChange(state.copy(endSec = it)) 
+                    }
+                }
             )
         }
     }
@@ -163,18 +254,23 @@ private fun FormFieldWithLabel(label: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun TimeInputFields(
-    hour: String,
-    onHourChange: (String) -> Unit,
-    minute: String,
-    onMinuteChange: (String) -> Unit
+    min: String,
+    onMinChange: (String) -> Unit,
+    sec: String,
+    onSecChange: (String) -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 분(minutes) 입력 필드
         Input(
-            value = hour,
-            onValueChange = { if (it.length <= 2 && it.all { c -> c.isDigit() }) onHourChange(it) },
+            value = min,
+            onValueChange = { newValue -> 
+                if (newValue.length <= 2 && newValue.all { c -> c.isDigit() }) {
+                    onMinChange(newValue)
+                }
+            },
             placeholder = "00",
             keyboardType = KeyboardType.Number,
             modifier = Modifier.weight(1f)
@@ -188,9 +284,14 @@ private fun TimeInputFields(
                 fontSize = 14.sp
             )
         )
+        // 초(seconds) 입력 필드
         Input(
-            value = minute,
-            onValueChange = { if (it.length <= 2 && it.all { c -> c.isDigit() }) onMinuteChange(it) },
+            value = sec,
+            onValueChange = { newValue -> 
+                if (newValue.length <= 2 && newValue.all { c -> c.isDigit() }) {
+                    onSecChange(newValue)
+                }
+            },
             placeholder = "00",
             keyboardType = KeyboardType.Number,
             modifier = Modifier.weight(1f)
