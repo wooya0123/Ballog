@@ -201,15 +201,32 @@ class VideoViewModel : ViewModel() {
         }
     }
 
-    fun addHighlight(request: HighlightAddRequest) {
+    fun addHighlight(request: HighlightAddRequest, matchId: Int) {
         viewModelScope.launch {
             try {
-                Log.d("VideoViewModel", "➕ 하이라이트 추가 요청: ${request.highlightName}")
-                videoApi.addHighlight(request)
-                getMatchVideos(request.videoId)
+                Log.d("VideoViewModel", "➕ 하이라이트 추가 시작")
+                Log.d("VideoViewModel", "📋 요청 정보: videoId=${request.videoId}, name=${request.highlightName}, start=${request.startTime}, end=${request.endTime}")
+                
+                val response = videoApi.addHighlight(request)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    Log.d("VideoViewModel", "✅ 하이라이트 추가 성공: highlightId=${response.body()?.result?.highlightId}")
+                    
+                    // 전체 매치 데이터 새로고침
+                    Log.d("VideoViewModel", "🔄 매치 데이터 새로고침 시작")
+                    getMatchVideos(matchId)
+                    Log.d("VideoViewModel", "✅ 매치 데이터 새로고침 완료")
+                } else {
+                    val errorMessage = response.body()?.message ?: "하이라이트 추가 실패"
+                    Log.e("VideoViewModel", "❌ 하이라이트 추가 실패 - $errorMessage")
+                    Log.e("VideoViewModel", "⚠️ 에러 응답: ${response.errorBody()?.string()}")
+                    _error.value = errorMessage
+                    throw Exception(errorMessage)
+                }
             } catch (e: Exception) {
-                Log.e("VideoViewModel", "🔥 하이라이트 추가 실패", e)
+                Log.e("VideoViewModel", "🔥 하이라이트 추가 중 예외 발생", e)
+                Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
                 _error.value = e.message
+                throw e
             }
         }
     }
@@ -217,12 +234,29 @@ class VideoViewModel : ViewModel() {
     fun updateHighlight(request: HighlightUpdateRequest, matchId: Int) {
         viewModelScope.launch {
             try {
-                Log.d("VideoViewModel", "✏️ 하이라이트 수정 요청: ${request.highlightId}")
-                videoApi.updateHighlight(request)
-                getMatchVideos(matchId)
+                Log.d("VideoViewModel", "✏️ 하이라이트 수정 시작")
+                Log.d("VideoViewModel", "📋 수정 정보: highlightId=${request.highlightId}, name=${request.highlightName}, start=${request.startTime}, end=${request.endTime}")
+                
+                val response = videoApi.updateHighlight(request)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    Log.d("VideoViewModel", "✅ 하이라이트 수정 성공")
+                    
+                    // 전체 매치 데이터 새로고침
+                    Log.d("VideoViewModel", "🔄 매치 데이터 새로고침 시작")
+                    getMatchVideos(matchId)
+                    Log.d("VideoViewModel", "✅ 매치 데이터 새로고침 완료")
+                } else {
+                    val errorMessage = response.body()?.message ?: "하이라이트 수정 실패"
+                    Log.e("VideoViewModel", "❌ 하이라이트 수정 실패 - $errorMessage")
+                    Log.e("VideoViewModel", "⚠️ 에러 응답: ${response.errorBody()?.string()}")
+                    _error.value = errorMessage
+                    throw Exception(errorMessage)
+                }
             } catch (e: Exception) {
-                Log.e("VideoViewModel", "🔥 하이라이트 수정 실패", e)
+                Log.e("VideoViewModel", "🔥 하이라이트 수정 중 예외 발생", e)
+                Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
                 _error.value = e.message
+                throw e
             }
         }
     }
@@ -230,12 +264,24 @@ class VideoViewModel : ViewModel() {
     fun deleteHighlight(highlightId: Int, matchId: Int) {
         viewModelScope.launch {
             try {
-                Log.d("VideoViewModel", "❌ 하이라이트 삭제 요청: $highlightId")
-                videoApi.deleteHighlight(highlightId)  // Path 파라미터로 변경
-                getMatchVideos(matchId)
+                Log.d("VideoViewModel", "🗑️ 하이라이트 삭제 시작")
+                Log.d("VideoViewModel", "📋 삭제할 하이라이트 ID: $highlightId")
+                Log.d("VideoViewModel", "📋 매치 ID: $matchId")
+                
+                val response = videoApi.deleteHighlight(highlightId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    Log.d("VideoViewModel", "✅ 하이라이트 삭제 성공")
+                    getMatchVideos(matchId)
+                } else {
+                    val errorMessage = response.body()?.message ?: "하이라이트 삭제 실패"
+                    Log.e("VideoViewModel", "❌ 하이라이트 삭제 실패 - $errorMessage")
+                    Log.e("VideoViewModel", "⚠️ 에러 응답: ${response.errorBody()?.string()}")
+                    _error.value = errorMessage
+                }
             } catch (e: Exception) {
-                Log.e("VideoViewModel", "🔥 하이라이트 삭제 실패", e)
-                _error.value = e.message
+                Log.e("VideoViewModel", "🔥 하이라이트 삭제 중 예외 발생", e)
+                Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
+                _error.value = "하이라이트 삭제 중 오류가 발생했습니다: ${e.message}"
             }
         }
     }
@@ -246,41 +292,62 @@ class VideoViewModel : ViewModel() {
             quarterNumber = this.quarterNumber ?: 1,
             videoUrl = this.videoUrl?: "",
             highlights = this.highlightList.map { dto ->
+                Log.d("VideoViewModel", "🕒 원본 시간 형식: start=${dto.startTime}, end=${dto.endTime}")
+                
+                // HH:mm:ss -> mm:ss 변환
                 val startParts = dto.startTime.split(":")
                 val startTime = if (startParts.size >= 3) {
-                    val minutes = startParts[1].padStart(2, '0')
-                    val seconds = startParts[2].padStart(2, '0')
-                    "$minutes:$seconds"
+                    // HH:mm:ss 형식인 경우 mm:ss로 변환
+                    val minutes = (startParts[0].toIntOrNull()?.times(60) ?: 0) + (startParts[1].toIntOrNull() ?: 0)
+                    val seconds = startParts[2].toIntOrNull() ?: 0
+                    val result = "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+                    Log.d("VideoViewModel", "🕒 시작 시간 변환: ${dto.startTime} -> $result")
+                    result
                 } else if (startParts.size == 2) {
-                    val minutes = startParts[0].padStart(2, '0')
-                    val seconds = startParts[1].padStart(2, '0')
-                    "$minutes:$seconds"
+                    // mm:ss 형식인 경우 그대로 사용
+                    val result = "${startParts[0].padStart(2, '0')}:${startParts[1].padStart(2, '0')}"
+                    Log.d("VideoViewModel", "🕒 시작 시간 유지: ${dto.startTime} -> $result")
+                    result
                 } else {
+                    Log.d("VideoViewModel", "⚠️ 잘못된 시작 시간 형식: ${dto.startTime}")
                     "00:00"
                 }
                 
                 val endParts = dto.endTime.split(":")
                 val endTime = if (endParts.size >= 3) {
-                    val minutes = endParts[1].padStart(2, '0')
-                    val seconds = endParts[2].padStart(2, '0')
-                    "$minutes:$seconds"
+                    // HH:mm:ss 형식인 경우 mm:ss로 변환
+                    val minutes = (endParts[0].toIntOrNull()?.times(60) ?: 0) + (endParts[1].toIntOrNull() ?: 0)
+                    val seconds = endParts[2].toIntOrNull() ?: 0
+                    val result = "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+                    Log.d("VideoViewModel", "🕒 종료 시간 변환: ${dto.endTime} -> $result")
+                    result
                 } else if (endParts.size == 2) {
-                    val minutes = endParts[0].padStart(2, '0')
-                    val seconds = endParts[1].padStart(2, '0')
-                    "$minutes:$seconds"
+                    // mm:ss 형식인 경우 그대로 사용
+                    val result = "${endParts[0].padStart(2, '0')}:${endParts[1].padStart(2, '0')}"
+                    Log.d("VideoViewModel", "🕒 종료 시간 유지: ${dto.endTime} -> $result")
+                    result
                 } else {
+                    Log.d("VideoViewModel", "⚠️ 잘못된 종료 시간 형식: ${dto.endTime}")
                     "00:00"
                 }
                 
-                HighlightUiState(
+                val highlight = HighlightUiState(
                     id = dto.highlightId.toString(),
                     title = dto.highlightName,
-                    startMin = startTime,
-                    startSec = "",
-                    endMin = endTime,
-                    endSec = ""
+                    startMin = startTime.trim().padStart(5, '0').substringBefore(":"),
+                    startSec = startTime.trim().padStart(5, '0').substringAfter(":"),
+                    endMin = endTime.trim().padStart(5, '0').substringBefore(":"),
+                    endSec = endTime.trim().padStart(5, '0').substringAfter(":")
                 )
-            },
+                Log.d("VideoViewModel", "✅ 변환된 하이라이트: id=${highlight.id}, title=${highlight.title}, start=${highlight.startMin}:${highlight.startSec}, end=${highlight.endMin}:${highlight.endSec}")
+                highlight
+            }.sortedWith(compareBy(
+                { it.startMin.toIntOrNull() ?: 0 },
+                { it.startSec.toIntOrNull() ?: 0 },
+                { it.endMin.toIntOrNull() ?: 0 },
+                { it.endSec.toIntOrNull() ?: 0 },
+                { it.title }
+            )),
             showPlayer = false
         )
     }

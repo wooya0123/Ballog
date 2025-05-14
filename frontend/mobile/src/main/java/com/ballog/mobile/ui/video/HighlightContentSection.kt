@@ -86,8 +86,8 @@ fun HighlightContentSection(
                 highlights.forEach { highlight ->
                     HighlightCard(
                         title = highlight.title,
-                        startTime = highlight.startMin,
-                        endTime = highlight.endMin,
+                        startTime = "${highlight.startMin}:${highlight.startSec}",
+                        endTime = "${highlight.endMin}:${highlight.endSec}",
                         onEdit = { onEditClick(highlight) },
                         onLike = { /* TODO */ }
                     )

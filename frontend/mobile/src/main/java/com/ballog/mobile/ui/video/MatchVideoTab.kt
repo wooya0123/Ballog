@@ -79,7 +79,7 @@ fun MatchVideoTab(matchId: Int) {
                 quarterNumber = video.quarterNumber ?: 1,
                 videoUrl = video.videoUrl ?: "",
                 highlights = video.highlights,
-                showPlayer = false
+                showPlayer = quarterData[quarter]?.showPlayer ?: false  // 기존 showPlayer 상태 유지
             )
             Log.d("MatchVideoTab", "🧩 $quarter → videoUrl=${video.videoUrl}, highlight=${video.highlights.size}개")
         }
@@ -196,6 +196,13 @@ fun MatchVideoTab(matchId: Int) {
 
         coroutineScope.launch {
             if (showAddSheet && current.videoId > 0) {
+                Log.d("MatchVideoTab", "🎯 하이라이트 추가 시작")
+                Log.d("MatchVideoTab", "📋 현재 쿼터: $selectedQuarter")
+                Log.d("MatchVideoTab", "📋 비디오 ID: ${current.videoId}")
+                Log.d("MatchVideoTab", "📋 하이라이트 제목: ${updatedHighlight.title}")
+                Log.d("MatchVideoTab", "📋 시작 시간: $startTime")
+                Log.d("MatchVideoTab", "📋 종료 시간: $endTime")
+                
                 // API 호출
                 val request = HighlightAddRequest(
                     videoId = current.videoId,
@@ -203,16 +210,23 @@ fun MatchVideoTab(matchId: Int) {
                     startTime = startTime,
                     endTime = endTime
                 )
-                Log.d("MatchVideoTab", "🎯 하이라이트 추가 요청: videoId=${request.videoId}, name=${request.highlightName}, start=${request.startTime}, end=${request.endTime}")
-                videoViewModel.addHighlight(request)
                 
-                // 바텀시트 닫기
-                sheetState.hide()
-                showAddSheet = false
-                
-                // 데이터 새로고침
-                videoViewModel.getMatchVideos(matchId)
+                try {
+                    videoViewModel.addHighlight(request, matchId)
+                    // 바텀시트 닫기
+                    sheetState.hide()
+                    showAddSheet = false
+                    Log.d("MatchVideoTab", "✅ 하이라이트 추가 요청 완료")
+                } catch (e: Exception) {
+                    Log.e("MatchVideoTab", "❌ 하이라이트 추가 실패", e)
+                }
             } else if (showEditSheet && updatedHighlight.id.isNotEmpty()) {
+                Log.d("MatchVideoTab", "✏️ 하이라이트 수정 시작")
+                Log.d("MatchVideoTab", "📋 하이라이트 ID: ${updatedHighlight.id}")
+                Log.d("MatchVideoTab", "📋 수정된 제목: ${updatedHighlight.title}")
+                Log.d("MatchVideoTab", "📋 수정된 시작 시간: $startTime")
+                Log.d("MatchVideoTab", "📋 수정된 종료 시간: $endTime")
+                
                 // 수정 API 호출
                 val request = HighlightUpdateRequest(
                     highlightId = updatedHighlight.id.toInt(),
@@ -220,14 +234,16 @@ fun MatchVideoTab(matchId: Int) {
                     startTime = startTime,
                     endTime = endTime
                 )
-                videoViewModel.updateHighlight(request, matchId)
                 
-                // 바텀시트 닫기
-                sheetState.hide()
-                showEditSheet = false
-                
-                // 데이터 새로고침
-                videoViewModel.getMatchVideos(matchId)
+                try {
+                    videoViewModel.updateHighlight(request, matchId)
+                    // 바텀시트 닫기
+                    sheetState.hide()
+                    showEditSheet = false
+                    Log.d("MatchVideoTab", "✅ 하이라이트 수정 요청 완료")
+                } catch (e: Exception) {
+                    Log.e("MatchVideoTab", "❌ 하이라이트 수정 실패", e)
+                }
             }
         }
     }
@@ -257,11 +273,13 @@ fun MatchVideoTab(matchId: Int) {
             },
             onConfirm = confirmAction,
             onDelete = {
-                val current = currentData()
-                val updatedList = current.highlights.filterNot { it == editingHighlight }
-                quarterData[selectedQuarter] = current.copy(highlights = updatedList)
+                Log.d("MatchVideoTab", "🗑️ 하이라이트 삭제 시작")
+                Log.d("MatchVideoTab", "📋 하이라이트 ID: ${editingHighlight.id}")
+                
                 coroutineScope.launch {
-                    sheetState.hide(); showEditSheet = false
+                    videoViewModel.deleteHighlight(editingHighlight.id.toInt(), matchId)
+                    sheetState.hide()
+                    showEditSheet = false
                 }
             },
             videoUri = currentData().videoUrl.let(Uri::parse),

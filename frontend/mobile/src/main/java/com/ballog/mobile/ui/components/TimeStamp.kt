@@ -63,12 +63,17 @@ private fun formatTimeWithPadding(time: String): String {
     if (time.isBlank()) return "00:00"
     
     val parts = time.split(":")
-    if (parts.size == 2) {
-        val min = parts[0].padStart(2, '0')
-        val sec = parts[1].padStart(2, '0')
-        return "$min:$sec"
+    return when {
+        parts.size == 2 -> {
+            val min = parts[0].padStart(2, '0')
+            val sec = parts[1].padStart(2, '0')
+            "$min:$sec"
+        }
+        parts.size == 1 && time.length <= 2 -> {
+            // 숫자만 있는 경우 분으로 처리
+            val min = time.padStart(2, '0')
+            "$min:00"
+        }
+        else -> "00:00"  // 잘못된 형식인 경우 기본값 반환
     }
-    
-    // 다른 형식이거나 오류 시 기본값 제공
-    return time.padStart(5, '0')
 }
