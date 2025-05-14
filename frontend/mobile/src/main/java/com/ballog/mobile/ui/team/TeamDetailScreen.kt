@@ -22,7 +22,7 @@ import com.ballog.mobile.R
 import com.ballog.mobile.data.model.TeamDetail
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
-import com.ballog.mobile.ui.components.PlayerCard
+import com.ballog.mobile.ui.components.TeamPlayerCard
 import com.ballog.mobile.ui.components.TabMenu
 import com.ballog.mobile.ui.components.TeamInfoCard
 import com.ballog.mobile.ui.components.TeamStats
@@ -259,7 +259,7 @@ private fun TeamInfoTab(
                 Log.d(TAG, "플레이어 목록 표시: ${teamDetail.players.size}명")
                 items(teamDetail.players) { player ->
                     Log.d(TAG, "플레이어 카드 표시: ${player.nickname}")
-                    PlayerCard(
+                    TeamPlayerCard(
                         name = player.nickname,
                         isManager = player.role == "MANAGER",
                         modifier = Modifier.fillMaxWidth()
