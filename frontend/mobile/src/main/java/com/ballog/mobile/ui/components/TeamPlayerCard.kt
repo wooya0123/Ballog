@@ -75,14 +75,19 @@ fun TeamPlayerCard(
 
             // 카드 아이콘: 클릭 리스너가 주어졌을 때만 표시
             if (onCardClick != null) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_card),
-                    contentDescription = "카드",
-                    tint = Gray.Gray800,
+                Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable { onCardClick() }
-                )
+                        .size(40.dp) // 터치 영역 확보
+                        .clickable(onClick = onCardClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_card),
+                        contentDescription = "카드",
+                        tint = Gray.Gray800,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
