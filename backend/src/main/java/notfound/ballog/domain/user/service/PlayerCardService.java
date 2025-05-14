@@ -27,6 +27,7 @@ public class PlayerCardService {
         playerCardRepository.save(newPlayerCard);
     }
 
+    @Transactional
     public GetPlayerCardResponse getPlayerCard(UUID userId) {
         PlayerCard playerCard = playerCardRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.PLAYER_CARD_NOT_FOUND));
