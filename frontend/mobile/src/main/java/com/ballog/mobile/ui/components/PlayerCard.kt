@@ -41,13 +41,14 @@ fun PlayerCard(
             Box(
                 modifier = modifier
                     .width(280.dp)
+                    .height(450.dp)
                     .shadow(
-                        elevation = 32.dp,
+                        elevation = 48.dp,
                         shape = RoundedCornerShape(24.dp),
-                        ambientColor = Primary.copy(alpha = 0.5f),
-                        spotColor = Primary.copy(alpha = 0.7f)
+                        ambientColor = Color(0xFF20E9F5).copy(alpha = 0.8f),
+                        spotColor = Color(0xFF20E9F5).copy(alpha = 1f)
                     )
-                    .background(Color.White, shape = RoundedCornerShape(24.dp))
+                    .background(Gray.Gray700, shape = RoundedCornerShape(24.dp))
                     .border(6.dp, Gray.Gray500, shape = RoundedCornerShape(24.dp))
                     .padding(4.dp)
             ) {
@@ -88,58 +89,59 @@ fun PlayerCard(
                             fontFamily = pretendard
                         )
                     }
-                    // 스탯 리스트
+                    // 이름 아래 공간 전체를 Column으로 확보
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight()
+                            .weight(1f) // 💡 남은 영역을 다 차지하게 하고
                             .background(Gray.Gray700)
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 12.dp,
-                                bottom = 16.dp
-                            ),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.Center // 💡 자식들을 수직 중앙 정렬
                     ) {
-                        stats.forEach { (statName, statValue) ->
-                            val valueInt = statValue.toIntOrNull() ?: 0
-                            val ratio = (valueInt.coerceIn(0, 100)) / 100f
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = statName,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    fontFamily = pretendard,
-                                    modifier = Modifier.width(64.dp)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(8.dp)
+                        // 스탯 리스트 박스
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            stats.forEach { (statName, statValue) ->
+                                val valueInt = statValue.toIntOrNull() ?: 0
+                                val ratio = (valueInt.coerceIn(0, 100)) / 100f
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    Text(
+                                        text = statName,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = pretendard,
+                                        modifier = Modifier.width(64.dp)
+                                    )
                                     Box(
                                         modifier = Modifier
-                                            .fillMaxHeight()
-                                            .fillMaxWidth(ratio)
-                                            .background(Primary, RoundedCornerShape(4.dp))
+                                            .weight(1f)
+                                            .height(8.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .fillMaxWidth(ratio)
+                                                .background(Primary, RoundedCornerShape(4.dp))
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = statValue,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = pretendard,
+                                        modifier = Modifier.width(32.dp),
+                                        maxLines = 1,
+                                        textAlign = TextAlign.Center
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = statValue,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    fontFamily = pretendard,
-                                    modifier = Modifier.width(32.dp),
-                                    maxLines = 1,
-                                    textAlign = TextAlign.Center
-                                )
                             }
                         }
                     }
@@ -152,12 +154,12 @@ fun PlayerCard(
             Box(
                 modifier = modifier
                     .width(280.dp)
-                    .height(400.dp)
+                    .height(450.dp)
                     .shadow(
-                        elevation = 32.dp,
+                        elevation = 48.dp,
                         shape = RoundedCornerShape(24.dp),
-                        ambientColor = Primary.copy(alpha = 0.5f),
-                        spotColor = Primary.copy(alpha = 0.7f)
+                        ambientColor = Color(0xFF20E9F5).copy(alpha = 0.8f),
+                        spotColor = Color(0xFF20E9F5).copy(alpha = 1f)
                     )
                     .background(Gray.Gray700, shape = RoundedCornerShape(24.dp))
                     .border(6.dp, Gray.Gray500, shape = RoundedCornerShape(24.dp))
