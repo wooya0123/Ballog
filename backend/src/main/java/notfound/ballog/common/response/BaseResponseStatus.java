@@ -53,7 +53,9 @@ public enum BaseResponseStatus {
     TEAM_DELETE_ERROR(false, 5004, "팀 삭제 중 에러가 발생했습니다."),
 
     // 쿼터 관련 로직 에러(6000번대)
-    QUARTER_MATCH_NOT_FOUND(false, 6000, "해당 날짜에 매치가 존재하지 않습니다.");
+    QUARTER_MATCH_NOT_FOUND(false, 6000, "해당 날짜에 매치가 존재하지 않습니다."),
+    GAME_REPORT_NOT_FOUND(false, 6001, "최근 매치가 존재하지 않습니다");
+
 
     private final boolean isSuccess;
     private final int code;
