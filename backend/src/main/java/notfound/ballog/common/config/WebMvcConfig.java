@@ -12,7 +12,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("https://k12a404.p.ssafy.io",
                                 "http://k12a404.p.ssafy.io")
-                .allowedMethods("OPTIONS", "GET", "POST", "PUT", "DELETE");
+                .allowedMethods("OPTIONS", "GET", "POST", "PATCH", "DELETE");
     }
 
 }
