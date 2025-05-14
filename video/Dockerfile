@@ -2,10 +2,11 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# 시스템 패키지 설치 (PostgreSQL 드라이버를 위해 필요)
+# 시스템 패키지 설치 (PostgreSQL 드라이버와 ffmpeg를 위해 필요)
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
