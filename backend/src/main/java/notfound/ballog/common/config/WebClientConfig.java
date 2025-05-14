@@ -10,7 +10,7 @@ public class WebClientConfig {
     public WebClient webClient(WebClient.Builder builder) {
         return builder
 //                .baseUrl("http://localhost:8000")
-                .baseUrl("http://fastapi:8000")
+                .baseUrl("http://video:8000")
                 .build();
     }
 }
