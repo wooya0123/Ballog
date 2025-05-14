@@ -51,7 +51,7 @@ class SamsungHealthDataService(private val context: Context) {
         private const val APP_NAME = "Ballog"
 
         /** 스프린트로 간주할 최소 속력 (m/s) */
-        private const val SPRINT_THRESHOLD_SPEED = 5.0f // 약 18 km/h
+        private const val SPRINT_THRESHOLD_SPEED = 2.8f // 약 18 km/h
 
         /** 스프린트 상태가 유지되어야 하는 최소 시간 (밀리초) */
         private const val SPRINT_MIN_DURATION = 500 // 0.2초
@@ -76,25 +76,7 @@ class SamsungHealthDataService(private val context: Context) {
                 return@withContext emptyList()
             }
             Log.d(TAG, "운동 데이터 ${exerciseList.size}개 불러옴")
-
-            // 히트맵 계산
-            val heatmapDataList = mutableListOf<Exercise>()
-            for (exercise in exerciseList) {
-                Log.d(TAG, "운동 ID: ${exercise.id}, GPS 포인트 수: ${exercise.gpsPoints.size}")
-                if (exercise.gpsPoints.isNotEmpty()) {
-                    Log.d(TAG, "히트맵 새로 계산 시작 - 운동 ID: ${exercise.id}")
-                    // 기존 히트맵 데이터를 무시하고 새로 계산
-                    val heatmapData = metricsCalculator.calculateHeatmap(exercise.gpsPoints)
-                    Log.d(TAG, "히트맵 새로 계산 완료 - 운동 ID: ${exercise.id}")
-                    heatmapDataList.add(exercise.copy(heatmapData = heatmapData))
-                } else {
-                    Log.d(TAG, "GPS 포인트 없음 - 히트맵 계산 생략 - 운동 ID: ${exercise.id}")
-                    heatmapDataList.add(exercise)
-                }
-            }
-
-            Log.d(TAG, "총 ${heatmapDataList.size}개의 Ballog 운동 데이터 변환 완료")
-            return@withContext heatmapDataList
+            return@withContext exerciseList
         } catch (e: Exception) {
             Log.e(TAG, "운동 데이터 조회 실패: ${e.message}")
             emptyList()
@@ -110,7 +92,7 @@ class SamsungHealthDataService(private val context: Context) {
     private suspend fun readExercise(): List<Exercise> {
         // 최근 7일 데이터 조회를 위한 시간 설정
         val endTime = LocalDateTime.now()
-        val startTime = endTime.minusDays(2)
+        val startTime = endTime.minusDays(1)
 
         try {
             // 데이터 요청 객체 생성
@@ -172,7 +154,7 @@ class SamsungHealthDataService(private val context: Context) {
             }
 
             Log.d(TAG, "총 ${exerciseList.size}개의 Ballog 운동 데이터 변환 완료")
-            return exerciseList.sortedByDescending { it.timestamp }
+            return exerciseList.sortedBy { it.timestamp }
 
         } catch (e: Exception) {
             Log.e(TAG, "운동 데이터 읽기 실패: ${e.message}")

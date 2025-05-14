@@ -58,27 +58,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     private var pollingJob: Job? = null
     private var lastTimestamp: Long = 0L
 
-    private fun startWatchConnectionPolling() {
-        if (pollingJob?.isActive == true) return
-        pollingJob = viewModelScope.launch {
-            val context = getApplication<Application>().applicationContext
-            val nodeClient = Wearable.getNodeClient(context)
-            try {
-                while (isActive) {
-                    val nodes = getConnectedNodesSuspend(nodeClient)
-                    if (nodes.isNotEmpty()) {
-                        setWatchConnected()
-                    } else {
-                        setWatchNotConnected()
-                    }
-                    delay(2000)
-                }
-            } catch (e: CancellationException) {
-                // 폴링 취소 시 무시
-            }
-        }
-    }
-
     private suspend fun getConnectedNodesSuspend(nodeClient: NodeClient): List<Node> =
         suspendCancellableCoroutine { cont ->
             nodeClient.connectedNodes
@@ -311,7 +290,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
             if (corners != null && corners.size == 4 && timestamp != lastTimestamp) {
                 lastTimestamp = timestamp
                 _uiState.value = MatchUiState.Loading
-                checkSamsungHealthData()
             } else if (corners == null || corners.size != 4) {
                 _uiState.value = MatchUiState.WaitingForStadiumData
             }
@@ -327,7 +305,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
             // 임시 Success 데이터
             _uiState.value = MatchUiState.Success(
                 listOf(
-                    MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기")
                 )
             )
         } else {

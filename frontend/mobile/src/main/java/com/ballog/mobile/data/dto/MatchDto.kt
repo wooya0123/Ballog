@@ -54,13 +54,18 @@ data class ReportDataDto(
     val startTime: String,
     val endTime: String,
     val distance: Double,
-    val avgSpeed: Int,
-    val maxSpeed: Int,
+    val avgSpeed: Double,
+    val maxSpeed: Double,
     val calories: Int,
     val sprint: Int,
     val avgHeartRate: Int,
     val maxHeartRate: Int,
     val heatmap: List<List<Int>>
+)
+
+data class MatchReportResponse(
+    val matchId: Int,
+    val matchName: String
 )
 
 

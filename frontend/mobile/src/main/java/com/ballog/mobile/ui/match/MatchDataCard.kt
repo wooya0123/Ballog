@@ -24,6 +24,7 @@ import com.ballog.mobile.ui.components.ButtonColor
 
 @Composable
 fun MatchDataCard(
+    id: String,
     date: String,
     startTime: String,
     endTime: String,
@@ -113,14 +114,3 @@ fun MatchDataCard(
         }
     }
 }
-
-@Preview
-@Composable
-fun PreviewMatchDataCard() {
-    MatchDataCard(
-        date = "2025.05.08",
-        startTime = "15:37",
-        endTime = "15:50",
-        buttonText = "정보 수정하기"
-    )
-} 
