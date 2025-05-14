@@ -80,13 +80,13 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
                 val report = selectedQuarter.reportData
                 val reportCards = listOf(
                     Triple("분석시간", calculateDuration(report.startTime, report.endTime), "분"),
-                    Triple("이동거리", "%.1f".format(report.distance), "km"),
-                    Triple("최고 속도", "%.1f".format(report.maxSpeed), "km/h"),
-                    Triple("평균 속도", "%.1f".format(report.avgSpeed), "km/h"),
+                    Triple("이동거리", "%.1f".format(report.distance.toDouble()), "km"),
+                    Triple("최고 속도", "%.1f".format(report.maxSpeed.toDouble()), "km/h"),
+                    Triple("평균 속도", "%.1f".format(report.avgSpeed.toDouble()), "km/h"),
                     Triple("스프린트", report.sprint.toString(), "회"),
-                    Triple("소모 칼로리", "%.1f".format(report.calories), "kcal"),
-                    Triple("평균 심박수", "%.1f".format(report.avgHeartRate), "bpm"),
-                    Triple("최대 심박수", "%.1f".format(report.maxHeartRate), "bpm")
+                    Triple("소모 칼로리", "%.1f".format(report.calories.toDouble()), "kcal"),
+                    Triple("평균 심박수", "%.1f".format(report.avgHeartRate.toDouble()), "bpm"),
+                    Triple("최대 심박수", "%.1f".format(report.maxHeartRate.toDouble()), "bpm")
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     reportCards.forEach { (label, value, unit) ->
