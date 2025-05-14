@@ -34,6 +34,12 @@ public class GlobalExceptionHandler {
         return BaseResponse.error(e.getStatus());
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public BaseResponse<BaseResponseStatus> NotFoundExceptionHandler(NotFoundException e) {
+        log.error("NotFoundException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
+        return BaseResponse.error(e.getStatus());
+    }
+
     // RequestDto Valid 에러
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public BaseResponse<Void> MethodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {

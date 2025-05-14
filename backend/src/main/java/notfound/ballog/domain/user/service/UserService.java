@@ -108,7 +108,7 @@ public class UserService {
             // 2) 첫 번째 heatmap의 사이즈를 기준으로 행(row)과 열(col) 크기 결정
             int numRows = heatmapList.get(0).size();
             int numCols = heatmapList.get(0).get(0).size();
-            int count = heatmapList.size(); // 보통 5
+            int count = heatmapList.size();
 
             // 3) 행 단위 순회
             for (int i = 0; i < numRows; i++) {
@@ -127,7 +127,7 @@ public class UserService {
                     }
 
                     // 6) 평균 계산 및 소수점 저장
-                    int avgInt = (int) Math.round(sum / numRows);
+                    int avgInt = (int) Math.round(sum / count);
                     averagedRow.add(avgInt);
                 }
 
