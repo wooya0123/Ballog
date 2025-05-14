@@ -22,26 +22,27 @@ import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.pretendard
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun PlayerCardFigma(
+    modifier: Modifier = Modifier,
     name: String,
     imageRes: Int = R.drawable.ic_profile, // 임시 이미지
-    stats: List<Pair<String, String>>,
-    modifier: Modifier = Modifier
+    stats: List<Pair<String, String>>
 ) {
     Box(
         modifier = modifier
-            .width(250.dp)
+            .width(280.dp)
             .shadow(
                 elevation = 32.dp,
-                shape = RoundedCornerShape(22.dp),
+                shape = RoundedCornerShape(24.dp),
                 ambientColor = Primary.copy(alpha = 0.5f),
                 spotColor = Primary.copy(alpha = 0.7f)
             )
-            .background(Color.White, shape = RoundedCornerShape(22.dp))
-            .border(1.dp, Gray.Gray400, shape = RoundedCornerShape(22.dp))
-            .padding(0.dp)
+            .background(Color.White, shape = RoundedCornerShape(24.dp))
+            .border(6.dp, Gray.Gray500, shape = RoundedCornerShape(24.dp))
+            .padding(4.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -53,7 +54,7 @@ fun PlayerCardFigma(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .background(Gray.Gray700),
                 contentAlignment = Alignment.Center
             ) {
@@ -84,8 +85,14 @@ fun PlayerCardFigma(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .background(Gray.Gray700)
-                    .padding(vertical = 12.dp, horizontal = 16.dp),
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 12.dp,
+                        bottom = 16.dp
+                    ),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 stats.forEach { (statName, statValue) ->
@@ -123,7 +130,8 @@ fun PlayerCardFigma(
                             color = Color.White,
                             fontFamily = pretendard,
                             modifier = Modifier.width(32.dp),
-                            maxLines = 1
+                            maxLines = 1,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }

@@ -24,7 +24,7 @@ fun UserInfoResponse.toUser(): com.ballog.mobile.data.model.User =
 // 홈화면에 사용자 통계
 data class UserStatisticsDto(
     val nickname: String,
-    val heatmap: List<List<List<Int>>>,
+    val heatmap: List<List<Int>>,
     val distance: List<Double>,
     val speed: List<Double>,
     val sprint: List<Int>,

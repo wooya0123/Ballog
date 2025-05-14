@@ -1,5 +1,7 @@
 package com.ballog.mobile.ui.home
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +33,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
@@ -52,12 +56,7 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
 
     // 기본값
     val nickname = statistics?.nickname ?: "불러오는 중..."
-    val rawHeatmap = statistics?.heatmap ?: emptyList()
-
-    // 3차원 → 2차원 펼침
-    val heatmap: List<List<Int>> = rawHeatmap.map { row ->
-        row.map { cellArray -> cellArray.firstOrNull() ?: 0 }
-    }
+    val heatmap = statistics?.heatmap ?: emptyList()
 
     val distanceList = statistics?.distance ?: emptyList()
     val speedList = statistics?.speed ?: emptyList()
@@ -193,13 +192,27 @@ fun Double.format1f(): String = String.format("%.1f", this)
 
 @Composable
 fun PlayerCardDialog(onDismiss: () -> Unit) {
-    // 어두운 반투명 배경 + X 버튼은 전체 화면의 오른쪽 위에 고정
+    // 카드 플립 애니메이션 상태
+    var flipped by remember { mutableStateOf(false) }
+
+    // 회전 애니메이션 상태
+    val rotationY by animateFloatAsState(
+        targetValue = if (flipped) 180f else 0f,
+        animationSpec = tween(durationMillis = 600),
+        label = "flip"
+    )
+
+    // 다이얼로그가 진입하면 자동으로 애니메이션 실행
+    LaunchedEffect(Unit) {
+        flipped = true
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.98f))
+            .background(Color.Black.copy(alpha = 0.7f))
     ) {
-        // X 버튼 (전체 화면 기준 오른쪽 위)
+        // X 버튼
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -213,14 +226,18 @@ fun PlayerCardDialog(onDismiss: () -> Unit) {
                 )
             }
         }
-        // 중앙에 카드 (Glow 효과 추가)
+
+        // 중앙 카드 + Flip 애니메이션
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
+                .graphicsLayer {
+                    this.rotationY = rotationY
+                    cameraDistance = 12 * density
+                }
                 .drawBehind {
-                    // RadialGradient를 활용한 그라데이션 Glow 효과
                     drawRoundRect(
-                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                        brush = Brush.radialGradient(
                             colors = listOf(
                                 Primary.copy(alpha = 0.35f),
                                 Primary.copy(alpha = 0.0f)
@@ -229,7 +246,6 @@ fun PlayerCardDialog(onDismiss: () -> Unit) {
                             radius = size.maxDimension * 0.7f
                         ),
                         size = size,
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(22.dp.toPx())
                     )
                 }
                 .shadow(
@@ -237,19 +253,39 @@ fun PlayerCardDialog(onDismiss: () -> Unit) {
                     shape = RoundedCornerShape(22.dp)
                 )
         ) {
-            PlayerCardFigma(
-                name = "KIM GAHEE",
-                stats = listOf(
-                    "Speed" to "78",
-                    "Stamina" to "80",
-                    "Attack" to "64",
-                    "Defense" to "80",
-                    "Recovery" to "76"
+            if (rotationY <= 90f) {
+                PlayerCardFigma(
+                    name = "KIM GAHEE",
+                    stats = listOf(
+                        "Speed" to "78",
+                        "Stamina" to "80",
+                        "Attack" to "64",
+                        "Defense" to "80",
+                        "Recovery" to "76"
+                    )
                 )
-            )
+            } else {
+                // 뒷면이 있는 경우 이곳에 다른 컴포저블 넣기 가능
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer { this.rotationY = 180f } // 반전 처리
+                ) {
+                    PlayerCardFigma(
+                        name = "KIM GAHEE",
+                        stats = listOf(
+                            "Speed" to "78",
+                            "Stamina" to "80",
+                            "Attack" to "64",
+                            "Defense" to "80",
+                            "Recovery" to "76"
+                        )
+                    )
+                }
+            }
         }
     }
 }
+
 
 //@Preview(showBackground = true)
 //@Composable
