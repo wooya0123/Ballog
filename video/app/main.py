@@ -2,7 +2,6 @@ import os
 import shutil
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from app.response import HighlightItem, HighlightResult
-from app.request import HighlightRequest
 from app.service import analyze_audio_file
 
 app = FastAPI(
