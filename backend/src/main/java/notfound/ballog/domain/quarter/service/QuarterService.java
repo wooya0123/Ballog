@@ -35,16 +35,19 @@ public class QuarterService {
 
         if(matchId == null){
             // 원래 여기서 매치 추가하고 그 매치 아이디로 쿼터 등록하고 경기 기록 등록 (자동 등록 버전)
-            throw new NotFoundException(BaseResponseStatus.BAD_REQUEST);
+            throw new NotFoundException(BaseResponseStatus.QUARTER_MATCH_NOT_FOUND);
         }
 
+        // 쿼터 넘버 뭐가 있는지 확인하기 위해 쿼터 조회
         List<Quarter> existingQuarters = quarterRepository.findAllByMatchId(matchId);
 
+        // 쿼터 넘버, 쿼터 짝으로 맵 생성
         Map<Integer, Quarter> quarterNumberToQuarter = existingQuarters.stream()
                 .collect(Collectors.toMap(Quarter::getQuarterNumber, quarter -> quarter));
 
         List<Quarter> quartersToSave = new ArrayList<>();
 
+        // 반복문 돌면서 만약 요청에 있는 쿼터 넘버가 없다면 저장할 쿼터 목록에 추가
         for (ReportData reportData : req.getReportDataList()) {
             int quarterNumber = reportData.getQuarterNumber();
 
@@ -58,13 +61,16 @@ public class QuarterService {
             quarterRepository.saveAll(quartersToSave);
         }
 
+        // 요청에 있는 쿼터 넘버들만 리스트로 만들고
         List<Integer> requestedQuarterNumbers = req.getReportDataList().stream()
                 .map(ReportData::getQuarterNumber)
                 .collect(Collectors.toList());
 
+        // 새로 만든 쿼터, 기존에 있는 쿼터 포함해서 요청에 있는 쿼터 넘버에 걸리는 쿼터들 가져옴
         List<Quarter> requestedQuarters = quarterRepository.findAllByMatchIdAndQuarterNumberIn(
                 matchId, requestedQuarterNumbers);
 
+        // 다시 쿼터 넘버, 쿼터 짝으로 맵 생성
         Map<Integer, Quarter> quarterMap = requestedQuarters.stream()
                 .collect(Collectors.toMap(Quarter::getQuarterNumber, quarter -> quarter));
 
@@ -82,22 +88,16 @@ public class QuarterService {
             gameReportRepository.saveAll(gameReportsToSave);
         }
 
-        //선수카드 업데이트
-        updatePlayerCard(userId, req.getReportDataList());
-    }
-
-    private void updatePlayerCard(UUID userId, List<ReportData> reportDataList) {
         // 사용자의 선수 카드 조회
         PlayerCard playerCard = playerCardRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.NOT_FOUND));
-        
-        // 각 쿼터별로 능력치 계산 후 평균
-        Map<String, Integer> abilities = calculateAveragedAbilities(reportDataList);
-        
-        // 선수 카드 업데이트
+
+        // 각 쿼터별 데이터 계산해서 능력치 추출 하고 평균 총 쿼터 평균 능력치 계산
+        Map<String, Integer> abilities = calculateAveragedAbilities(req.getReportDataList());
+
+        // 계산한 값과 기존에 있던값 가중치 부여해서 능려치 업데이트
         updatePlayerCardAbilities(playerCard, abilities);
-        
-        // 저장
+
         playerCardRepository.save(playerCard);
     }
     
@@ -311,4 +311,5 @@ public class QuarterService {
     private int clamp(int value) {
         return Math.max(0, Math.min(100, value));
     }
+
 }
