@@ -17,6 +17,8 @@ import com.ballog.mobile.util.FileUtils
 import com.ballog.mobile.util.VideoUtils
 import com.ballog.mobile.viewmodel.VideoViewModel
 import android.util.Log
+import com.ballog.mobile.data.dto.HighlightAddRequest
+import com.ballog.mobile.data.dto.HighlightUpdateRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,10 +140,17 @@ fun MatchVideoTab(matchId: Int) {
                 quarterData[prevQuarter] = quarterData[prevQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
                 quarterData[it] = quarterData[it]?.copy(showPlayer = true) ?: QuarterVideoData()
 
+                // 쿼터 변경 시 editingHighlight 초기화
+                editingHighlight = HighlightUiState()
+
                 Log.d("MatchVideoTab", "🔄 쿼터 변경: $prevQuarter → $it")
             },
             onExpandedChange = { expanded = it },
-            onAddClick = { showAddSheet = true },
+            onAddClick = { 
+                // 하이라이트 구간 추가 시 editingHighlight 초기화
+                editingHighlight = HighlightUiState()
+                showAddSheet = true 
+            },
             onEditClick = {
                 editingHighlight = it
                 showEditSheet = true
@@ -171,19 +180,55 @@ fun MatchVideoTab(matchId: Int) {
             endSec = editingHighlight.endSec.padStart(2, '0')
         )
         val current = currentData()
-        val updatedList = when {
-            showAddSheet -> current.highlights + updatedHighlight
-            showEditSheet -> current.highlights.map {
-                if (it == editingHighlight) updatedHighlight else it
-            }
-            else -> current.highlights
+
+        // UI의 mm:ss 형식을 API 요청용 HH:mm:ss 형식으로 변환
+        val startTime = if (updatedHighlight.startMin.contains(":")) {
+            "00:${updatedHighlight.startMin}"  // UI에서 mm:ss 형식으로 입력된 경우
+        } else {
+            "00:${updatedHighlight.startMin}:${updatedHighlight.startSec}"  // 분/초 따로 입력된 경우
         }
-        quarterData[selectedQuarter] = current.copy(highlights = updatedList)
+
+        val endTime = if (updatedHighlight.endMin.contains(":")) {
+            "00:${updatedHighlight.endMin}"  // UI에서 mm:ss 형식으로 입력된 경우
+        } else {
+            "00:${updatedHighlight.endMin}:${updatedHighlight.endSec}"  // 분/초 따로 입력된 경우
+        }
 
         coroutineScope.launch {
-            sheetState.hide()
-            showAddSheet = false
-            showEditSheet = false
+            if (showAddSheet && current.videoId > 0) {
+                // API 호출
+                val request = HighlightAddRequest(
+                    videoId = current.videoId,
+                    highlightName = updatedHighlight.title,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+                Log.d("MatchVideoTab", "🎯 하이라이트 추가 요청: videoId=${request.videoId}, name=${request.highlightName}, start=${request.startTime}, end=${request.endTime}")
+                videoViewModel.addHighlight(request)
+                
+                // 바텀시트 닫기
+                sheetState.hide()
+                showAddSheet = false
+                
+                // 데이터 새로고침
+                videoViewModel.getMatchVideos(matchId)
+            } else if (showEditSheet && updatedHighlight.id.isNotEmpty()) {
+                // 수정 API 호출
+                val request = HighlightUpdateRequest(
+                    highlightId = updatedHighlight.id.toInt(),
+                    highlightName = updatedHighlight.title,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+                videoViewModel.updateHighlight(request, matchId)
+                
+                // 바텀시트 닫기
+                sheetState.hide()
+                showEditSheet = false
+                
+                // 데이터 새로고침
+                videoViewModel.getMatchVideos(matchId)
+            }
         }
     }
 

@@ -36,9 +36,6 @@ fun HighlightBottomSheet(
     confirmButtonText: String = "저장하기"
 ) {
     val context = LocalContext.current
-    val videoDurationSec = remember(videoUri) {
-        if (videoUri != null) getVideoDurationInSec(context, videoUri) else 0
-    }
 
     BallogBottomSheet(
         title = title,
@@ -86,28 +83,24 @@ fun HighlightBottomSheet(
                 endSec = ""
             )
 
-            // 영상 길이 검증 로직
-            val isValid = if (videoUri != null) {
-                try {
-                    val startParts = startTime.split(":")
-                    val endParts = endTime.split(":")
-                    
-                    val startSec = startParts[0].toInt() * 60 + startParts[1].toInt()
-                    val endSec = endParts[0].toInt() * 60 + endParts[1].toInt()
-                    
-                    startSec < endSec && endSec <= videoDurationSec
-                } catch (e: Exception) {
-                    false
-                }
-            } else {
-                true  // 영상이 없으면 유효성 검사를 건너뜁니다.
+            // 시간 유효성 검사 - 시작 시간이 종료 시간보다 작은지만 확인
+            val isValid = try {
+                val startParts = startTime.split(":")
+                val endParts = endTime.split(":")
+                
+                val startSec = startParts[0].toInt() * 60 + startParts[1].toInt()
+                val endSec = endParts[0].toInt() * 60 + endParts[1].toInt()
+                
+                startSec < endSec
+            } catch (e: Exception) {
+                false
             }
 
             if (isValid) {
                 onStateChange(padded)
                 onConfirm()
             } else {
-                Toast.makeText(context, "시간 입력이 잘못되었거나 영상 길이를 초과했습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "시작 시간은 종료 시간보다 작아야 합니다.", Toast.LENGTH_SHORT).show()
             }
         }
 
