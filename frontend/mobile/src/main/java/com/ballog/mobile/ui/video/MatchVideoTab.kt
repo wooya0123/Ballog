@@ -141,10 +141,10 @@ fun MatchVideoTab(matchId: Int, totalQuarters: Int) {
 
     val confirmAction: () -> Unit = {
         val updatedHighlight = editingHighlight.copy(
-            startHour = editingHighlight.startHour.padStart(2, '0'),
             startMin = editingHighlight.startMin.padStart(2, '0'),
-            endHour = editingHighlight.endHour.padStart(2, '0'),
-            endMin = editingHighlight.endMin.padStart(2, '0')
+            startSec = editingHighlight.startSec.padStart(2, '0'),
+            endMin = editingHighlight.endMin.padStart(2, '0'),
+            endSec = editingHighlight.endSec.padStart(2, '0')
         )
         val current = currentData()
         val updatedList = when {

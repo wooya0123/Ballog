@@ -192,15 +192,39 @@ class VideoViewModel : ViewModel() {
             quarterNumber = this.quarterNumber ?: 1,
             videoUrl = this.videoUrl?: "",
             highlights = this.highlightList.map { dto ->
-                val (startHour, startMin) = dto.startTime.split(":").let { it[0] to it[1] }
-                val (endHour, endMin) = dto.endTime.split(":").let { it[0] to it[1] }
+                val startParts = dto.startTime.split(":")
+                val startTime = if (startParts.size >= 3) {
+                    val minutes = startParts[1].padStart(2, '0')
+                    val seconds = startParts[2].padStart(2, '0')
+                    "$minutes:$seconds"
+                } else if (startParts.size == 2) {
+                    val minutes = startParts[0].padStart(2, '0')
+                    val seconds = startParts[1].padStart(2, '0')
+                    "$minutes:$seconds"
+                } else {
+                    "00:00"
+                }
+                
+                val endParts = dto.endTime.split(":")
+                val endTime = if (endParts.size >= 3) {
+                    val minutes = endParts[1].padStart(2, '0')
+                    val seconds = endParts[2].padStart(2, '0')
+                    "$minutes:$seconds"
+                } else if (endParts.size == 2) {
+                    val minutes = endParts[0].padStart(2, '0')
+                    val seconds = endParts[1].padStart(2, '0')
+                    "$minutes:$seconds"
+                } else {
+                    "00:00"
+                }
+                
                 HighlightUiState(
                     id = dto.highlightId.toString(),
                     title = dto.highlightName,
-                    startHour = startHour,
-                    startMin = startMin,
-                    endHour = endHour,
-                    endMin = endMin
+                    startMin = startTime,
+                    startSec = "",
+                    endMin = endTime,
+                    endSec = ""
                 )
             },
             showPlayer = false

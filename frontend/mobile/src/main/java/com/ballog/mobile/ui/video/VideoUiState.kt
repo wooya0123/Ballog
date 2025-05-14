@@ -16,8 +16,8 @@ data class QuarterVideoData(
 data class HighlightUiState(
     val id: String = "",
     val title: String = "",
-    val startHour: String = "",
     val startMin: String = "",
-    val endHour: String = "",
-    val endMin: String = ""
+    val startSec: String = "",
+    val endMin: String = "",
+    val endSec: String = ""
 )

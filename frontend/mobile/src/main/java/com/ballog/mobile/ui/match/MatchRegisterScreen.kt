@@ -62,7 +62,7 @@ fun MatchRegisterScreen(
 
     var hour by remember { mutableStateOf("") }
     var minute by remember { mutableStateOf("") }
-    var endHour by remember { mutableStateOf("") }
+    var endMin by remember { mutableStateOf("") }
     var endMinute by remember { mutableStateOf("") }
 
     Column(
@@ -152,10 +152,10 @@ fun MatchRegisterScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Input(
-                value = endHour,
+                value = endMin,
                 onValueChange = {
                     if (it.length <= 2 && it.all { c -> c.isDigit() }) {
-                        endHour = it
+                        endMin = it
                         if (it.length == 2) endMinuteFocus.requestFocus()
                     }
                 },
@@ -252,7 +252,7 @@ fun MatchRegisterScreen(
                         teamId = teamId!!,
                         date = selectedDate,
                         startTime = "${hour.padStart(2, '0')}:${minute.padStart(2, '0')}",
-                        endTime = "${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}",
+                        endTime = "${endMin.padStart(2, '0')}:${endMinute.padStart(2, '0')}",
                         matchName = matchName,
                         participantIds = selectedPlayerIds.toList(),
                         onSuccess = {
@@ -266,7 +266,7 @@ fun MatchRegisterScreen(
                     if (
                         matchName.isBlank() ||
                         hour.isBlank() || minute.isBlank() ||
-                        endHour.isBlank() || endMinute.isBlank()
+                        endMin.isBlank() || endMinute.isBlank()
                     ) {
                         println("⚠️ 입력값이 부족합니다.")
                         return@BallogButton
@@ -274,7 +274,7 @@ fun MatchRegisterScreen(
 
                     val date = selectedDate
                     val startTime = "${hour.padStart(2, '0')}:${minute.padStart(2, '0')}"
-                    val endTime = "${endHour.padStart(2, '0')}:${endMinute.padStart(2, '0')}"
+                    val endTime = "${endMin.padStart(2, '0')}:${endMinute.padStart(2, '0')}"
 
                     viewModel.registerMyMatch(
                         date = date,

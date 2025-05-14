@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -38,7 +40,7 @@ fun HighlightContentSection(
     onTogglePlayer: () -> Unit,
     quarterOptions: List<String>
 ) {
-    Column {
+    Column(modifier = Modifier.fillMaxSize()) {
         VideoPlaceholderBox(
             videoUri = videoUri,
             showPlayer = showPlayer,
@@ -46,7 +48,12 @@ fun HighlightContentSection(
             selectedQuarter = selectedQuarter
         )
 
-        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
             Spacer(modifier = Modifier.height(20.dp))
 
             QuarterDropDown(
@@ -74,8 +81,8 @@ fun HighlightContentSection(
                 highlights.forEach { highlight ->
                     HighlightCard(
                         title = highlight.title,
-                        startTime = "${highlight.startHour}:${highlight.startMin}",
-                        endTime = "${highlight.endHour}:${highlight.endMin}",
+                        startTime = highlight.startMin,
+                        endTime = highlight.endMin,
                         onEdit = { onEditClick(highlight) },
                         onLike = { /* TODO */ }
                     )
@@ -111,6 +118,8 @@ fun HighlightContentSection(
                     label = "영상 삭제",
                     modifier = Modifier.fillMaxWidth()
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
