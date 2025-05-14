@@ -37,8 +37,13 @@ public class S3Util {
             GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, objectKey)
                     .withMethod(HttpMethod.PUT)
                     .withExpiration(expiration);
+
+            request.setContentType("video/mp4");
+
             URL url = amazonS3.generatePresignedUrl(request);
+
             return url.toString();
+
         } catch (Exception e) {
             throw new InternalServerException(BaseResponseStatus.URL_GENERATION_FAIL);
         }

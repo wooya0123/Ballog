@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE video SET is_deleted = TRUE WHERE video_id = ?")
 public class Video {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "video_seq_generator")
@@ -47,9 +46,6 @@ public class Video {
     private LocalDateTime createdAt;
 
     @Column(columnDefinition = "boolean default false")
-    private boolean uploadSuccess;
-
-    @Column(columnDefinition = "boolean default false")
     private boolean deleted;
 
     public static Video of(Match match, Integer quarterNumber, String videoUrl, Duration duration) {
@@ -59,10 +55,6 @@ public class Video {
                 .videoUrl(videoUrl)
                 .duration(duration)
                 .build();
-    }
-
-    public void updateUploadSuccess() {
-        this.uploadSuccess = true;
     }
 
     public void delete() {

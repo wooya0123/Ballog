@@ -12,9 +12,11 @@ import java.util.List;
 @Builder
 public class VideoDto {
     private Integer videoId;
+
     private Integer quarterNumber;
+
     private String videoUrl;
-    private Boolean uploadSuccess;
+
     private List<HighlightDto> highlightList;
 
     public static VideoDto of(Video video, List<HighlightDto> highlightList) {
@@ -22,7 +24,6 @@ public class VideoDto {
                 .videoId(video.getVideoId())
                 .quarterNumber(video.getQuarterNumber())
                 .videoUrl(video.getVideoUrl())
-                .uploadSuccess(video.isUploadSuccess())
                 .highlightList(highlightList)
                 .build();
     }

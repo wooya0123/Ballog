@@ -20,4 +20,11 @@ public class GetVideoListResponse {
                 .quarterList(quarterList)
                 .build();
     }
+
+    public static GetVideoListResponse emptyOf(Integer totalQuarters) {
+        return GetVideoListResponse.builder()
+                .totalQuarters(totalQuarters)
+                .quarterList(null)
+                .build();
+    }
 }

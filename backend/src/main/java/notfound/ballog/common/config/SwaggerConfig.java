@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Configuration;
         ),
         security = @SecurityRequirement(name = "bearerAuth"),
         servers = {
-                @Server(url = "https://k12a404.p.ssafy.io/api", description = "HTTPS Server")
+                @Server(url = "https://k12a404.p.ssafy.io/api", description = "HTTPS Server"),
+                @Server(url = "http://localhost:8080/api", description = "local server")
         }
 )
 

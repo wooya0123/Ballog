@@ -13,16 +13,16 @@ import java.util.List;
 @Builder
 public class GetStatisticsResponse {
     private String nickname;
-    private List<List<List<Integer>>> heatmap;
+    private List<List<Integer>> heatmap;
     private List<Double> distance;
-    private List<Integer> speed;
+    private List<Double> speed;
     private List<Integer> sprint;
     private List<Integer> heartRate;
 
     public static GetStatisticsResponse of(String nickname,
-                                           List<List<List<Integer>>> heatmap,
+                                           List<List<Integer>> heatmap,
                                            List<Double> distance,
-                                           List<Integer> speed,
+                                           List<Double> speed,
                                            List<Integer> sprint,
                                            List<Integer> heartRate) {
         return GetStatisticsResponse.builder()

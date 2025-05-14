@@ -6,19 +6,18 @@ import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.common.utils.S3Util;
 import notfound.ballog.domain.match.entity.Match;
 import notfound.ballog.domain.match.repository.MatchRepository;
+import notfound.ballog.domain.quarter.repository.QuarterRepository;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.dto.VideoDto;
 import notfound.ballog.domain.video.entity.Highlight;
 import notfound.ballog.domain.video.entity.Video;
 import notfound.ballog.domain.video.repository.HighlightRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
-import notfound.ballog.domain.video.request.DeleteVideoRequest;
+import notfound.ballog.domain.video.request.AddS3UrlRequest;
 import notfound.ballog.domain.video.request.AddVideoRequest;
-import notfound.ballog.domain.video.request.UpdateVideoRequest;
-import notfound.ballog.domain.video.response.AddVideoResponse;
+import notfound.ballog.domain.video.response.AddS3UrlResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.exception.NotFoundException;
-import notfound.ballog.exception.ValidationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -33,24 +32,29 @@ public class VideoService {
     private final VideoRepository videoRepository;
     private final HighlightRepository highlightRepository;
     private final MatchRepository matchRepository;
+    private final QuarterRepository quarterRepository;
     private final S3Util s3Util;
 
-    @Transactional
-    public AddVideoResponse uploadVideo(AddVideoRequest request) {
-        // 업로드한 영상 있는지 확인
-        Optional<Video> existingVideo = videoRepository.findByMatch_MatchIdAndQuarterNumber(request.getMatchId(), request.getQuarterNumber());
-        if (existingVideo.isPresent()) {
-            Video video = existingVideo.get();
-            if (video.isUploadSuccess()) {
-                throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
-            }
-        }
-
-        Match match = matchRepository.findById(request.getMatchId())
-                        .orElseThrow(() -> new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND));
-        // PresignedUrl 생성
+    public AddS3UrlResponse addS3Url(AddS3UrlRequest request) {
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
         String presignedUrl = s3Util.generatePresignedUrl(objectKey);
+
+        return AddS3UrlResponse.of(presignedUrl);
+    }
+
+    @Transactional
+    public void uploadVideo(AddVideoRequest request) {
+        Integer matchId = request.getMatchId();
+        Integer quarterNumber = request.getQuarterNumber();
+
+        // 업로드한 영상 있는지 확인
+        Video existingVideo = videoRepository
+                .findByMatch_MatchIdAndQuarterNumberAndDeletedFalse(matchId, quarterNumber)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_ALREADY_EXIST));
+
+        // 해당하는 매치 조회
+        Match match = matchRepository.findById(request.getMatchId())
+                        .orElseThrow(() -> new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND));
 
         // Duration 타입으로 변환
         String[] part = request.getDuration().split(":");
@@ -61,42 +65,30 @@ public class VideoService {
                 .plusMinutes(minutes)
                 .plusSeconds(seconds);
 
-        Video video = Video.of(match, request.getQuarterNumber(), presignedUrl, videoDuration);
-        Video savedVideo = videoRepository.save(video);
-        return AddVideoResponse.of(savedVideo.getVideoUrl());
-    }
-
-    @Transactional
-    public void updateVideo(UpdateVideoRequest request) {
-        // 영상 조회
-        Video video = videoRepository.
-                findByMatch_MatchIdAndQuarterNumber(request.getMatchId(), request.getQuarterNumber())
-                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
-
-        // 이미 업로드 체크를 했다면 예외처리
-        if (video.isUploadSuccess()) {
-            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
-        }
-        video.updateUploadSuccess();
+        Video video = Video.of(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
         videoRepository.save(video);
     }
 
+
     @Transactional
     public GetVideoListResponse getVideo(Integer matchId) {
-        // 1. 매치 영상 조회
-        List<Video> videoList = videoRepository.findAllByMatch_MatchId(matchId);
-        // 매치 영상 없으면 예외 처리
+        // 1. 총 쿼터 수 조회
+        Integer totalQuarters = quarterRepository.countByMatchId(matchId);
+
+        // 2. 쿼터 영상 조회 -> 없으면 null로 반환
+        List<Video> videoList = videoRepository.findAllByMatch_MatchIdAndDeletedFalse(matchId);
         if (videoList.isEmpty()) {
-            throw new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND);
+            return GetVideoListResponse.emptyOf(totalQuarters);
         }
 
+        // 3. 응답 객체 구성
         List<VideoDto> videoDtoList = new ArrayList<>();
         for (Video video : videoList) {
             Integer videoId = video.getVideoId();
             List<HighlightDto> highlightDtoList = new ArrayList<>();
 
-            // 2. 하이라이트 조회
-            List<Highlight> highlightList = highlightRepository.findAllByVideo_VideoId(videoId);
+            // 3. 하이라이트 조회
+            List<Highlight> highlightList = highlightRepository.findAllByVideo_VideoIdAndDeletedFalse(videoId);
             // 하이라이트가 있으면 리스트에 추가
             for (Highlight highlight : highlightList) {
                 HighlightDto highlightDto = HighlightDto.of(highlight);
@@ -106,14 +98,15 @@ public class VideoService {
             VideoDto videoDto = VideoDto.of(video, highlightDtoList);
             videoDtoList.add(videoDto);
         }
-        Integer totalQuarters = videoDtoList.size();
+
         return GetVideoListResponse.of(totalQuarters, videoDtoList);
     }
 
     @Transactional
-    public void deleteVideo(DeleteVideoRequest request) {
-        Video video = videoRepository.findById(request.getVideoId())
+    public void deleteVideo(Integer videoId) {
+        Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
-        videoRepository.delete(video);
+        video.delete();
+        videoRepository.save(video);
     }
 }

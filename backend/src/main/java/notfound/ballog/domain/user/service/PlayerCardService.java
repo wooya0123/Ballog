@@ -19,19 +19,24 @@ import java.util.UUID;
 public class PlayerCardService {
 
     private final PlayerCardRepository playerCardRepository;
+    private final UserRepository userRepository;
 
-    /** 플레이어 카드 생성 */
     @Transactional
     public void addPlayerCard(User savedUser) {
         PlayerCard newPlayerCard = PlayerCard.addBaseCard(savedUser);
         playerCardRepository.save(newPlayerCard);
     }
 
+    @Transactional
     public GetPlayerCardResponse getPlayerCard(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
         PlayerCard playerCard = playerCardRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.PLAYER_CARD_NOT_FOUND));
 
         PlayerCardStatListDto playerCardStatList = PlayerCardStatListDto.of(playerCard);
-        return GetPlayerCardResponse.of(playerCard, playerCardStatList);
+
+        return GetPlayerCardResponse.of(user.getProfileImageUrl(), playerCard, playerCardStatList);
     }
 }

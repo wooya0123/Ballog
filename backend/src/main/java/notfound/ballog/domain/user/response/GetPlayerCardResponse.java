@@ -13,11 +13,13 @@ import notfound.ballog.domain.user.entity.PlayerCard;
 @Builder
 public class GetPlayerCardResponse {
     private String nickname;
+    private String profileImageUrl;
     private PlayerCardStatListDto cardStats;
 
-    public static GetPlayerCardResponse of(PlayerCard playerCard, PlayerCardStatListDto cardStatList) {
+    public static GetPlayerCardResponse of(String profileImageUrl, PlayerCard playerCard, PlayerCardStatListDto cardStatList) {
         return GetPlayerCardResponse.builder()
                 .nickname(playerCard.getUser().getNickname())
+                .profileImageUrl(profileImageUrl)
                 .cardStats(cardStatList)
                 .build();
     }

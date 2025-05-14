@@ -43,6 +43,7 @@ public enum BaseResponseStatus {
     HIGHLIGHT_NOT_FOUND(false, 4001, "해당 영상에 하이라이트 영상이 없습니다."),
     URL_GENERATION_FAIL(false, 4002, "영상 업로드 url 생성에 실패했습니다."),
     VIDEO_ALREADY_EXIST(false, 4003, "이미 업로드된 영상이 있습니다."),
+    HIGHLIGHT_ALREADY_EXIST(false, 4004, "이미 하이라이트를 자동 추출하였습니다."),
 
     // 팀 관련 로직 에러 (5000번대)
     TEAM_NOT_FOUND(false, 5000, "해당하는 팀이 존재하지 않습니다."),
