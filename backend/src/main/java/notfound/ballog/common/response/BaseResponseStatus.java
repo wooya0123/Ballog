@@ -50,7 +50,10 @@ public enum BaseResponseStatus {
     TEAMMEMBER_NOT_FOUND(false, 5001, "해당하는 팀 멤버가 존재하지 않습니다."),
     TEAMMEMBER_NOT_AUTHORIZED(false, 5002, "매니저만 할 수 있는 기능입니다"),
     TEAM_NOT_EMPTY(false, 5003, "팀이 삭제 되려면 팀에 팀원이 존재하지 않아야 합니다."),
-    TEAM_DELETE_ERROR(false, 5004, "팀 삭제 중 에러가 발생했습니다.");
+    TEAM_DELETE_ERROR(false, 5004, "팀 삭제 중 에러가 발생했습니다."),
+
+    // 쿼터 관련 로직 에러(6000번대)
+    QUARTER_MATCH_NOT_FOUND(false, 6000, "해당 날짜에 매치가 존재하지 않습니다.");
 
     private final boolean isSuccess;
     private final int code;
