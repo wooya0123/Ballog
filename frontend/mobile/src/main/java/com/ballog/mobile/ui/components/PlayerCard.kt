@@ -23,6 +23,7 @@ import com.ballog.mobile.ui.theme.pretendard
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
+import coil.compose.AsyncImage
 
 enum class CardFace {
     FRONT, BACK
@@ -30,11 +31,11 @@ enum class CardFace {
 
 @Composable
 fun PlayerCard(
-    modifier: Modifier = Modifier,
     name: String,
-    imageRes: Int = R.drawable.ic_profile,
+    imageUrl: String? = null, // ← URL로 변경
     stats: List<Pair<String, String>>,
-    face: CardFace = CardFace.FRONT
+    face: CardFace = CardFace.FRONT,
+    modifier: Modifier = Modifier
 ) {
     when (face) {
         CardFace.FRONT -> {
@@ -66,8 +67,8 @@ fun PlayerCard(
                             .background(Gray.Gray700),
                         contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(id = imageRes),
+                        AsyncImage(
+                            model = imageUrl ?: R.drawable.ic_profile, // URL 또는 fallback
                             contentDescription = "Player Image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop

@@ -21,6 +21,7 @@ import com.ballog.mobile.ui.components.CardFace
 @Composable
 fun PlayerCardDialog(
     name: String,
+    imageUrl: String?,
     stats: List<Pair<String, String>>,
     onDismiss: () -> Unit
 ) {
@@ -86,7 +87,7 @@ fun PlayerCardDialog(
 
             if (normalizedRotation <= 90f || normalizedRotation >= 270f) {
                 // 앞면: 0~90도 또는 270~360도
-                PlayerCard(name = name, stats = stats, face = CardFace.FRONT)
+                PlayerCard(name = name, imageUrl = imageUrl, stats = stats, face = CardFace.FRONT)
             } else {
                 // 뒷면: 90~270도
                 Box(
@@ -94,7 +95,7 @@ fun PlayerCardDialog(
                         this.rotationY = 180f
                     }
                 ) {
-                    PlayerCard(name = name, stats = stats, face = CardFace.BACK)
+                    PlayerCard(name = name, imageUrl = imageUrl, stats = stats, face = CardFace.BACK)
                 }
             }
         }

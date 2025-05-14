@@ -8,3 +8,9 @@ data class User(
     val birthDate: String,
     val profileImageUrl: String
 )
+
+data class PlayerCardInfo(
+    val nickname: String,
+    val profileImageUrl: String,
+    val stats: List<Pair<String, String>>
+)

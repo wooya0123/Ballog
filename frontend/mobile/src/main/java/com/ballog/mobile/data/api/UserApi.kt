@@ -1,6 +1,7 @@
 package com.ballog.mobile.data.api
 
 import androidx.lifecycle.viewModelScope
+import com.ballog.mobile.data.dto.PlayerCardResponseDto
 import com.ballog.mobile.data.dto.UserInfoResponse
 import com.ballog.mobile.data.dto.UserStatisticsDto
 import com.ballog.mobile.data.dto.UserUpdateRequest
@@ -34,4 +35,10 @@ interface UserApi {
     suspend fun getUserStatistics(
         @Header("Authorization") token: String
     ): Response<ApiResponse<UserStatisticsDto>>
+
+    // 선수 카드 조회
+    @GET("v1/users/player-card")
+    suspend fun getPlayerCard(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<PlayerCardResponseDto>>
 }

@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import com.ballog.mobile.ui.components.DropDown
 import com.ballog.mobile.ui.components.SectionHeader
-import com.ballog.mobile.ui.components.PlayerCard
+import com.ballog.mobile.ui.components.TeamPlayerCard
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
@@ -123,7 +123,7 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
             if (playerListExpanded) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     participants.forEach { player ->
-                        PlayerCard(
+                        TeamPlayerCard(
                             name = player.nickName,
                             isManager = player.role.uppercase() == "MANAGER"
                         )
