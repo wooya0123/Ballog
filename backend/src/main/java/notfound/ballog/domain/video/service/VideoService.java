@@ -18,6 +18,7 @@ import notfound.ballog.domain.video.request.AddVideoRequest;
 import notfound.ballog.domain.video.response.AddS3UrlResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.exception.NotFoundException;
+import notfound.ballog.exception.ValidationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -48,9 +49,11 @@ public class VideoService {
         Integer quarterNumber = request.getQuarterNumber();
 
         // 업로드한 영상 있는지 확인
-        Video existingVideo = videoRepository
-                .findByMatch_MatchIdAndQuarterNumberAndDeletedFalse(matchId, quarterNumber)
-                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_ALREADY_EXIST));
+        Optional<Video> existingVideo = videoRepository
+                .findByMatch_MatchIdAndQuarterNumberAndDeletedFalse(matchId, quarterNumber);
+        if (existingVideo.isPresent()) {
+            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
+        }
 
         // 해당하는 매치 조회
         Match match = matchRepository.findById(request.getMatchId())
