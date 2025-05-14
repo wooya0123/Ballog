@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <queries>
+        <package android:name="com.sec.android.app.shealth" />
+    </queries>
+
     <!-- Android 11 이상에서 Samsung Health 연결을 위한 설정 -->
     <queries>
         <package android:name="com.sec.android.app.shealth" />

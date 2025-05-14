@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     alias(libs.plugins.spotless)
+    id("kotlin-parcelize")
+
 }
 
 // AWS 자격 증명은 안드로이드 앱에서 직접 로드하도록 설정
@@ -110,7 +112,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4") // ✅ BOM 적용됨
 
     // Wearable
-    implementation("com.google.android.gms:play-services-wearable:18.0.0")
+    implementation(libs.play.services.wearable.v1800)
 
     // Media3 (ExoPlayer 최신 버전)
     implementation("androidx.media3:media3-exoplayer:1.2.1")

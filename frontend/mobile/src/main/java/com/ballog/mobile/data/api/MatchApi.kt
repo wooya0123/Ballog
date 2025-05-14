@@ -3,8 +3,10 @@ package com.ballog.mobile.data.api
 import com.ballog.mobile.data.dto.MatchDetailResponseDto
 import com.ballog.mobile.data.dto.MatchListResponse
 import com.ballog.mobile.data.dto.MatchRegisterRequest
+import com.ballog.mobile.data.dto.MatchReportResponse
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
 import com.ballog.mobile.data.model.ApiResponse
+import com.ballog.mobile.data.model.MatchReportRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -50,5 +52,11 @@ interface MatchApi {
         @Path("matchId") matchId: Int
     ): Response<ApiResponse<MatchDetailResponseDto>>
 
+    // 매치 리포트 전송
+    @POST("v1/quarter")
+    suspend fun sendMatchReport(
+        @Header("Authorization") token: String,
+        @Body request: MatchReportRequest
+    ): Response<ApiResponse<MatchReportResponse>>
 
 }

@@ -22,9 +22,14 @@ import com.ballog.mobile.ui.team.TeamDelegateScreen
 import com.ballog.mobile.ui.team.TeamKickScreen
 import com.ballog.mobile.ui.team.TeamCreateScreen
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.platform.LocalContext
 import com.ballog.mobile.ui.components.NavigationTab
 import com.ballog.mobile.viewmodel.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ballog.mobile.data.api.RetrofitInstance
+import com.ballog.mobile.data.service.MatchReportService
+import com.ballog.mobile.data.service.MatchReportServiceSingleton
+import com.ballog.mobile.data.service.SamsungHealthDataService
 import com.ballog.mobile.ui.match.MatchDataScreen
 import com.ballog.mobile.ui.match.MatchRegisterMode
 import com.ballog.mobile.ui.match.MatchRegisterScreen
@@ -32,10 +37,7 @@ import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.TeamViewModel
 import com.ballog.mobile.ui.team.TeamUpdateScreen
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.time.LocalDate
-import com.ballog.mobile.ui.match.MatchDataScreen
 import com.ballog.mobile.ui.profile.LikedVideosScreen
 import com.ballog.mobile.ui.profile.MyPageScreen
 import com.ballog.mobile.ui.profile.ProfileEditScreen
@@ -48,16 +50,23 @@ fun MainScreen(
     viewModel: AuthViewModel,
     initialTeamId: Int? = null
 ) {
+    val context = LocalContext.current
+    val matchApi = RetrofitInstance.matchApi
+    val samsungHealthDataService = remember { SamsungHealthDataService(context) }
+
+    // 앱 시작 시점에서 싱글턴 초기화
+    LaunchedEffect(Unit) {
+        MatchReportServiceSingleton.init(
+            context = context,
+            matchApi = matchApi,
+            samsungHealthDataService = samsungHealthDataService
+        )
+    }
+
     var selectedTab by remember { mutableStateOf(if (initialTeamId != null) NavigationTab.TEAM else NavigationTab.HOME) }
     val teamNavController = rememberNavController()
     val teamViewModel = remember { TeamViewModel() }
-    val tabRoutes = mapOf(
-        NavigationTab.HOME to "home",
-        NavigationTab.MATCH to "match",
-        NavigationTab.TEAM to "team",
-        NavigationTab.MYPAGE to "mypage"
-        // DATA는 실제 화면 route가 아님
-    )
+    val matchTabNavController = rememberNavController()
     
     // 초기 팀 ID가 있으면 팀 상세 화면으로 자동 이동
     LaunchedEffect(initialTeamId) {
@@ -92,13 +101,18 @@ fun MainScreen(
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 NavigationTab.HOME -> HomeScreen()
-                NavigationTab.MATCH -> MatchTabScreen(navController = rememberNavController())
+                NavigationTab.MATCH -> MatchTabScreen(navController = matchTabNavController)
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
                 NavigationTab.MYPAGE -> ProfileTabScreen(
                     navController = rememberNavController(),
                     rootNavController = navController
                 )
-                NavigationTab.DATA -> MatchDataScreen()
+                NavigationTab.DATA -> MatchDataScreen(
+                    navController = navController,
+                    matchTabNavController = matchTabNavController,
+                    setSelectedTab = { selectedTab = it },
+                    matchReportService = MatchReportServiceSingleton.getInstance()
+                )
             }
         }
     }

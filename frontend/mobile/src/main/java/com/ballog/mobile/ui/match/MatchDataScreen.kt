@@ -1,5 +1,6 @@
 package com.ballog.mobile.ui.match
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import com.ballog.mobile.ui.theme.pretendard
-import androidx.compose.ui.tooling.preview.Preview
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
 import androidx.compose.runtime.*
@@ -38,10 +38,83 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.CircleShape
 import com.ballog.mobile.data.model.MatchDataCardInfo
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.ballog.mobile.data.service.MatchReportService
+import com.ballog.mobile.ui.theme.System
+import kotlinx.coroutines.launch
+import com.ballog.mobile.ui.components.NavigationTab
 
 @Composable
-fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
+fun MatchDataScreen(
+    navController: NavHostController,
+    matchTabNavController: NavHostController,
+    setSelectedTab: (NavigationTab) -> Unit,
+    viewModel: MatchViewModel = viewModel(),
+    matchReportService: MatchReportService
+) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    var matchData by remember { mutableStateOf<List<MatchDataCardInfo>>(emptyList()) }
+    val scope = rememberCoroutineScope()
+    val quarterReportList by matchReportService.quarterReportList.collectAsState()
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // 최초 진입 시 SharedPreferences 값만 확인
+    LaunchedEffect(Unit) {
+        Log.d("MatchDataScreen", "uiState: $uiState")
+        viewModel.checkFieldCorners()
+        println(quarterReportList)
+    }
+
+    // MatchUiState가 Loading일 때만 데이터 로드
+    LaunchedEffect(uiState) {
+        if (uiState is MatchUiState.Loading) {
+                scope.launch {
+                    try {
+                        matchReportService.createMatchReport()
+                    } catch (e: Exception) {
+                        viewModel.setNoData()
+                    }
+                }
+
+        }
+        if(uiState is MatchUiState.Success) {
+            val mapped = quarterReportList.map { exercise ->
+                MatchDataCardInfo(
+                    id = exercise.id,
+                    date = exercise.date,
+                    startTime = exercise.gameReportData.startTime,
+                    endTime = exercise.gameReportData.endTime,
+                    buttonText = if(exercise.gameSide == null || exercise.quarterNumber == null) "정보 입력하기" else "정보 수정하기"
+                )
+            }
+            matchData = mapped
+            viewModel.setSuccess(matchData)
+        }
+    }
+
+    // quarterReportList 값이 변경될 때만 matchData와 viewModel 상태를 갱신
+    LaunchedEffect(quarterReportList) {
+        if (uiState is MatchUiState.Loading) {
+            if (quarterReportList.isEmpty()) {
+                viewModel.setNoData()
+            } else {
+                val mapped = quarterReportList.map { exercise ->
+                    MatchDataCardInfo(
+                        id = exercise.id,
+                        date = exercise.date,
+                        startTime = exercise.gameReportData.startTime,
+                        endTime = exercise.gameReportData.endTime,
+                        buttonText = if(exercise.gameSide == null || exercise.quarterNumber == null) "정보 입력하기" else "정보 수정하기"
+                    )
+                }
+                matchData = mapped
+                viewModel.setSuccess(matchData)
+            }
+        }
+    }
 
     when (uiState) {
         is MatchUiState.WaitingForStadiumData -> {
@@ -100,7 +173,6 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                     type = TopNavType.MAIN_BASIC
                 )
                 Spacer(modifier = Modifier.height(180.dp))
-                // 삼성헬스 이미지
                 Image(
                     painter = painterResource(id = R.drawable.samsung_health_144x144),
                     contentDescription = "삼성헬스 아이콘",
@@ -108,7 +180,7 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "삼성헬스 데이터가 없습니다.",
+                    text = "삼성 헬스 데이터가 없습니다.",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = pretendard,
@@ -116,7 +188,7 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "삼성헬스에서 운동 데이터를 연동해 주세요.",
+                    text = "삼성 헬스에서 운동 데이터를 연동해 주세요.",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = pretendard,
@@ -127,12 +199,15 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
         is MatchUiState.Success -> {
             var showModal by remember { mutableStateOf(false) }
             var modalData by remember { mutableStateOf<MatchDataCardInfo?>(null) }
-            val cardList = listOf(
-                MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기"),
-                MatchDataCardInfo("2025.05.09", "16:00", "16:45", "정보 입력하기"),
-                MatchDataCardInfo("2025.05.10", "17:10", "17:55", "정보 입력하기"),
-                MatchDataCardInfo("2025.05.11", "18:20", "19:05", "정보 입력하기")
-            )
+            val cardList = quarterReportList.map { exercise ->
+                MatchDataCardInfo(
+                    id = exercise.id,
+                    date = exercise.date,
+                    startTime = exercise.gameReportData.startTime,
+                    endTime = exercise.gameReportData.endTime,
+                    buttonText = if(exercise.gameSide == null || exercise.quarterNumber == null) "정보 입력하기" else "정보 수정하기"
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -152,6 +227,7 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                 ) {
                     cardList.forEach { card ->
                         MatchDataCard(
+                            id = card.id,
                             date = card.date,
                             startTime = card.startTime,
                             endTime = card.endTime,
@@ -164,28 +240,100 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .height(48.dp)
-                        .background(Color(0xFF1B1B1D), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
+                if (errorMessage != null) {
                     Text(
-                        text = "저장하기",
-                        fontSize = 16.sp,
-                        color = Color(0xFF7EE4EA),
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = pretendard
+                        text = errorMessage!!,
+                        color = System.Red,
+                        fontSize = 12.sp,
+                        fontFamily = pretendard,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, bottom = 8.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(32.dp))
+                BallogButton(
+                    onClick = {
+                        scope.launch {
+                            var flag = false;
+                            quarterReportList.map { quarter ->
+                                if (quarter.quarterNumber == null || quarter.gameSide == null) {
+                                    flag = true
+                                }
+                            }
+                            if (flag) {
+                                errorMessage = "입력하지 않은 쿼터 정보가 있습니다."
+                            } else {
+                                val matchReportResponse = matchReportService.sendMatchReport()
+                                if (matchReportResponse == null) {
+                                    errorMessage = "매치 데이터 전송에 실패하였습니다."
+                                } else {
+                                    setSelectedTab(NavigationTab.MATCH)
+                                    matchTabNavController.navigate("match/detail/${matchReportResponse.matchId}/${matchReportResponse.matchName}")
+                                }
+                            }
+                        }
+                    },
+                    type = ButtonType.LABEL_ONLY,
+                    buttonColor = ButtonColor.BLACK,
+                    label = "저장",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
             if (showModal && modalData != null) {
                 MatchDataModal(
                     data = modalData!!,
+                    matchReportService = matchReportService,
                     onDismiss = { showModal = false }
+                )
+            }
+        }
+        is MatchUiState.Error -> {
+            val message = (uiState as? MatchUiState.Error)?.message ?: "알 수 없는 에러"
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "에러 발생: $message",
+                    color = Color.Red,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        else -> {
+            // StadiumDataSuccess 등 미처리 상태 → 삼성헬스 데이터 없음 UI
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TopNavItem(
+                    title = "매치 데이터 연동",
+                    type = TopNavType.MAIN_BASIC
+                )
+                Spacer(modifier = Modifier.height(180.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.samsung_health_144x144),
+                    contentDescription = "삼성헬스 아이콘",
+                    modifier = Modifier.size(80.dp)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "삼성 헬스 데이터가 없습니다.",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = pretendard,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "삼성 헬스에서 운동 데이터를 연동해 주세요.",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    color = Color.Gray
                 )
             }
         }
@@ -195,12 +343,24 @@ fun MatchDataScreen(viewModel: MatchViewModel = viewModel()) {
 @Composable
 fun MatchDataModal(
     data: MatchDataCardInfo,
+    matchReportService: MatchReportService,
     onDismiss: () -> Unit
 ) {
+    val quarterReportList by matchReportService.quarterReportList.collectAsState()
     var quarter by remember { mutableStateOf("") }
-    var heatData by remember { mutableStateOf(List(15) { List(10) { (0..5).random() } }) }
-    var selectedSide by remember { mutableStateOf<String?>("LEFT") } // "LEFT" or "RIGHT"
-
+    var selectedSide by remember { mutableStateOf<String>("left") } // "LEFT" or "RIGHT"
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    LaunchedEffect(Unit) {
+        quarterReportList.map { quarterReport ->
+            if(data.id == quarterReport.id) {
+                if (quarterReport.quarterNumber != null)
+                    quarter = quarterReport.quarterNumber.toString()
+                if(quarterReport.gameSide != null)
+                    selectedSide = quarterReport.gameSide
+            }
+        }
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -213,11 +373,12 @@ fun MatchDataModal(
                 .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
                 .background(Gray.Gray100)
                 .width(310.dp)
-                .height(480.dp)
+                .height(520.dp)
                 .padding(24.dp)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom,
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(
@@ -269,7 +430,7 @@ fun MatchDataModal(
                             .height(168.dp)
                     ) {
                         HeatMap(
-                            heatData = heatData,
+                            heatData = matchReportService.getHeatMapData(data.id),
                             modifier = Modifier.matchParentSize()
                         )
                         Row(Modifier.matchParentSize()) {
@@ -278,9 +439,9 @@ fun MatchDataModal(
                                 Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .clickable { selectedSide = "LEFT" }
+                                    .clickable { selectedSide = "left" }
                             ) {
-                                if (selectedSide == "LEFT") {
+                                if (selectedSide == "left") {
                                     Box(
                                         Modifier
                                             .fillMaxSize()
@@ -299,9 +460,9 @@ fun MatchDataModal(
                                 Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .clickable { selectedSide = "RIGHT" }
+                                    .clickable { selectedSide = "right" }
                             ) {
-                                if (selectedSide == "RIGHT") {
+                                if (selectedSide == "right") {
                                     Box(
                                         Modifier
                                             .fillMaxSize()
@@ -319,35 +480,48 @@ fun MatchDataModal(
                     }
                 }
                 Spacer(Modifier.height(24.dp))
-                // 저장 버튼
-                BallogButton(
-                    onClick = { /* TODO: 저장 동작 구현 */ },
-                    type = ButtonType.LABEL_ONLY,
-                    buttonColor = ButtonColor.BLACK,
-                    label = "저장",
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
-                )
+                ) {
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage!!,
+                            color = System.Red,
+                            fontSize = 12.sp,
+                            fontFamily = pretendard,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        )
+                    }
+                    BallogButton(
+                        onClick = { 
+                            if(quarter == ""){
+                                errorMessage = "쿼터 번호를 입력해주세요"
+                            }
+                            else {
+                                matchReportService.updateNumberAndSide(
+                                    id = data.id,
+                                    quarterNumber = quarter.toInt(),
+                                    side = selectedSide
+                                )
+                                onDismiss()
+                            }},
+                        type = ButtonType.LABEL_ONLY,
+                        buttonColor = ButtonColor.BLACK,
+                        label = "저장",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    )
+                }
             }
         }
     }
 }
 
-@Preview
-@Composable
-fun PreviewMatchDataModal() {
-    MatchDataModal(
-        data = MatchDataCardInfo("2025.05.08", "15:37", "15:50", "정보 수정하기"),
-        onDismiss = {}
-    )
-}
-
-@Preview
-@Composable
-fun PreviewMatchDataScreen() {
-    MatchDataScreen()
-}
 
 @Composable
 fun WatchWithAnimatedCircles() {

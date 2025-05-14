@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -18,11 +19,14 @@ import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
+import androidx.compose.ui.platform.LocalContext
+import com.ballog.mobile.data.util.OnboardingPrefs
 
 @Composable
 fun OnboardingScreen(
     onEmailLoginClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -51,13 +55,20 @@ fun OnboardingScreen(
                 color = Gray.Gray100,
                 fontFamily = pretendard
             )
-
-            Spacer(modifier = Modifier.weight(1f))
-
+        }
+        // 버튼을 하단에 고정
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
             BallogButton(
-                onClick = onEmailLoginClick,
+                onClick = {
+                    OnboardingPrefs.setOnboardingCompleted(context, true)
+                    onEmailLoginClick()
+                },
                 type = ButtonType.LABEL_ONLY,
-                buttonColor = ButtonColor.PRIMARY,
+                buttonColor = ButtonColor.BLACK,
                 label = "이메일로 시작하기",
                 modifier = Modifier
                     .fillMaxWidth()

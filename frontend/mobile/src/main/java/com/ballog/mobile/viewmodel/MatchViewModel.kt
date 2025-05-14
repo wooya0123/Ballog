@@ -10,6 +10,7 @@ import com.ballog.mobile.data.dto.MatchItemDto
 import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
 import com.ballog.mobile.data.dto.TeamMember
+import com.ballog.mobile.data.model.FieldCorners
 import com.ballog.mobile.data.model.Match
 import com.ballog.mobile.data.model.MatchState
 import com.ballog.mobile.ui.components.DateMarkerState
@@ -36,9 +37,12 @@ sealed class MatchUiState {
     object Loading : MatchUiState()
     object NoData : MatchUiState()
     data class Success(val data: List<MatchDataCardInfo>) : MatchUiState()
+    data class StadiumDataSuccess(val fieldCorners: FieldCorners) : MatchUiState()
+    data class Error(val message: String) : MatchUiState()
 }
 
 class MatchViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = com.ballog.mobile.data.repository.MatchRepository(application.applicationContext)
     private val tokenManager = BallogApplication.getInstance().tokenManager
     private val matchApi = RetrofitInstance.matchApi
 
@@ -52,27 +56,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<MatchUiState> = _uiState.asStateFlow()
 
     private var pollingJob: Job? = null
-
-    private fun startWatchConnectionPolling() {
-        if (pollingJob?.isActive == true) return
-        pollingJob = viewModelScope.launch {
-            val context = getApplication<Application>().applicationContext
-            val nodeClient = Wearable.getNodeClient(context)
-            try {
-                while (isActive) {
-                    val nodes = getConnectedNodesSuspend(nodeClient)
-                    if (nodes.isNotEmpty()) {
-                        setWatchConnected()
-                    } else {
-                        setWatchNotConnected()
-                    }
-                    delay(2000)
-                }
-            } catch (e: CancellationException) {
-                // 폴링 취소 시 무시
-            }
-        }
-    }
+    private var lastTimestamp: Long = 0L
 
     private suspend fun getConnectedNodesSuspend(nodeClient: NodeClient): List<Node> =
         suspendCancellableCoroutine { cont ->
@@ -284,10 +268,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         android.util.Log.d("MatchViewModel", "상태 전환: WatchConnected")
         _uiState.value = MatchUiState.WaitingForStadiumData
     }
-    fun setLoading() {
-        android.util.Log.d("MatchViewModel", "상태 전환: Loading")
-        _uiState.value = MatchUiState.Loading
-    }
     fun setNoData() {
         android.util.Log.d("MatchViewModel", "상태 전환: NoData")
         _uiState.value = MatchUiState.NoData
@@ -297,36 +277,39 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = MatchUiState.Success(data)
     }
 
-    // 샘플: 데이터 연동 (2초 후 랜덤으로 데이터 있음/없음)
-    fun loadDataFromWatch() {
-        viewModelScope.launch {
-            setLoading()
-            kotlinx.coroutines.delay(2000)
-            val hasData = (0..1).random() == 1
-            if (hasData) {
-                setSuccess(emptyList())
-            } else {
-                setNoData()
-            }
-        }
-    }
-
-    // 워치에서 데이터가 오면 호출
-    fun onWatchDataReceived(data: List<MatchDataCardInfo>?) {
-        _uiState.value = MatchUiState.Loading
-        viewModelScope.launch {
-            kotlinx.coroutines.delay(1000) // 데이터 처리/계산 시간 시뮬레이션
-            if (data.isNullOrEmpty()) {
-                _uiState.value = MatchUiState.NoData
-            } else {
-                _uiState.value = MatchUiState.Success(data)
-            }
-        }
-    }
-
     override fun onCleared() {
         super.onCleared()
         pollingJob?.cancel()
+    }
+
+    fun checkFieldCorners() {
+        viewModelScope.launch {
+            val corners = repository.getFieldCorners()
+            val sharedPrefs = getApplication<Application>().getSharedPreferences("field_corners", android.content.Context.MODE_PRIVATE)
+            val timestamp = sharedPrefs.getLong("timestamp", 0L)
+            if (corners != null && corners.size == 4 && timestamp != lastTimestamp) {
+                lastTimestamp = timestamp
+                _uiState.value = MatchUiState.Loading
+            } else if (corners == null || corners.size != 4) {
+                _uiState.value = MatchUiState.WaitingForStadiumData
+            }
+        }
+    }
+
+    private fun checkSamsungHealthData() {
+        println("삼성 헬스 체크 중")
+        // TODO: 실제 삼성헬스 데이터 확인 로직으로 대체
+        // 임시: 50% 확률로 데이터 있다고 가정
+        val hasData = (0..1).random() == 0
+        if (hasData) {
+            // 임시 Success 데이터
+            _uiState.value = MatchUiState.Success(
+                listOf(
+                )
+            )
+        } else {
+            _uiState.value = MatchUiState.NoData
+        }
     }
 }
 

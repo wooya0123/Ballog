@@ -12,6 +12,7 @@ composeBom = "2024.09.00"
 playServicesWearable = "19.0.0"
 composeMaterial = "1.2.1"
 composeFoundation = "1.2.1"
+playServicesWearableVersion = "18.1.0"
 wearToolingPreview = "1.0.0"
 coreSplashscreen = "1.0.1"
 tvMaterial = "1.0.0"
@@ -39,6 +40,7 @@ androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose
 androidx-wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-tv-material = { group = "androidx.tv", name = "tv-material", version.ref = "tvMaterial" }
+play-services-wearable-v1800 = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearableVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
