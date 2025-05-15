@@ -72,7 +72,7 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
                 type = TopNavType.MAIN_BASIC
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 BallogButton(
                     onClick = {

@@ -42,11 +42,10 @@ fun OnboardingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .padding(top = 53.dp),
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            Spacer(modifier = Modifier.height(53.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             Text(
                 text = "당신의 풋살 기록을\n볼로그와 함께 하세요",
                 fontSize = 24.sp,
@@ -59,7 +58,8 @@ fun OnboardingScreen(
         // 버튼을 하단에 고정
         Box(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             BallogButton(

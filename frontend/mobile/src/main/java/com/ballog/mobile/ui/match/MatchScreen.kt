@@ -44,99 +44,101 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
         viewModel.fetchMyMatches(currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM")))
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
-            .verticalScroll(rememberScrollState())
-            .background(Gray.Gray100),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column {
         TopNavItem(title = "매치", type = TopNavType.MAIN_BASIC)
-        Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
+                .background(Gray.Gray100),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        when (matchState) {
-            is MatchState.Loading -> {
-                MatchSkeletonCard()
-            }
-            is MatchState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "에러: ${(matchState as MatchState.Error).message}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = pretendard,
-                        color = Gray.Gray500,
-                        textAlign = TextAlign.Center
-                    )
+            when (matchState) {
+                is MatchState.Loading -> {
+                    MatchSkeletonCard()
                 }
-            }
-            is MatchState.Success -> {
-                val matches = (matchState as MatchState.Success).matches
-                val calendarData = buildCalendar(currentMonth, matches).map { week ->
-                    week.map { marker ->
-                        marker.copy(selected = marker.date == selectedDate.dayOfMonth.toString() && marker.thisMonth)
+                is MatchState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "에러: ${(matchState as MatchState.Error).message}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = pretendard,
+                            color = Gray.Gray500,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
-
-                MatchCalendar(
-                    month = formattedMonth,
-                    dates = calendarData,
-                    onPrevMonth = { currentMonth = currentMonth.minusMonths(1) },
-                    onNextMonth = { currentMonth = currentMonth.plusMonths(1) },
-                    onDateClick = { day -> selectedDate = day }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                val filteredMatches = matches.filter { it.date == selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) }
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (filteredMatches.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "경기 일정이 없습니다",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = pretendard,
-                                color = Gray.Gray500, // 색상 옅게
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        filteredMatches.forEach { match ->
-                            MatchCard(
-                                timeLabel = "경기 시간",
-                                startTime = match.startTime,
-                                endTime = match.endTime,
-                                matchName = match.matchName,
-                                onClick = {
-                                    navController.navigate("match/detail/${match.id}/${match.matchName}")
-                                }
-                            )
+                is MatchState.Success -> {
+                    val matches = (matchState as MatchState.Success).matches
+                    val calendarData = buildCalendar(currentMonth, matches).map { week ->
+                        week.map { marker ->
+                            marker.copy(selected = marker.date == selectedDate.dayOfMonth.toString() && marker.thisMonth)
                         }
                     }
-                    BallogButton(
-                        onClick = {
-                            navController.navigate("match/register/${selectedDateStr}?mode=PERSONAL")
-                        },
-                        type = ButtonType.BOTH,
-                        buttonColor = ButtonColor.GRAY,
-                        icon = painterResource(id = R.drawable.ic_add),
-                        label = "매치 등록"
+
+                    MatchCalendar(
+                        month = formattedMonth,
+                        dates = calendarData,
+                        onPrevMonth = { currentMonth = currentMonth.minusMonths(1) },
+                        onNextMonth = { currentMonth = currentMonth.plusMonths(1) },
+                        onDateClick = { day -> selectedDate = day }
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val filteredMatches = matches.filter { it.date == selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) }
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (filteredMatches.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "경기 일정이 없습니다",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = pretendard,
+                                    color = Gray.Gray500, // 색상 옅게
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            filteredMatches.forEach { match ->
+                                MatchCard(
+                                    timeLabel = "경기 시간",
+                                    startTime = match.startTime,
+                                    endTime = match.endTime,
+                                    matchName = match.matchName,
+                                    onClick = {
+                                        navController.navigate("match/detail/${match.id}/${match.matchName}")
+                                    }
+                                )
+                            }
+                        }
+                        BallogButton(
+                            onClick = {
+                                navController.navigate("match/register/${selectedDateStr}?mode=PERSONAL")
+                            },
+                            type = ButtonType.BOTH,
+                            buttonColor = ButtonColor.GRAY,
+                            icon = painterResource(id = R.drawable.ic_add),
+                            label = "매치 등록"
+                        )
+                    }
                 }
             }
         }
