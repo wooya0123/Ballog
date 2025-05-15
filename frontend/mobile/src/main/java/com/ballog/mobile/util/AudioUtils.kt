@@ -7,12 +7,21 @@ import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.util.Log
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.TimeUnit
 
 object AudioUtils {
     private const val TAG = "AudioUtils"
+    private const val BUFFER_SIZE = 4096 // 4KB 버퍼
+    private const val PROJECT_RESOURCES_PATH = "mobile/src/main/resources/audio"
+    
+    // 오디오 품질 설정
+    private const val TARGET_SAMPLE_RATE = 22050 // 22.05kHz (CD 품질의 절반)
+    private const val TARGET_BIT_DEPTH = 16 // 16비트
+    private const val DOWNSAMPLE_FACTOR = 2 // 다운샘플링 비율
 
     /**
      * WAV 파일 헤더를 생성합니다.
@@ -50,57 +59,151 @@ object AudioUtils {
     }
 
     /**
-     * MP4 비디오에서 오디오를 WAV 형식으로 추출합니다.
+     * 파일을 작은 버퍼를 사용하여 복사합니다.
      */
-    fun extractAudioFromVideo(context: Context, videoFile: File): File? {
+    private fun copyFile(input: FileInputStream, output: FileOutputStream): Long {
+        val buffer = ByteArray(BUFFER_SIZE)
+        var totalBytesRead = 0L
+        var bytesRead: Int
+        
+        while (input.read(buffer).also { bytesRead = it } != -1) {
+            output.write(buffer, 0, bytesRead)
+            totalBytesRead += bytesRead
+        }
+        
+        return totalBytesRead
+    }
+
+    /**
+     * 오디오 데이터를 다운샘플링합니다.
+     */
+    private fun downsampleAudioData(inputBuffer: ByteArray, channels: Int): ByteArray {
+        // 16비트 샘플을 가정
+        val samplesPerChannel = inputBuffer.size / (2 * channels)
+        val outputSize = (samplesPerChannel / DOWNSAMPLE_FACTOR) * 2 * channels
+        val outputBuffer = ByteArray(outputSize)
+        
+        var inputIndex = 0
+        var outputIndex = 0
+        
+        while (outputIndex < outputSize) {
+            // 각 채널에 대해 처리
+            for (channel in 0 until channels) {
+                // 16비트 샘플을 복사
+                outputBuffer[outputIndex++] = inputBuffer[inputIndex]
+                outputBuffer[outputIndex++] = inputBuffer[inputIndex + 1]
+                // DOWNSAMPLE_FACTOR만큼 건너뛰기
+                inputIndex += 2 * DOWNSAMPLE_FACTOR
+            }
+        }
+        
+        return outputBuffer
+    }
+
+    /**
+     * MP4 비디오에서 오디오를 WAV 형식으로 추출합니다.
+     * @param context Android 컨텍스트
+     * @param videoFile 입력 비디오 파일
+     * @param saveToProject true인 경우 프로젝트 디렉토리에 저장, false인 경우 앱 디렉토리에 저장
+     * @return 생성된 WAV 파일
+     */
+    fun extractAudioFromVideo(context: Context, videoFile: File, saveToProject: Boolean = false): File? {
         Log.d(TAG, "🎬 오디오 추출 시작")
         Log.d(TAG, "📁 입력 비디오 파일: ${videoFile.absolutePath}")
         Log.d(TAG, "📊 비디오 파일 크기: ${videoFile.length() / 1024}KB")
 
-        var extractor = MediaExtractor()
+        if (!videoFile.exists()) {
+            Log.e(TAG, "❌ 입력 비디오 파일이 존재하지 않음")
+            return null
+        }
+
+        if (!videoFile.canRead()) {
+            Log.e(TAG, "❌ 입력 비디오 파일을 읽을 수 없음")
+            return null
+        }
+
+        var extractor: MediaExtractor? = null
+        var decoder: MediaCodec? = null
         var outputStream: FileOutputStream? = null
+        var audioFile: File? = null
+        var tempVideoFile: File? = null
+        var inputStream: FileInputStream? = null
+        var tempPcmFile: File? = null
+        var pcmOutputStream: FileOutputStream? = null
 
         try {
-            // WAV 파일 생성
-            val fileName = "extracted_audio_${System.currentTimeMillis()}.wav"
-            val audioFile = File(context.getExternalFilesDir(null), fileName)
-            outputStream = FileOutputStream(audioFile)
-            Log.d(TAG, "📁 WAV 파일 생성: ${audioFile.absolutePath}")
+            // 캐시 파일을 임시 파일로 복사
+            tempVideoFile = File(context.getExternalFilesDir(null), "temp_video_${System.currentTimeMillis()}.mp4")
+            Log.d(TAG, "📁 임시 비디오 파일 생성 시도: ${tempVideoFile.absolutePath}")
+            
+            try {
+                inputStream = FileInputStream(videoFile)
+                FileOutputStream(tempVideoFile).use { output ->
+                    val totalBytesRead = copyFile(inputStream, output)
+                    Log.d(TAG, "✅ 임시 파일 복사 완료: ${totalBytesRead / 1024}KB")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ 임시 파일 복사 실패", e)
+                throw e
+            }
 
-            // 비디오 파일에서 MediaExtractor 설정
-            Log.d(TAG, "⚙️ MediaExtractor 설정 시작")
-            extractor.setDataSource(videoFile.absolutePath)
-            Log.d(TAG, "✅ MediaExtractor 데이터 소스 설정 완료")
+            if (!tempVideoFile.exists() || !tempVideoFile.canRead()) {
+                Log.e(TAG, "❌ 임시 비디오 파일 생성 실패")
+                throw IllegalStateException("임시 비디오 파일 생성 실패")
+            }
+
+            // 임시 PCM 파일 생성
+            tempPcmFile = File(context.getExternalFilesDir(null), "temp_pcm_${System.currentTimeMillis()}.pcm")
+            pcmOutputStream = FileOutputStream(tempPcmFile)
+            Log.d(TAG, "📁 임시 PCM 파일 생성: ${tempPcmFile.absolutePath}")
+
+            // MediaExtractor 설정
+            extractor = MediaExtractor()
+            try {
+                Log.d(TAG, "⚙️ MediaExtractor 설정 시작")
+                extractor.setDataSource(tempVideoFile.absolutePath)
+                Log.d(TAG, "✅ MediaExtractor 설정 완료")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ MediaExtractor 설정 실패: ${e.message}")
+                e.printStackTrace()
+                throw e
+            }
+
+            val trackCount = extractor.trackCount
+            Log.d(TAG, "📊 전체 트랙 수: $trackCount")
+
+            if (trackCount == 0) {
+                Log.e(TAG, "❌ 비디오 파일에 트랙이 없음")
+                throw IllegalStateException("비디오 파일에 트랙이 없음")
+            }
 
             // 오디오 트랙 찾기
-            Log.d(TAG, "🔍 오디오 트랙 검색 시작")
-            Log.d(TAG, "📊 전체 트랙 수: ${extractor.trackCount}")
-
             var audioTrackIndex = -1
             var format: MediaFormat? = null
 
-            for (i in 0 until extractor.trackCount) {
-                val trackFormat = extractor.getTrackFormat(i)
-                val mime = trackFormat.getString(MediaFormat.KEY_MIME)
-                Log.d(TAG, "🎵 트랙 #$i MIME 타입: $mime")
+            for (i in 0 until trackCount) {
+                try {
+                    val trackFormat = extractor.getTrackFormat(i)
+                    val mime = trackFormat.getString(MediaFormat.KEY_MIME)
+                    Log.d(TAG, "🎵 트랙 #$i MIME 타입: $mime")
 
-                if (mime?.startsWith("audio/") == true) {
-                    audioTrackIndex = i
-                    format = trackFormat
-                    Log.d(TAG, "✅ 오디오 트랙 발견: 트랙 #$i")
-                    // 오디오 포맷 정보 출력
-                    trackFormat.let { audioFormat ->
+                    if (mime?.startsWith("audio/") == true) {
+                        audioTrackIndex = i
+                        format = trackFormat
+                        // 샘플레이트 조정
+                        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, TARGET_SAMPLE_RATE)
+                        Log.d(TAG, "✅ 오디오 트랙 발견: #$i")
                         Log.d(TAG, "📊 오디오 포맷 정보:")
-                        Log.d(TAG, "- 채널 수: ${audioFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)}")
-                        Log.d(TAG, "- 샘플레이트: ${audioFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)}Hz")
-                        if (audioFormat.containsKey(MediaFormat.KEY_BIT_RATE)) {
-                            Log.d(TAG, "- 비트레이트: ${audioFormat.getInteger(MediaFormat.KEY_BIT_RATE)}bps")
+                        Log.d(TAG, "- MIME: $mime")
+                        Log.d(TAG, "- 채널 수: ${format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)}")
+                        Log.d(TAG, "- 샘플레이트: ${format.getInteger(MediaFormat.KEY_SAMPLE_RATE)}Hz")
+                        if (format.containsKey(MediaFormat.KEY_DURATION)) {
+                            Log.d(TAG, "- 재생 시간: ${TimeUnit.MICROSECONDS.toSeconds(format.getLong(MediaFormat.KEY_DURATION))}초")
                         }
-                        if (audioFormat.containsKey(MediaFormat.KEY_DURATION)) {
-                            Log.d(TAG, "- 재생 시간: ${audioFormat.getLong(MediaFormat.KEY_DURATION) / 1000000}초")
-                        }
+                        break
                     }
-                    break
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ 트랙 #$i 정보 읽기 실패", e)
                 }
             }
 
@@ -109,78 +212,148 @@ object AudioUtils {
                 return null
             }
 
+            // 오디오 디코더 설정
+            val mime = format.getString(MediaFormat.KEY_MIME)
+            Log.d(TAG, "🎵 디코더 생성 시작: $mime")
+            try {
+                decoder = MediaCodec.createDecoderByType(mime!!)
+                decoder.configure(format, null, null, 0)
+                decoder.start()
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ 디코더 설정 실패", e)
+                e.printStackTrace()
+                throw e
+            }
+            Log.d(TAG, "✅ 디코더 설정 완료")
+
             // 오디오 트랙 선택
-            Log.d(TAG, "⚙️ 오디오 트랙 선택: 트랙 #$audioTrackIndex")
             extractor.selectTrack(audioTrackIndex)
 
             // WAV 헤더에 필요한 정보 추출
             val channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-            val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-            val bitsPerSample = 16  // PCM 16비트로 고정
+            val sampleRate = TARGET_SAMPLE_RATE // 낮은 샘플레이트 사용
+            val duration = format.getLong(MediaFormat.KEY_DURATION)
+            val bitsPerSample = TARGET_BIT_DEPTH
 
-            // 버퍼 설정
-            val bufferSize = format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)
-            Log.d(TAG, "📊 버퍼 크기: ${bufferSize}bytes")
-            val buffer = ByteBuffer.allocate(bufferSize)
+            // 버퍼 설정 - 더 작은 버퍼 크기 사용
+            val inputBufferSize = minOf(format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE), BUFFER_SIZE * 2)
+            val inputBuffer = ByteBuffer.allocate(inputBufferSize)
+            val bufferInfo = MediaCodec.BufferInfo()
+            
+            var totalBytesWritten = 0L
+            var isEOS = false
+            var frameCount = 0
 
-            // 먼저 데이터 크기를 계산
-            var totalAudioLen = 0L
-            while (true) {
-                val sampleSize = extractor.readSampleData(buffer, 0)
-                if (sampleSize < 0) break
-                totalAudioLen += sampleSize
-                extractor.advance()
-            }
+            // 디코딩 및 PCM 파일 쓰기
+            while (!isEOS) {
+                // 입력 버퍼 처리
+                val inputBufferId = decoder.dequeueInputBuffer(10000)
+                if (inputBufferId >= 0) {
+                    val sampleSize = extractor.readSampleData(inputBuffer, 0)
+                    val presentationTimeUs = if (sampleSize < 0) -1 else extractor.sampleTime
 
-            // WAV 헤더 쓰기
-            val wavHeader = createWavHeader(totalAudioLen, sampleRate, channels, bitsPerSample)
-            outputStream.write(wavHeader)
-
-            // 오디오 데이터 쓰기를 위해 Extractor 리셋
-            extractor.release()
-            extractor = MediaExtractor()
-            extractor.setDataSource(videoFile.absolutePath)
-            extractor.selectTrack(audioTrackIndex)
-
-            // 오디오 데이터 추출 및 파일로 쓰기
-            Log.d(TAG, "📥 오디오 데이터 추출 시작")
-            var sampleCount = 0
-            var writtenBytes = 0L
-
-            while (true) {
-                val sampleSize = extractor.readSampleData(buffer, 0)
-                if (sampleSize < 0) {
-                    Log.d(TAG, "✅ 모든 샘플 추출 완료")
-                    break
+                    when {
+                        sampleSize < 0 -> {
+                            Log.d(TAG, "🔚 입력 스트림 종료")
+                            decoder.queueInputBuffer(inputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            isEOS = true
+                        }
+                        else -> {
+                            val codecInputBuffer = decoder.getInputBuffer(inputBufferId)
+                            codecInputBuffer?.clear()
+                            codecInputBuffer?.put(inputBuffer)
+                            decoder.queueInputBuffer(inputBufferId, 0, sampleSize, presentationTimeUs, 0)
+                            extractor.advance()
+                            frameCount++
+                        }
+                    }
                 }
 
-                buffer.limit(sampleSize)
-                outputStream.write(buffer.array(), 0, sampleSize)
-                writtenBytes += sampleSize
-                extractor.advance()
+                // 출력 버퍼 처리
+                val outputBufferId = decoder.dequeueOutputBuffer(bufferInfo, 10000)
+                if (outputBufferId >= 0) {
+                    val outputBuffer = decoder.getOutputBuffer(outputBufferId)
+                    if (outputBuffer != null && bufferInfo.size > 0) {
+                        val chunk = ByteArray(minOf(bufferInfo.size, BUFFER_SIZE))
+                        outputBuffer.get(chunk)
+                        
+                        // 다운샘플링 적용
+                        val downsampledChunk = downsampleAudioData(chunk, channels)
+                        pcmOutputStream?.write(downsampledChunk)
+                        totalBytesWritten += downsampledChunk.size
+                    }
+                    decoder.releaseOutputBuffer(outputBufferId, false)
 
-                sampleCount++
-                if (sampleCount % 100 == 0) {
-                    Log.d(TAG, "📊 추출 진행 상황 - 샘플 수: $sampleCount, 총 데이터: ${writtenBytes / 1024}KB")
+                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                        Log.d(TAG, "🔚 출력 스트림 종료")
+                        break
+                    }
+                }
+
+                // 메모리 정리를 위해 가비지 컬렉션 유도
+                if (frameCount % 1000 == 0) {
+                    System.gc()
                 }
             }
 
-            Log.d(TAG, "📊 최종 추출 결과:")
-            Log.d(TAG, "- 총 샘플 수: $sampleCount")
-            Log.d(TAG, "- 총 데이터 크기: ${writtenBytes / 1024}KB")
-            Log.d(TAG, "- 출력 파일 크기: ${audioFile.length() / 1024}KB")
+            Log.d(TAG, "📊 디코딩 완료:")
+            Log.d(TAG, "- 총 프레임 수: $frameCount")
+            Log.d(TAG, "- 총 데이터 크기: ${totalBytesWritten / 1024}KB")
+
+            // PCM 스트림 닫기
+            pcmOutputStream?.close()
+
+            if (totalBytesWritten > 0) {
+                // WAV 파일 생성
+                audioFile = if (saveToProject) {
+                    val resourcesDir = File(PROJECT_RESOURCES_PATH)
+                    if (!resourcesDir.exists()) {
+                        resourcesDir.mkdirs()
+                    }
+                    File(resourcesDir, "extracted_audio_${System.currentTimeMillis()}.wav")
+                } else {
+                    File(context.getExternalFilesDir(null), "extracted_audio_${System.currentTimeMillis()}.wav")
+                }
+
+                outputStream = FileOutputStream(audioFile)
+                
+                // WAV 헤더 쓰기
+                val wavHeader = createWavHeader(totalBytesWritten, sampleRate, channels, bitsPerSample)
+                outputStream.write(wavHeader)
+
+                // PCM 데이터 복사 - 작은 버퍼 사용
+                FileInputStream(tempPcmFile).use { input ->
+                    copyFile(input, outputStream)
+                }
+
+                Log.d(TAG, "✅ WAV 파일 생성 완료")
+                Log.d(TAG, "📁 WAV 파일 저장 위치: ${audioFile.absolutePath}")
+                Log.d(TAG, "📊 최종 파일 크기: ${audioFile.length() / 1024}KB")
+            } else {
+                Log.e(TAG, "❌ 추출된 오디오 데이터가 없음")
+                return null
+            }
 
             return audioFile
+
         } catch (e: Exception) {
             Log.e(TAG, "❌ 오디오 추출 중 오류 발생", e)
             Log.e(TAG, "⚠️ 오류 메시지: ${e.message}")
             Log.e(TAG, "⚠️ 오류 종류: ${e.javaClass.simpleName}")
+            e.printStackTrace()
+            audioFile?.delete()
             return null
         } finally {
             try {
                 Log.d(TAG, "🔄 리소스 정리 시작")
+                inputStream?.close()
                 outputStream?.close()
-                extractor.release()
+                pcmOutputStream?.close()
+                decoder?.stop()
+                decoder?.release()
+                extractor?.release()
+                tempVideoFile?.delete()
+                tempPcmFile?.delete()
                 Log.d(TAG, "✅ 리소스 정리 완료")
             } catch (e: Exception) {
                 Log.e(TAG, "⚠️ 리소스 정리 중 오류 발생", e)
