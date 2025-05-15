@@ -81,7 +81,7 @@ public class VideoController {
             @RequestPart("file") MultipartFile file,
             @RequestPart("videoId") Integer videoId
     ) throws IOException {
-        log.info("영상 아이디 ------------", videoId);
+        log.info("영상 아이디 ------------ {}", videoId);
 
         highlightService.extractHighlight(videoId, file);
         return BaseResponse.ok();

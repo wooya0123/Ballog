@@ -10,7 +10,6 @@ import notfound.ballog.domain.video.entity.Video;
 import notfound.ballog.domain.video.repository.HighlightRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
 import notfound.ballog.domain.video.request.AddHighlightRequest;
-import notfound.ballog.domain.video.request.ExtractHighlightRequest;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
 import notfound.ballog.domain.video.response.ExtractHighlightResponse;
@@ -94,15 +93,23 @@ public class HighlightService {
                 .block();
 
         // DB에 하이라이트 저장
-        List<HighlightDto> highlightList = highlightResponse.getHighlightList();
-        log.info("하이라이트 리스트---------------", highlightList);
-        log.info("하이라이트 갯수---------------", highlightList.size());
+        List<HighlightDto> highlightList = null;
+        if (highlightResponse != null) {
+            highlightList = highlightResponse.getHighlightList();
+        }
+        log.info("하이라이트 리스트--------------- {}", highlightList);
 
-        for (HighlightDto highlightDto : highlightList) {
-            log.info("하이라이트 -----------", highlightDto);
+        if (highlightList != null) {
+            log.info("하이라이트 갯수--------------- {}", highlightList.size());
+        }
 
-            Highlight highlight = Highlight.of(video, highlightDto);
-            highlightRepository.save(highlight);
+        if (highlightList != null) {
+            for (HighlightDto highlightDto : highlightList) {
+                log.info("하이라이트 ----------- {}", highlightDto);
+
+                Highlight highlight = Highlight.of(video, highlightDto);
+                highlightRepository.save(highlight);
+            }
         }
     }
 }
