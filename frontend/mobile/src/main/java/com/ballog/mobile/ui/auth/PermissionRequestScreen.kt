@@ -42,6 +42,8 @@ import com.samsung.android.sdk.health.data.request.DataTypes
 import com.samsung.android.sdk.health.data.permission.Permission
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 private const val TAG = "MatchDetailScreen"
 
@@ -55,44 +57,29 @@ fun PermissionRequestScreen(
     var samsungHealthDataService by remember { mutableStateOf<SamsungHealthDataService?>(null) }
     var isHealthDataLoading by remember { mutableStateOf(false) }
     var healthDataError by remember { mutableStateOf<String?>(null) }
-    var requestPermissionTrigger by remember { mutableStateOf(false) }
+    //var requestPermissionTrigger by remember { mutableStateOf(false) }
     Log.d("PermissionRequestScreen", "Composable context type: ${context::class.java.name}")
     val scope = rememberCoroutineScope()
 
-    // 삼성 헬스 초기화
+    // 삼성 헬스 초기화 및 권한 요청/데이터 로드까지 한 번에 처리
     LaunchedEffect(Unit) {
         try {
-            healthDataStore = HealthDataService.getStore(context)
-            samsungHealthDataService = SamsungHealthDataService(context)
-            Log.d(TAG, "Samsung Health 초기화 성공")
-        } catch (e: Exception) {
-            Log.e(TAG, "Samsung Health 초기화 실패: ${e.message}")
-            healthDataError = "삼성 헬스 초기화 실패: ${e.message}"
-        }
-    }
-
-    // 권한 요청 및 데이터 로드
-    LaunchedEffect(healthDataStore, samsungHealthDataService) {
-        if (healthDataStore != null && samsungHealthDataService != null) {
+            val healthDataStore = HealthDataService.getStore(context)
+            val samsungHealthDataService = SamsungHealthDataService(context)
             isHealthDataLoading = true
             try {
-                // TODO: 권한 요청 부분 - 추후 제거 가능
                 val permissions = setOf(
                     Permission.of(DataTypes.EXERCISE, AccessType.READ),
                     Permission.of(DataTypes.HEART_RATE, AccessType.READ),
                     Permission.of(DataTypes.EXERCISE_LOCATION, AccessType.READ)
                 )
-
-                val grantedPermissions = healthDataStore?.requestPermissions(
+                val grantedPermissions = healthDataStore.requestPermissions(
                     permissions,
                     context as Activity
                 )
-
                 if (grantedPermissions?.containsAll(permissions) == true) {
-                    // 권한 요청 성공 시 자동 저장
                     OnboardingPrefs.setPermissionCompleted(context, true)
-                    // TODO: 권한 요청 부분 끝
-                    val exerciseData = samsungHealthDataService?.getExercise()
+                    val exerciseData = samsungHealthDataService.getExercise()
                     Log.d(TAG, "운동 데이터 로딩 완료: ${exerciseData?.size ?: 0}개")
                 } else {
                     healthDataError = "필요한 권한이 부여되지 않았습니다"
@@ -103,38 +90,41 @@ fun PermissionRequestScreen(
             } finally {
                 isHealthDataLoading = false
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Samsung Health 초기화 실패: ${e.message}")
+            healthDataError = "삼성 헬스 초기화 실패: ${e.message}"
         }
     }
 
-    LaunchedEffect(requestPermissionTrigger) {
-        if (requestPermissionTrigger) {
-            val activity = context as? android.app.Activity
-            if (activity == null) {
-                Log.e("PermissionRequestScreen", "context is not Activity!")
-                android.widget.Toast.makeText(context, "권한 요청 실패: Activity 컨텍스트가 아님", android.widget.Toast.LENGTH_SHORT).show()
-            } else {
-                try {
-                    SamsungHealthPermissionManager(context).initialize()
-                        .onSuccess { healthDataStore ->
-                            Log.d("PermissionRequestScreen", "healthDataStore initialized: $healthDataStore")
-                            SamsungHealthPermissionManager(context).requestPermissions()
-                                .onSuccess { grantedPermissions ->
-                                    Log.d("PermissionRequestScreen", "grantedPermissions: $grantedPermissions")
-                                }
-                                .onFailure { e ->
-                                    Log.e("PermissionRequestScreen", "권한 요청 실패: ${e.message}")
-                                }
-                        }
-                        .onFailure { e ->
-                            Log.e("PermissionRequestScreen", "Samsung Health 초기화 실패: ${e.message}")
-                        }
-                } catch (e: Exception) {
-                    Log.e("PermissionRequestScreen", "권한 요청 예외: ${e.message}")
-                }
-            }
-            requestPermissionTrigger = false
-        }
-    }
+//    LaunchedEffect(requestPermissionTrigger) {
+//        if (requestPermissionTrigger) {
+//            val activity = context as? android.app.Activity
+//            if (activity == null) {
+//                Log.e("PermissionRequestScreen", "context is not Activity!")
+//                android.widget.Toast.makeText(context, "권한 요청 실패: Activity 컨텍스트가 아님", android.widget.Toast.LENGTH_SHORT).show()
+//            } else {
+//                try {
+//                    SamsungHealthPermissionManager(context).initialize()
+//                        .onSuccess { healthDataStore ->
+//                            Log.d("PermissionRequestScreen", "healthDataStore initialized: $healthDataStore")
+//                            SamsungHealthPermissionManager(context).requestPermissions()
+//                                .onSuccess { grantedPermissions ->
+//                                    Log.d("PermissionRequestScreen", "grantedPermissions: $grantedPermissions")
+//                                }
+//                                .onFailure { e ->
+//                                    Log.e("PermissionRequestScreen", "권한 요청 실패: ${e.message}")
+//                                }
+//                        }
+//                        .onFailure { e ->
+//                            Log.e("PermissionRequestScreen", "Samsung Health 초기화 실패: ${e.message}")
+//                        }
+//                } catch (e: Exception) {
+//                    Log.e("PermissionRequestScreen", "권한 요청 예외: ${e.message}")
+//                }
+//            }
+//            requestPermissionTrigger = false
+//        }
+//    }
 
     Box(
         modifier = Modifier
@@ -147,11 +137,17 @@ fun PermissionRequestScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.samsung_health_72x72),
-                contentDescription = "App Icon",
-                modifier = Modifier.size(60.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(12.dp))
+            ) {
+                Image(
+                    painter = painterResource(id = R.mipmap.ballog_logo_foreground),
+                    contentDescription = "App Icon",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             Spacer(modifier = Modifier.width(8.dp))
             Image(
                 painter = painterResource(id = R.drawable.ic_link),

@@ -15,12 +15,7 @@ import com.ballog.mobile.ui.auth.SignupProfileScreen
 import com.ballog.mobile.ui.auth.SignupScreen
 import com.ballog.mobile.ui.auth.SignupVerificationScreen
 import com.ballog.mobile.ui.main.MainScreen
-import com.ballog.mobile.ui.profile.LikedVideosScreen
-import com.ballog.mobile.ui.profile.MyPageScreen
-import com.ballog.mobile.ui.profile.ProfileEditScreen
 import com.ballog.mobile.viewmodel.AuthViewModel
-import com.ballog.mobile.navigation.Routes.MATCH_DATA
-import com.ballog.mobile.ui.match.MatchDataScreen
 import com.ballog.mobile.ui.auth.PermissionRequestScreen
 import com.ballog.mobile.ui.auth.SamsungHealthGuideScreen
 import com.ballog.mobile.ui.home.HomeScreen

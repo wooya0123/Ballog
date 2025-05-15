@@ -11,6 +11,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.painterResource
 import com.ballog.mobile.R
@@ -19,14 +21,25 @@ import com.ballog.mobile.ui.match.HeatMap
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.pretendard
-import com.ballog.mobile.viewmodel.ProfileViewModel
+import com.ballog.mobile.viewmodel.UserViewModel
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
 
 @Composable
-fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
+fun HomeScreen(
+    viewModel: UserViewModel = viewModel(),
+    onNavigateToStatisticsPage: () -> Unit = {},
+    onNicknameLoaded: (String) -> Unit = {}
+) {
     val statistics by viewModel.userStatistics.collectAsState()
     val playerCardInfo by viewModel.playerCardInfo.collectAsState()
+
+    val nickname = statistics?.nickname ?: "불러오는 중..."
+
+    // 닉네임이 바뀔 때마다 콜백 호출
+    LaunchedEffect(nickname) {
+        onNicknameLoaded(nickname)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.fetchUserStatistics()
@@ -41,7 +54,6 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
     var showPlayerCard by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    val nickname = statistics?.nickname ?: "불러오는 중..."
     val heatmap = statistics?.heatmap ?: emptyList()
 
     val distanceList = statistics?.distance ?: emptyList()
@@ -98,20 +110,38 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "통계",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Gray.Gray700,
-                        fontFamily = pretendard
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "최근 5경기의 평균을 나타냅니다",
-                        fontSize = 12.sp,
-                        color = Gray.Gray500,
-                        fontFamily = pretendard
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "통계",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Gray.Gray700,
+                                fontFamily = pretendard
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "최근 5경기의 평균을 나타냅니다",
+                                fontSize = 12.sp,
+                                color = Gray.Gray500,
+                                fontFamily = pretendard
+                            )
+                        }
+                        IconButton(
+                            onClick = onNavigateToStatisticsPage,
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_edit),
+                                contentDescription = "통계 상세 이동",
+                                tint = Gray.Gray700
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

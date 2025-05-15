@@ -1,4 +1,4 @@
-package com.ballog.mobile.ui.profile
+package com.ballog.mobile.ui.user
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -31,14 +31,13 @@ import com.ballog.mobile.ui.theme.*
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.ballog.mobile.viewmodel.ProfileViewModel
-import androidx.compose.material3.SnackbarHost
+import com.ballog.mobile.viewmodel.UserViewModel
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 
 @Composable
-fun ProfileEditScreen(navController: NavController, rootNavController: NavHostController, viewModel: ProfileViewModel = viewModel()) {
+fun ProfileEditScreen(navController: NavController, rootNavController: NavHostController, viewModel: UserViewModel = viewModel()) {
     val context = LocalContext.current
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 

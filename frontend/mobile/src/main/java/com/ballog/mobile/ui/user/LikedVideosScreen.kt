@@ -1,4 +1,4 @@
-package com.ballog.mobile.ui.profile
+package com.ballog.mobile.ui.user
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
