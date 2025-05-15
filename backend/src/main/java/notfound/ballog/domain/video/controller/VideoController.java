@@ -12,6 +12,7 @@ import notfound.ballog.domain.video.response.AddS3UrlResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.domain.video.service.HighlightService;
 import notfound.ballog.domain.video.service.VideoService;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,14 +79,15 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "하이라이트 자동 추출"
+    @Operation(summary = "하이라이트 자동 추출")
+    @PostMapping(value = "/highlight/auto",
+                consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    @PostMapping("/highlight/auto")
     public BaseResponse<Void> extractHighlight(
-            @RequestPart("videoId") Integer videoId,
-            @RequestPart("file") MultipartFile file
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("videoId") String videoIdStr
     ) throws IOException {
+        Integer videoId = Integer.parseInt(videoIdStr);
         highlightService.extractHighlight(videoId, file);
         return BaseResponse.ok();
     }

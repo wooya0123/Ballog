@@ -9,6 +9,7 @@ import notfound.ballog.domain.video.entity.Video;
 import notfound.ballog.domain.video.repository.HighlightRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
 import notfound.ballog.domain.video.request.AddHighlightRequest;
+import notfound.ballog.domain.video.request.ExtractHighlightRequest;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
 import notfound.ballog.domain.video.response.ExtractHighlightResponse;
