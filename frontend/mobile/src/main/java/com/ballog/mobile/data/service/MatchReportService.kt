@@ -107,6 +107,7 @@ class MatchReportService(
 
             val success = response.body()?.isSuccess == true
             Log.d(TAG, "[sendMatchReport] 서버 전송 결과: $success")
+            matchRepository.clearFieldCorners()
             return response.body()!!.result
 
         } catch (e: Exception) {

@@ -6,7 +6,7 @@ data class User(
     val email: String,
     val nickname: String,
     val birthDate: String,
-    val profileImageUrl: String
+    val profileImageUrl: String?
 )
 
 data class PlayerCardInfo(

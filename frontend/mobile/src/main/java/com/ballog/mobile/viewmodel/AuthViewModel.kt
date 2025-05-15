@@ -381,7 +381,7 @@ class AuthViewModel : ViewModel() {
     }
 
     // 로그인 처리
-    fun login(email: String, password: String) {
+    fun login(context: Context, email: String, password: String) {
         viewModelScope.launch {
             try {
                 _authState.value = AuthResult.Loading
@@ -404,6 +404,8 @@ class AuthViewModel : ViewModel() {
                 }
                 when (loginResult) {
                     is LoginResult.Success -> {
+                        com.ballog.mobile.data.util.OnboardingPrefs.clearAll(context)
+                        com.ballog.mobile.data.util.OnboardingPrefs.setOnboardingCompleted(context, true)
                         tokenManager.saveTokens(
                             accessToken = loginResult.auth.accessToken,
                             refreshToken = loginResult.auth.refreshToken

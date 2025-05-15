@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     val deepLinkEvent: StateFlow<Boolean> = _deepLinkEvent.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.AppTheme) // 시스템 스플래시에서 앱 테마로 전환
         super.onCreate(savedInstanceState)
 
         // 시스템 바 설정
@@ -66,52 +67,6 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
             BallogTheme {
                 AppNavHost(navController)
-
-                // 토큰 존재 여부에 따라 화면 전환
-                LaunchedEffect(Unit) {
-                    try {
-                        val hasTokens = tokenManager.hasTokens().first()
-                        println("MainActivity - Token check result: $hasTokens")
-
-                        val onboardingDone = OnboardingPrefs.isOnboardingCompleted(applicationContext)
-                        val permissionDone = OnboardingPrefs.isPermissionCompleted(applicationContext)
-                        val guideDone = OnboardingPrefs.isGuideCompleted(applicationContext)
-
-                        if (hasTokens && onboardingDone && permissionDone && guideDone) {
-                            handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
-                        } else {
-                            // 온보딩 → 권한 → 가이드 순서로 분기
-                            when {
-                                !onboardingDone -> navController.navigate(Routes.ONBOARDING) { popUpTo(0) { inclusive = true } }
-                                !permissionDone -> navController.navigate(Routes.PERMISSION_REQUEST) { popUpTo(0) { inclusive = true } }
-                                !guideDone -> navController.navigate(Routes.SAMSUNG_HEALTH_GUIDE) { popUpTo(0) { inclusive = true } }
-                                else -> navController.navigate(Routes.ONBOARDING) { popUpTo(0) { inclusive = true } } // fallback
-                            }
-                        }
-                    } catch (e: Exception) {
-                        println("MainActivity - Error checking tokens: ${e.message}")
-                        navController.navigate(Routes.ONBOARDING) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                }
-
-                // 로그인 상태가 변경될 때마다 실행
-                LaunchedEffect(authState) {
-                    if (authState is AuthResult.Success) {
-                        println("MainActivity - Login successful, handling navigation")
-                        handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
-                    }
-                }
-
-                // 딥 링크 이벤트가 발생했을 때 실행
-                LaunchedEffect(deepLinkTrigger) {
-                    if (deepLinkTrigger) {
-                        println("MainActivity - Deep link event triggered")
-                        handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
-                        _deepLinkEvent.value = false // 이벤트 처리 후 초기화
-                    }
-                }
             }
         }
     }

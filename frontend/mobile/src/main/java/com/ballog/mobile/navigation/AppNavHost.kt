@@ -24,11 +24,12 @@ import com.ballog.mobile.ui.match.MatchDataScreen
 import com.ballog.mobile.ui.auth.PermissionRequestScreen
 import com.ballog.mobile.ui.auth.SamsungHealthGuideScreen
 import com.ballog.mobile.ui.home.HomeScreen
+import com.ballog.mobile.ui.splash.SplashScreen
 
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    startDestination: String = Routes.ONBOARDING
+    startDestination: String = "splash"
 ) {
     val authViewModel: AuthViewModel = viewModel()
 
@@ -36,6 +37,9 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable("splash") {
+            SplashScreen(navController)
+        }
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onEmailLoginClick = {

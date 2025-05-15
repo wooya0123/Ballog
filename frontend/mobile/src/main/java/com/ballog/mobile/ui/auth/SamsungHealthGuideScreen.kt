@@ -108,14 +108,14 @@ fun SamsungHealthGuideScreen(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF7EE4EA))
+                        .background(Gray.Gray300)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFD4D9DE))
+                        .background(Primary)
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
