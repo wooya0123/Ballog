@@ -31,9 +31,7 @@ public class VideoController {
     private final VideoService videoService;
     private final HighlightService highlightService;
 
-    @Operation(
-            summary = "s3 presigned url 발급"
-    )
+    @Operation(summary = "s3 presigned url 발급")
     @PostMapping("/url")
     public BaseResponse<AddS3UrlResponse> addS3Url(@RequestBody AddS3UrlRequest request) {
         AddS3UrlResponse response = videoService.addS3Url(request);
@@ -41,9 +39,7 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "업로드한 영상 저장"
-    )
+    @Operation(summary = "업로드한 영상 저장")
     @PostMapping()
     public BaseResponse<Void> uploadVideo(@Valid @RequestBody AddVideoRequest request) {
         videoService.uploadVideo(request);
@@ -51,9 +47,7 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "쿼터 영상 조회"
-    )
+    @Operation(summary = "쿼터 영상 조회")
     @GetMapping("/{matchId}")
     public BaseResponse<GetVideoListResponse> getVideo(
             @PathVariable
@@ -65,9 +59,7 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "쿼터 영상 삭제"
-    )
+    @Operation(summary = "쿼터 영상 삭제")
     @DeleteMapping("/{videoId}")
     public BaseResponse<Void> deleteVideo(
             @PathVariable
@@ -93,9 +85,7 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "하이라이트 구간 수정"
-    )
+    @Operation(summary = "하이라이트 구간 수정")
     @PatchMapping("/highlight")
     public BaseResponse<Void> updateHighlight(@Valid @RequestBody UpdateHighlightRequest request) {
         highlightService.updateHighlight(request);
@@ -103,9 +93,7 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "하이라이트 구간 삭제"
-    )
+    @Operation(summary = "하이라이트 구간 삭제")
     @DeleteMapping("/highlight/{highlightId}")
     public BaseResponse<Void> deleteHighlight(
             @NotNull(message = "하이라이트 아이디를 입력하세요.")
@@ -116,9 +104,7 @@ public class VideoController {
     }
 
 
-    @Operation(
-            summary = "하이라이트 구간 추가"
-    )
+    @Operation(summary = "하이라이트 구간 추가")
     @PostMapping("/highlight")
     public BaseResponse<AddHighlightResponse> addHighlight(@Valid @RequestBody AddHighlightRequest request) {
         AddHighlightResponse response = highlightService.addHighlight(request);

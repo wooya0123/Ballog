@@ -59,9 +59,7 @@ public class AuthController {
     }
 
 
-    @Operation(
-            summary = "로그아웃"
-    )
+    @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public BaseResponse<Void> logout(
             @AuthenticationPrincipal UUID userId){
@@ -70,9 +68,7 @@ public class AuthController {
     }
 
 
-    @Operation(
-            summary = "토큰 재발급"
-    )
+    @Operation(summary = "토큰 재발급")
     @PostMapping("/refresh-token")
     public BaseResponse<TokenRefreshResponse> refreshToken(
             @AuthenticationPrincipal UUID userId,
@@ -99,9 +95,7 @@ public class AuthController {
     }
 
 
-    @Operation(
-            summary = "회원탈퇴"
-    )
+    @Operation(summary = "회원탈퇴")
     @PostMapping("/signout")
     public BaseResponse<Void> signOut(@AuthenticationPrincipal UUID userId) {
         authService.signOut(userId);
