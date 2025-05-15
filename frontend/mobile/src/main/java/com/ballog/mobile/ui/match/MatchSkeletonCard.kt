@@ -16,24 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.ballog.mobile.ui.theme.Gray
-import androidx.compose.runtime.getValue
 
 @Composable
 fun MatchSkeletonCard() {
-    val alpha by rememberInfiniteTransition(label = "skeleton")
-        .animateFloat(
-            initialValue = 0.3f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 1000, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "pulseAlpha"
-        )
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
