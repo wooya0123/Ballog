@@ -46,3 +46,16 @@ data class PlayerCardStatsDto(
     val recovery: Int
 )
 
+data class recommendedPlayer(
+    val name: String,
+    val position: String,
+    val style: String,
+    val reason: String,
+    val imageUrl: String
+)
+
+data class AiRecommendDto(
+    val conclusion: String,
+    val analysis: String,
+    val recommendedPlayer: recommendedPlayer
+)

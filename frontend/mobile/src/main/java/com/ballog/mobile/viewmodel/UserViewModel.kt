@@ -21,8 +21,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import com.ballog.mobile.data.dto.AiRecommendDto
 
-class ProfileViewModel : ViewModel() {
+class UserViewModel : ViewModel() {
     private val tokenManager = BallogApplication.getInstance().tokenManager
     private val userApi = RetrofitInstance.userApi
 
@@ -210,6 +211,31 @@ class ProfileViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("PlayerCard", "❌ 네트워크 오류: ${e.localizedMessage}", e)
+            }
+        }
+    }
+
+    // AI 추천 결과 상태
+    private val _aiRecommend = MutableStateFlow<AiRecommendDto?>(null)
+    val aiRecommend: StateFlow<AiRecommendDto?> = _aiRecommend.asStateFlow()
+
+    fun fetchAiRecommend() {
+        viewModelScope.launch {
+            val token = tokenManager.getAccessToken().firstOrNull()
+            if (token == null) {
+                _error.value = "로그인이 필요합니다"
+                return@launch
+            }
+            try {
+                val response = userApi.getAiRecommend("Bearer $token")
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    println("API 요청 성공!")
+                    _aiRecommend.value = response.body()?.result
+                } else {
+                    _error.value = response.body()?.message ?: "AI 추천 결과를 불러오지 못했습니다"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "AI 추천 결과 네트워크 오류"
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.ballog.mobile.data.api
 
+import com.ballog.mobile.data.dto.AiRecommendDto
 import com.ballog.mobile.data.dto.PlayerCardResponseDto
 import com.ballog.mobile.data.dto.UserInfoResponse
 import com.ballog.mobile.data.dto.UserStatisticsDto
@@ -35,4 +36,9 @@ interface UserApi {
     suspend fun getPlayerCard(
         @Header("Authorization") token: String
     ): Response<ApiResponse<PlayerCardResponseDto>>
+
+    @GET("v1/users/ai-recommend")
+    suspend fun getAiRecommend(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<AiRecommendDto>>
 }
