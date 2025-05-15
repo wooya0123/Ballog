@@ -2,6 +2,7 @@ package notfound.ballog.domain.video.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.entity.Highlight;
@@ -29,6 +30,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HighlightService {
 
     private final HighlightRepository highlightRepository;
@@ -91,11 +93,14 @@ public class HighlightService {
                 .bodyToMono(ExtractHighlightResponse.class)
                 .block();
 
-        System.out.println("highlightResponse: ----------------------" + highlightResponse);
-
         // DB에 하이라이트 저장
         List<HighlightDto> highlightList = highlightResponse.getHighlightList();
+        log.info("하이라이트 리스트---------------", highlightList);
+        log.info("하이라이트 갯수---------------", highlightList.size());
+
         for (HighlightDto highlightDto : highlightList) {
+            log.info("하이라이트 -----------", highlightDto);
+
             Highlight highlight = Highlight.of(video, highlightDto);
             highlightRepository.save(highlight);
         }

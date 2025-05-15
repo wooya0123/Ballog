@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.video.request.*;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
@@ -26,6 +27,7 @@ import java.io.IOException;
 @RequestMapping("/v1/videos")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class VideoController {
 
     private final VideoService videoService;
@@ -79,7 +81,7 @@ public class VideoController {
             @RequestPart("file") MultipartFile file,
             @RequestPart("videoId") Integer videoId
     ) throws IOException {
-        System.out.println("비디오 아이디 -------------------------------------" +videoId);
+        log.info("영상 아이디 ------------", videoId);
 
         highlightService.extractHighlight(videoId, file);
         return BaseResponse.ok();
