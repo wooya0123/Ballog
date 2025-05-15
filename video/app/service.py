@@ -7,7 +7,7 @@ async def analyze_audio_file(audio_path: str, zscore_threshold=1.0) -> list[dict
     print(f"[analyzer] 📊 데시벨 분석 시작 - {audio_path}")
     start_time = _time_module.time()
 
-    sound = AudioSegment.from_wav(audio_path)
+    sound = AudioSegment.from_file(audio_path, format=audio_path.split('.')[-1])
     frame_ms = 100
     loudness_values = [sound[i:i + frame_ms].dBFS for i in range(0, len(sound), frame_ms)]
 
