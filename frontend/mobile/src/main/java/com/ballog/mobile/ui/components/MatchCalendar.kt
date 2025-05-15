@@ -35,7 +35,6 @@ fun MatchCalendar(
 
     Surface(
         modifier = modifier
-            .padding(horizontal = 24.dp)
             .fillMaxWidth()
             .wrapContentHeight(),
         shape = RoundedCornerShape(16.dp),

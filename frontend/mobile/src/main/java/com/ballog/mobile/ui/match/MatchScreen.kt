@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +47,7 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(horizontal = 24.dp)
             .verticalScroll(rememberScrollState())
             .background(Gray.Gray100),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -55,22 +57,24 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
 
         when (matchState) {
             is MatchState.Loading -> {
-                Text(
-                    text = "불러오는 중...",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = pretendard,
-                    modifier = Modifier.padding(24.dp)
-                )
+                MatchSkeletonCard()
             }
             is MatchState.Error -> {
-                Text(
-                    text = "에러: ${(matchState as MatchState.Error).message}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = pretendard,
-                    modifier = Modifier.padding(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "에러: ${(matchState as MatchState.Error).message}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = pretendard,
+                        color = Gray.Gray500,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
             is MatchState.Success -> {
                 val matches = (matchState as MatchState.Success).matches
