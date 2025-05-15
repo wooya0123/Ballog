@@ -38,9 +38,10 @@ import com.ballog.mobile.viewmodel.TeamViewModel
 import com.ballog.mobile.ui.team.TeamUpdateScreen
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import com.ballog.mobile.ui.profile.LikedVideosScreen
-import com.ballog.mobile.ui.profile.MyPageScreen
-import com.ballog.mobile.ui.profile.ProfileEditScreen
+import com.ballog.mobile.ui.user.LikedVideosScreen
+import com.ballog.mobile.ui.user.MyPageScreen
+import com.ballog.mobile.ui.user.ProfileEditScreen
+import com.ballog.mobile.ui.home.MatchDataReportScreen
 
 private const val TAG = "MainScreen"
 
@@ -100,7 +101,7 @@ fun MainScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                NavigationTab.HOME -> HomeScreen()
+                NavigationTab.HOME -> HomeTabScreen()
                 NavigationTab.MATCH -> MatchTabScreen(navController = matchTabNavController)
                 NavigationTab.TEAM -> TeamTabScreen(teamNavController, teamViewModel)
                 NavigationTab.MYPAGE -> ProfileTabScreen(
@@ -398,6 +399,36 @@ private fun ProfileTabScreen(navController: NavHostController, rootNavController
             LikedVideosScreen()
         }
         // 필요시 추가 스크린...
+    }
+}
+
+@Composable
+fun HomeTabScreen() {
+    val navController = rememberNavController()
+    var nickname by remember { mutableStateOf("") }
+
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable("home") {
+            HomeScreen(
+                onNavigateToStatisticsPage = {
+                    navController.navigate("statistics/${nickname}")
+                },
+                onNicknameLoaded = { loadedNickname -> nickname = loadedNickname }
+            )
+        }
+        composable(
+            "statistics/{nickname}",
+            arguments = listOf(navArgument("nickname") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nicknameArg = backStackEntry.arguments?.getString("nickname") ?: ""
+            MatchDataReportScreen(
+                nickname = nicknameArg,
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 

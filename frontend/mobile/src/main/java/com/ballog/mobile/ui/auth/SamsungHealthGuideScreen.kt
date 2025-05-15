@@ -28,6 +28,9 @@ import com.ballog.mobile.ui.theme.pretendard
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import com.ballog.mobile.data.util.OnboardingPrefs
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 
 @Composable
 fun SamsungHealthGuideScreen(
@@ -89,7 +92,7 @@ fun SamsungHealthGuideScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "[ 더보기 > + > 새 운동 만들기 ]",
+                text = "[ 더보기 > + > 새 운동 추가 ]",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = pretendard,
@@ -120,7 +123,20 @@ fun SamsungHealthGuideScreen(
             }
             Spacer(modifier = Modifier.height(32.dp))
             BallogButton(
-                onClick = {/* 설정하러 가기 동작(필요시 구현) */},
+                onClick = {
+                    val intent = context.packageManager.getLaunchIntentForPackage("com.sec.android.app.shealth")
+                    if (intent != null) {
+                        context.startActivity(intent)
+                    } else {
+                        // 삼성헬스가 설치되어 있지 않으면 마켓으로 이동
+                        val marketIntent = Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse("market://details?id=com.sec.android.app.shealth")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(marketIntent)
+                        Toast.makeText(context, "삼성헬스가 설치되어 있지 않습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 type = ButtonType.LABEL_ONLY,
                 buttonColor = ButtonColor.GRAY,
                 label = "설정하러 가기",
