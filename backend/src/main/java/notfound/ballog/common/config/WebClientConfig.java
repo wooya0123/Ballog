@@ -9,8 +9,8 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
         return builder
-                .baseUrl("http://localhost:8000")
-//                .baseUrl("http://video:8000")
+//                .baseUrl("http://localhost:8000")
+                .baseUrl("http://video:8000")
                 .build();
     }
 }
