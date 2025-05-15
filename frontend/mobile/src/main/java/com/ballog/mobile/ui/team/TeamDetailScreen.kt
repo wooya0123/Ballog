@@ -40,28 +40,15 @@ fun TeamDetailScreen(
     teamId: Int,
     viewModel: TeamViewModel
 ) {
-    Log.d(TAG, "TeamDetailScreen 시작: teamId=$teamId")
-
     var selectedTab by remember { mutableIntStateOf(0) }
     val teamDetail by viewModel.teamDetail.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // 선수카드 보기를 위한 변수
     var selectedPlayer by remember { mutableStateOf<Player?>(null) }
 
-    Log.d(TAG, "상태 - isLoading: $isLoading, error: $error, teamDetail: ${teamDetail != null}")
-
-    // 화면이 처음 표시될 때 팀 상세 정보 요청
     LaunchedEffect(teamId) {
-        Log.d(TAG, "LaunchedEffect 실행: teamId=$teamId")
-        try {
-            viewModel.getTeamDetail(teamId)
-            Log.d(TAG, "getTeamDetail 호출 완료")
-        } catch (e: Exception) {
-            Log.e(TAG, "getTeamDetail 호출 중 오류 발생", e)
-            e.printStackTrace()
-        }
+        viewModel.getTeamDetail(teamId)
     }
 
     Column(
@@ -71,7 +58,6 @@ fun TeamDetailScreen(
     ) {
         when {
             isLoading -> {
-                Log.d(TAG, "로딩 중 UI 표시")
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -79,8 +65,8 @@ fun TeamDetailScreen(
                     CircularProgressIndicator()
                 }
             }
+
             error != null -> {
-                Log.d(TAG, "에러 UI 표시: $error")
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -97,58 +83,40 @@ fun TeamDetailScreen(
                     )
                 }
             }
+
             teamDetail != null -> {
-                Log.d(TAG, "teamDetail UI 표시 시작")
-                teamDetail?.let { detail ->
-                    Log.d(TAG, "팀 정보: 이름=${detail.name}, 인원=${detail.players.size}")
-                    TopNavItem(
-                        title = detail.name,
-                        type = TopNavType.DETAIL_WITH_BACK_SETTINGS,
-                        onBackClick = {
-                            Log.d(TAG, "뒤로가기 클릭")
-                            navController.popBackStack()
-                        },
-                        onActionClick = {
-                            Log.d(TAG, "설정 클릭")
-                            // Navigate to TeamSettingScreen with teamId
-                            Log.d(TAG, "팀 설정 화면으로 이동 - teamId: $teamId")
-
-                            // 중첩된 NavHost에 맞는 경로 사용
-                            val settingsRoute = "team/settings/$teamId"
-                            Log.d(TAG, "팀 설정 화면으로 이동: $settingsRoute")
-                            navController.navigate(settingsRoute)
-                        }
-                    )
-
-                    TabMenu(
-                        leftTabText = "팀 정보",
-                        rightTabText = "매치",
-                        selectedTab = selectedTab,
-                        onTabSelected = {
-                            Log.d(TAG, "탭 선택: $it")
-                            selectedTab = it
-                        }
-                    )
-
-                    when (selectedTab) {
-                        0 -> {
-                            Log.d(TAG, "팀 정보 탭 표시")
-                            TeamInfoTab(
-                                teamDetail = detail,
-                                selectedPlayer = selectedPlayer,
-                                onDismiss = { selectedPlayer = null },
-                                onPlayerSelected = { selectedPlayer = it }
-                            )
-                        }
-                        1 -> {
-                            Log.d(TAG, "매치 탭 표시")
-                            TeamMatchTab(navController = navController, teamId = teamId)
-                        }
+                TopNavItem(
+                    title = teamDetail!!.name,
+                    type = TopNavType.DETAIL_WITH_BACK_SETTINGS,
+                    onBackClick = { navController.popBackStack() },
+                    onActionClick = {
+                        navController.navigate("team/settings/$teamId")
                     }
+                )
+
+                TabMenu(
+                    leftTabText = "팀 정보",
+                    rightTabText = "매치",
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
+
+                // 명시적 여백 처리
+                Spacer(modifier = Modifier.height(16.dp))
+
+                when (selectedTab) {
+                    0 -> TeamInfoTab(
+                        teamDetail = teamDetail!!,
+                        selectedPlayer = selectedPlayer,
+                        onDismiss = { selectedPlayer = null },
+                        onPlayerSelected = { selectedPlayer = it }
+                    )
+
+                    1 -> TeamMatchTab(navController = navController, teamId = teamId)
                 }
             }
+
             else -> {
-                Log.d(TAG, "데이터 없음 UI 표시")
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -168,27 +136,19 @@ fun TeamDetailScreen(
         }
     }
 
-    selectedPlayer?.let { p ->
+    selectedPlayer?.let { player ->
         PlayerCardDialog(
-            name = p.nickname,
-            imageUrl = p.cardImageUrl,
+            name = player.nickname,
+            imageUrl = player.cardImageUrl,
             stats = listOf(
-                "Speed" to p.stats.speed.toString(),
-                "Stamina" to p.stats.stamina.toString(),
-                "Attack" to p.stats.attack.toString(),
-                "Defense" to p.stats.defense.toString(),
-                "Recovery" to p.stats.recovery.toString()
+                "Speed" to player.stats.speed.toString(),
+                "Stamina" to player.stats.stamina.toString(),
+                "Attack" to player.stats.attack.toString(),
+                "Defense" to player.stats.defense.toString(),
+                "Recovery" to player.stats.recovery.toString()
             ),
             onDismiss = { selectedPlayer = null }
         )
-    }
-
-    // 화면이 종료될 때 실행되는 DisposableEffect
-    DisposableEffect(Unit) {
-        Log.d(TAG, "TeamDetailScreen 진입")
-        onDispose {
-            Log.d(TAG, "TeamDetailScreen 종료")
-        }
     }
 }
 
@@ -199,10 +159,7 @@ private fun TeamInfoTab(
     onDismiss: () -> Unit,
     onPlayerSelected: (Player) -> Unit
 ) {
-    Log.d(TAG, "TeamInfoTab 시작")
-    // 유효하지 않은 팀 데이터 확인
     if (teamDetail.name.isEmpty() && teamDetail.players.isEmpty()) {
-        Log.e(TAG, "유효하지 않은 팀 데이터")
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -219,95 +176,76 @@ private fun TeamInfoTab(
         return
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 24.dp)
-        ) {
-            item {
-                Log.d(TAG, "TeamInfoCard 표시")
-                val stats = teamDetail.stats
-                Log.d(TAG, "팀 스탯 처리: attack=${stats.attack}, defense=${stats.defense}, speed=${stats.speed}")
+        item {
+            TeamInfoCard(
+                stats = TeamStats(
+                    attack = teamDetail.stats.attack,
+                    defence = teamDetail.stats.defense,
+                    speed = teamDetail.stats.speed,
+                    recovery = teamDetail.stats.recovery,
+                    stamina = teamDetail.stats.stamina
+                )
+            )
+        }
 
-                TeamInfoCard(
-                    stats = TeamStats(
-                        attack = stats.attack,
-                        defence = stats.defense,
-                        speed = stats.speed,
-                        recovery = stats.recovery,
-                        stamina = stats.stamina
-                    )
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_profile),
+                    contentDescription = "멤버 수",
+                    tint = Gray.Gray800,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = teamDetail.players.size.toString(),
+                    fontSize = 12.sp,
+                    fontFamily = pretendard,
+                    fontWeight = FontWeight.Normal,
+                    color = Gray.Gray800
                 )
             }
+        }
 
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            item {
-                Log.d(TAG, "멤버 수 아이콘 표시")
-                Row(
+        if (teamDetail.players.isNotEmpty()) {
+            items(teamDetail.players) { player ->
+                TeamPlayerCard(
+                    name = player.nickname,
+                    isManager = player.role == "MANAGER",
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_profile),
-                        contentDescription = "멤버 수",
-                        tint = Gray.Gray800,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = teamDetail.players.size.toString(),
-                        fontSize = 12.sp,
-                        fontFamily = pretendard,
-                        fontWeight = FontWeight.Normal,
-                        color = Gray.Gray800
-                    )
-                }
+                    onCardClick = { onPlayerSelected(player) }
+                )
             }
-
+        } else {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            if (teamDetail.players.isNotEmpty()) {
-                Log.d(TAG, "플레이어 목록 표시: ${teamDetail.players.size}명")
-                items(teamDetail.players) { player ->
-                    Log.d(TAG, "플레이어 카드 표시: ${player.nickname}")
-                    TeamPlayerCard(
-                        name = player.nickname,
-                        isManager = player.role == "MANAGER",
-                        modifier = Modifier.fillMaxWidth(),
-                        onCardClick = {
-                            Log.d("PlayerCard", "🔥 카드 클릭됨: ${player.nickname}")
-                            onPlayerSelected(player)
-                        }
-                    )
-                }
-            } else {
-                Log.d(TAG, "플레이어 없음 표시")
-                item {
-                    Text(
-                        text = "팀원이 없습니다",
-                        fontSize = 14.sp,
-                        fontFamily = pretendard,
-                        fontWeight = FontWeight.Medium,
-                        color = Gray.Gray500,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
-                }
+                Text(
+                    text = "팀원이 없습니다",
+                    fontSize = 14.sp,
+                    fontFamily = pretendard,
+                    fontWeight = FontWeight.Medium,
+                    color = Gray.Gray500,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
             }
         }
     }
 }
+
 

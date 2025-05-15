@@ -100,12 +100,21 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (filteredMatches.isEmpty()) {
-                        Text(
-                            text = "경기 일정이 없습니다",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = pretendard
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "경기 일정이 없습니다",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = pretendard,
+                                color = Gray.Gray500, // 색상 옅게
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     } else {
                         filteredMatches.forEach { match ->
                             MatchCard(

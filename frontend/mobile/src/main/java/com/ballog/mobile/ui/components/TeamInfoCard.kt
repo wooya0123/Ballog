@@ -45,206 +45,221 @@ fun TeamInfoCard(
     stats: TeamStats,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Box(
         modifier = modifier
-            .size(312.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFF1B1B1D)
+            .fillMaxWidth()
+            .background(Gray.Gray700, RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = modifier
+                .size(312.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF1B1B1D)
         ) {
-            // Background circles
-            Canvas(
-                modifier = Modifier
-                    .size(214.dp)
-                    .align(Alignment.Center)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                val center = Offset(size.width / 2, size.height / 2)
-                val maxRadius = size.width / 2
-                
-                // Draw filled background circles
-                val circles = listOf(
-                    Color(0xFF2B2B2B),
-                    Color(0xFF3A3C3E),
-                    Color(0xFF505458),
-                    Color(0xFF575B5F),
-                    Color(0xFF676A6E)
-                )
-                
-                circles.forEachIndexed { index, color ->
-                    val radius = maxRadius * (1 - index * 0.2f)
-                    drawCircle(
-                        color = color,
-                        radius = radius,
-                        center = center
-                    )
-                }
+                // Background circles
+                Canvas(
+                    modifier = Modifier
+                        .size(214.dp)
+                        .align(Alignment.Center)
+                ) {
+                    val center = Offset(size.width / 2, size.height / 2)
+                    val maxRadius = size.width / 2
 
-                // Calculate stat points with adjusted angles
-                val statPoints = listOf(
-                    Triple(stats.attackRatio, -PI / 2, "ATTACK"),       // Top (270 degrees)
-                    Triple(stats.defenceRatio, 0.0, "DEFENCE"),         // Right (0 degrees)
-                    Triple(stats.recoveryRatio, PI / 3, "RECOVERY"),    // Bottom Right (60 degrees)
-                    Triple(stats.staminaRatio, 2 * PI / 3, "STAMINA"), // Bottom Left (120 degrees)
-                    Triple(stats.speedRatio, PI, "SPEED")              // Left (180 degrees)
-                )
-                
-                // Create path for the stat polygon
-                val path = Path()
-                statPoints.forEachIndexed { index, (value, angle, _) ->
-                    val radius = maxRadius * value
-                    val x = center.x + radius * cos(angle).toFloat()
-                    val y = center.y + radius * sin(angle).toFloat()
-                    
-                    if (index == 0) {
-                        path.moveTo(x, y)
-                    } else {
-                        path.lineTo(x, y)
+                    // Draw filled background circles
+                    val circles = listOf(
+                        Color(0xFF2B2B2B),
+                        Color(0xFF3A3C3E),
+                        Color(0xFF505458),
+                        Color(0xFF575B5F),
+                        Color(0xFF676A6E)
+                    )
+
+                    circles.forEachIndexed { index, color ->
+                        val radius = maxRadius * (1 - index * 0.2f)
+                        drawCircle(
+                            color = color,
+                            radius = radius,
+                            center = center
+                        )
+                    }
+
+                    // Calculate stat points with adjusted angles
+                    val statPoints = listOf(
+                        Triple(stats.attackRatio, -PI / 2, "ATTACK"),       // Top (270 degrees)
+                        Triple(stats.defenceRatio, 0.0, "DEFENCE"),         // Right (0 degrees)
+                        Triple(
+                            stats.recoveryRatio,
+                            PI / 3,
+                            "RECOVERY"
+                        ),    // Bottom Right (60 degrees)
+                        Triple(
+                            stats.staminaRatio,
+                            2 * PI / 3,
+                            "STAMINA"
+                        ), // Bottom Left (120 degrees)
+                        Triple(stats.speedRatio, PI, "SPEED")              // Left (180 degrees)
+                    )
+
+                    // Create path for the stat polygon
+                    val path = Path()
+                    statPoints.forEachIndexed { index, (value, angle, _) ->
+                        val radius = maxRadius * value
+                        val x = center.x + radius * cos(angle).toFloat()
+                        val y = center.y + radius * sin(angle).toFloat()
+
+                        if (index == 0) {
+                            path.moveTo(x, y)
+                        } else {
+                            path.lineTo(x, y)
+                        }
+                    }
+                    path.close()
+
+                    // Draw the polygon with gradient
+                    // First draw the glow effect
+                    val mintColor = Color(0xFF9BE8E8)  // Much lighter mint color
+                    val pastelMint = Color(
+                        red = mintColor.red * 0.95f + 0.05f,
+                        green = mintColor.green * 0.95f + 0.05f,
+                        blue = mintColor.blue * 0.95f + 0.05f,
+                        alpha = 1f
+                    )
+
+                    for (i in 5 downTo 1) {
+                        drawPath(
+                            path = path,
+                            color = pastelMint.copy(alpha = 0.15f / i),
+                            style = Stroke(
+                                width = (i * 8).toFloat(),
+                                cap = StrokeCap.Round,
+                                join = StrokeJoin.Round,
+                                pathEffect = PathEffect.cornerPathEffect(8f)
+                            )
+                        )
+                    }
+
+                    // Then draw the filled polygon with radial gradient
+                    drawPath(
+                        path = path,
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                pastelMint.copy(alpha = 0.7f),
+                                pastelMint.copy(alpha = 0.8f)
+                            ),
+                            center = Offset(size.width / 2, size.height / 2),
+                            radius = size.width / 2f * 0.8f
+                        )
+                    )
+
+                    // Draw the main polygon border
+                    drawPath(
+                        path = path,
+                        color = pastelMint.copy(alpha = 0.7f),
+                        style = Stroke(
+                            width = 2.5f,
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round
+                        )
+                    )
+
+                    // Draw dotted lines from circle edge to polygon points
+                    statPoints.forEach { (value, angle, _) ->
+                        val startRadius = maxRadius
+                        val endRadius = maxRadius * value
+
+                        val startX = center.x + startRadius * cos(angle).toFloat()
+                        val startY = center.y + startRadius * sin(angle).toFloat()
+                        val endX = center.x + endRadius * cos(angle).toFloat()
+                        val endY = center.y + endRadius * sin(angle).toFloat()
+
+                        val path = Path()
+                        path.moveTo(startX, startY)
+                        path.lineTo(endX, endY)
+
+                        drawPath(
+                            path = path,
+                            color = Gray.Gray500,
+                            style = Stroke(
+                                width = 1.5f,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f), 0f)
+                            )
+                        )
+                    }
+
+                    // Draw dots at stat points
+                    statPoints.forEach { (value, angle, _) ->
+                        val radius = maxRadius * value
+                        val x = center.x + radius * cos(angle).toFloat()
+                        val y = center.y + radius * sin(angle).toFloat()
+
+                        drawCircle(
+                            color = Primary,
+                            radius = 3f,
+                            center = Offset(x, y)
+                        )
                     }
                 }
-                path.close()
-                
-                // Draw the polygon with gradient
-                // First draw the glow effect
-                val mintColor = Color(0xFF9BE8E8)  // Much lighter mint color
-                val pastelMint = Color(
-                    red = mintColor.red * 0.95f + 0.05f,
-                    green = mintColor.green * 0.95f + 0.05f,
-                    blue = mintColor.blue * 0.95f + 0.05f,
-                    alpha = 1f
-                )
 
-                for (i in 5 downTo 1) {
-                    drawPath(
-                        path = path,
-                        color = pastelMint.copy(alpha = 0.15f / i),
-                        style = Stroke(
-                            width = (i * 8).toFloat(),
-                            cap = StrokeCap.Round,
-                            join = StrokeJoin.Round,
-                            pathEffect = PathEffect.cornerPathEffect(8f)
-                        )
+                // Stat labels
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Text(
+                        text = "ATTACK",
+                        color = Gray.Gray300,
+                        fontSize = 8.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 28.dp)
+                    )
+                    Text(
+                        text = "DEFENCE",
+                        color = Gray.Gray300,
+                        fontSize = 8.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 10.dp)
+                    )
+                    Text(
+                        text = "SPEED",
+                        color = Gray.Gray300,
+                        fontSize = 8.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 22.dp)
+                    )
+                    Text(
+                        text = "RECOVERY",
+                        color = Gray.Gray300,
+                        fontSize = 8.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 53.dp, bottom = 45.dp)
+                    )
+                    Text(
+                        text = "STAMINA",
+                        color = Gray.Gray300,
+                        fontSize = 8.sp,
+                        fontFamily = pretendard,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 49.dp, bottom = 45.dp)
                     )
                 }
-
-                // Then draw the filled polygon with radial gradient
-                drawPath(
-                    path = path,
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            pastelMint.copy(alpha = 0.7f),
-                            pastelMint.copy(alpha = 0.8f)
-                        ),
-                        center = Offset(size.width / 2, size.height / 2),
-                        radius = size.width / 2f * 0.8f
-                    )
-                )
-                
-                // Draw the main polygon border
-                drawPath(
-                    path = path,
-                    color = pastelMint.copy(alpha = 0.7f),
-                    style = Stroke(
-                        width = 2.5f,
-                        cap = StrokeCap.Round,
-                        join = StrokeJoin.Round
-                    )
-                )
-
-                // Draw dotted lines from circle edge to polygon points
-                statPoints.forEach { (value, angle, _) ->
-                    val startRadius = maxRadius
-                    val endRadius = maxRadius * value
-                    
-                    val startX = center.x + startRadius * cos(angle).toFloat()
-                    val startY = center.y + startRadius * sin(angle).toFloat()
-                    val endX = center.x + endRadius * cos(angle).toFloat()
-                    val endY = center.y + endRadius * sin(angle).toFloat()
-                    
-                    val path = Path()
-                    path.moveTo(startX, startY)
-                    path.lineTo(endX, endY)
-                    
-                    drawPath(
-                        path = path,
-                        color = Gray.Gray500,
-                        style = Stroke(
-                            width = 1.5f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f), 0f)
-                        )
-                    )
-                }
-
-                // Draw dots at stat points
-                statPoints.forEach { (value, angle, _) ->
-                    val radius = maxRadius * value
-                    val x = center.x + radius * cos(angle).toFloat()
-                    val y = center.y + radius * sin(angle).toFloat()
-                    
-                    drawCircle(
-                        color = Primary,
-                        radius = 3f,
-                        center = Offset(x, y)
-                    )
-                }
-            }
-            
-            // Stat labels
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text(
-                    text = "ATTACK",
-                    color = Gray.Gray300,
-                    fontSize = 8.sp,
-                    fontFamily = pretendard,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 28.dp)
-                )
-                Text(
-                    text = "DEFENCE",
-                    color = Gray.Gray300,
-                    fontSize = 8.sp,
-                    fontFamily = pretendard,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 10.dp)
-                )
-                Text(
-                    text = "SPEED",
-                    color = Gray.Gray300,
-                    fontSize = 8.sp,
-                    fontFamily = pretendard,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 22.dp)
-                )
-                Text(
-                    text = "RECOVERY",
-                    color = Gray.Gray300,
-                    fontSize = 8.sp,
-                    fontFamily = pretendard,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 53.dp, bottom = 45.dp)
-                )
-                Text(
-                    text = "STAMINA",
-                    color = Gray.Gray300,
-                    fontSize = 8.sp,
-                    fontFamily = pretendard,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 49.dp, bottom = 45.dp)
-                )
             }
         }
     }
@@ -253,20 +268,13 @@ fun TeamInfoCard(
 @Preview(showBackground = true)
 @Composable
 fun TeamInfoCardPreview() {
-    Box(
-        modifier = Modifier
-            .size(344.dp)
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        TeamInfoCard(
-            stats = TeamStats(
-                attack = 65,
-                defence = 60,
-                speed = 45,
-                recovery = 60,
-                stamina = 70
-            )
+    TeamInfoCard(
+        stats = TeamStats(
+            attack = 65,
+            defence = 60,
+            speed = 45,
+            recovery = 60,
+            stamina = 70
         )
-    }
+    )
 } 
