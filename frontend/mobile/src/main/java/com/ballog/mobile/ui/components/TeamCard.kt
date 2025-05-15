@@ -47,7 +47,7 @@ fun TeamCard(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (team.logoImageUrl.isNullOrBlank()) {
+            if (team.logoImageUrl.isNullOrBlank() || team.logoImageUrl == "null") {
                 Box(
                     modifier = Modifier
                         .size(52.dp)

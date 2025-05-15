@@ -89,6 +89,8 @@ fun PermissionRequestScreen(
                 )
 
                 if (grantedPermissions?.containsAll(permissions) == true) {
+                    // 권한 요청 성공 시 자동 저장
+                    OnboardingPrefs.setPermissionCompleted(context, true)
                     // TODO: 권한 요청 부분 끝
                     val exerciseData = samsungHealthDataService?.getExercise()
                     Log.d(TAG, "운동 데이터 로딩 완료: ${exerciseData?.size ?: 0}개")
@@ -204,14 +206,14 @@ fun PermissionRequestScreen(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF7EE4EA))
+                        .background(Primary)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFD4D9DE))
+                        .background(Gray.Gray300)
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))

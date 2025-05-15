@@ -128,11 +128,18 @@ fun TeamListScreen(
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(teams) { team ->
+                        val safeLogoUrl = team.logoImageUrl?.takeIf {
+                            !it.isNullOrBlank() &&
+                            it != "null" &&
+                            it != "about:blank" &&
+                            it != "http://" &&
+                            it.trim().isNotEmpty()
+                        }
                         TeamCard(
                             team = TeamInfo(
                                 name = team.name.orEmpty(),
                                 foundingDate = team.foundationDate.orEmpty(),
-                                logoImageUrl = team.logoImageUrl.orEmpty()
+                                logoImageUrl = safeLogoUrl
                             ),
                             onClick = {
                                 Log.d(TAG, "팀 카드 클릭: teamId=${team.teamId}, 이름=${team.name}")

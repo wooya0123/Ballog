@@ -27,7 +27,9 @@ import com.ballog.mobile.data.model.AuthResult
 import com.ballog.mobile.navigation.Routes
 import kotlinx.coroutines.launch
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 import com.ballog.mobile.MainActivity
 
 private fun isValidEmail(email: String): Boolean {
@@ -51,6 +53,7 @@ fun LoginScreen(
             popUpTo(Routes.LOGIN) { inclusive = true }
         }
     }
+    var context = LocalContext.current
 
     val lastCredentials by viewModel.lastSignUpCredentials.collectAsState()
     var email by remember { mutableStateOf("") }
@@ -201,7 +204,7 @@ fun LoginScreen(
                             keyboardController?.hide()
                             coroutineScope.launch {
                                 isLoading = true
-                                viewModel.login(email, password)
+                                viewModel.login(context, email, password)
                                 isLoading = false
                             }
                         }
