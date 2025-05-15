@@ -169,7 +169,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                         Log.d("VideoViewModel", "📁 원본 비디오 파일: ${file.absolutePath}")
                                         Log.d("VideoViewModel", "📊 비디오 파일 크기: ${file.length() / 1024}KB")
                                         
-                                        val audioFile = AudioUtils.extractAudioFromVideo(context, file)
+                                        val audioFile = AudioUtils.extractAudioToM4a(context, file)
                                         if (audioFile != null) {
                                             Log.d("VideoViewModel", "✅ 오디오 파일 추출 성공")
                                             Log.d("VideoViewModel", "📁 추출된 오디오 파일: ${audioFile.absolutePath}")
@@ -181,7 +181,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                                 Log.d("VideoViewModel", "📤 하이라이트 추출 요청: videoId=$videoId")
                                                 
                                                 // 파일 파트
-                                                val audioRequestBody = audioFile.asRequestBody("audio/wav".toMediaType())
+                                                val audioRequestBody = audioFile.asRequestBody("audio/m4a".toMediaType())
                                                 val filePart = MultipartBody.Part.createFormData("file", audioFile.name, audioRequestBody)
                                                 
                                                 // videoId 파트 (JSON 형식이 아닌 일반 문자열로 전송)
@@ -208,11 +208,13 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                                     Log.e("VideoViewModel", "⚠️ 응답 코드: ${extractionResponse.code()}")
                                                     Log.e("VideoViewModel", "⚠️ 에러 메시지: ${extractionResponse.body()?.message}")
                                                     Log.e("VideoViewModel", "⚠️ 에러 바디: ${extractionResponse.errorBody()?.string()}")
+                                                    _error.value = extractionResponse.body()?.message ?: "하이라이트 추출에 실패했습니다."
                                                 }
                                             } catch (e: Exception) {
                                                 Log.e("VideoViewModel", "🔥 하이라이트 추출 중 예외 발생", e)
                                                 Log.e("VideoViewModel", "⚠️ 예외 종류: ${e.javaClass.simpleName}")
                                                 Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
+                                                _error.value = "하이라이트 추출 중 오류가 발생했습니다: ${e.message}"
                                             } finally {
                                                 // 오디오 파일 삭제
                                                 Log.d("VideoViewModel", "🗑️ 임시 오디오 파일 삭제 시작")
@@ -400,7 +402,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("VideoViewModel", "📊 비디오 파일 크기: ${videoFile.length() / 1024}KB")
                 
                 // 1. 오디오 파일 추출
-                val audioFile = AudioUtils.extractAudioFromVideo(context, videoFile)
+                val audioFile = AudioUtils.extractAudioToM4a(context, videoFile)
                 if (audioFile != null) {
                     Log.d("VideoViewModel", "✅ 오디오 파일 추출 성공")
                     Log.d("VideoViewModel", "📁 추출된 오디오 파일: ${audioFile.absolutePath}")
@@ -412,7 +414,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                         Log.d("VideoViewModel", "📤 하이라이트 추출 요청: videoId=$videoId")
                         
                         // 파일 파트
-                        val audioRequestBody = audioFile.asRequestBody("audio/wav".toMediaType())
+                        val audioRequestBody = audioFile.asRequestBody("audio/m4a".toMediaType())
                         val filePart = MultipartBody.Part.createFormData("file", audioFile.name, audioRequestBody)
                         
                         // videoId 파트 (JSON 형식이 아닌 일반 문자열로 전송)
