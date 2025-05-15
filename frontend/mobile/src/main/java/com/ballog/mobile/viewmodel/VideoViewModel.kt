@@ -22,6 +22,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import androidx.media3.exoplayer.ExoPlayer
 
 class VideoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -39,6 +40,9 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     // ExoPlayer 상태를 관리하기 위한 상태 추가
     private val _shouldReleasePlayer = MutableStateFlow(false)
     val shouldReleasePlayer: StateFlow<Boolean> = _shouldReleasePlayer.asStateFlow()
+
+    private var _currentExoPlayer = MutableStateFlow<ExoPlayer?>(null)
+    private val currentExoPlayer: StateFlow<ExoPlayer?> = _currentExoPlayer.asStateFlow()
 
     fun setError(message: String?) {
         _error.value = message
@@ -523,5 +527,41 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
             )),
             showPlayer = false
         )
+    }
+
+    // ExoPlayer 인스턴스를 저장하는 메서드
+    fun setCurrentExoPlayer(player: ExoPlayer) {
+        _currentExoPlayer.value = player
+    }
+
+    // "mm:ss" 형식의 특정 타임스탬프로 이동하는 메서드
+    fun seekToTimestamp(timestamp: String) {
+        val currentPlayer = _currentExoPlayer.value ?: return
+        
+        try {
+            // 타임스탬프 파싱
+            val parts = timestamp.split(":")
+            if (parts.size != 2) {
+                Log.e("VideoViewModel", "❌ 타임스탬프 형식이 잘못되었습니다: $timestamp")
+                return
+            }
+            
+            val minutes = parts[0].trim().toIntOrNull() ?: 0
+            val seconds = parts[1].trim().toIntOrNull() ?: 0
+            
+            // 밀리초로 변환
+            val positionMs = (minutes * 60 + seconds) * 1000L
+            
+            // 해당 위치로 이동
+            Log.d("VideoViewModel", "🎯 타임스탬프로 이동: $timestamp (${positionMs}ms)")
+            currentPlayer.seekTo(positionMs)
+            
+            // 플레이어가 보이고 재생 중인지 확인
+            if (!currentPlayer.isPlaying) {
+                currentPlayer.play()
+            }
+        } catch (e: Exception) {
+            Log.e("VideoViewModel", "❌ 타임스탬프 이동 실패", e)
+        }
     }
 }

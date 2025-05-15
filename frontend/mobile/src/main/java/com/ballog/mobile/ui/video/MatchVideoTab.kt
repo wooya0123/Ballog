@@ -168,6 +168,16 @@ fun MatchVideoTab(matchId: Int) {
             },
             onUploadClick = {
                 launcher.launch("video/*")
+            },
+            onHighlightClick = { timestamp ->
+                // 비디오가 보이지 않는 경우 보이게 변경
+                if (!current.showPlayer) {
+                    quarterData[selectedQuarter] = current.copy(showPlayer = true)
+                }
+                
+                // 타임스탬프로 이동
+                Log.d("MatchVideoTab", "🔍 하이라이트 클릭: $timestamp 지점으로 이동")
+                videoViewModel.seekToTimestamp(timestamp)
             }
         )
     }

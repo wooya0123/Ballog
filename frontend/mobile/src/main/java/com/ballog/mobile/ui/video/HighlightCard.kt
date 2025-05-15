@@ -27,7 +27,8 @@ fun HighlightCard(
     startTime: String,
     endTime: String,
     onEdit: () -> Unit,
-    onLike: () -> Unit
+    onLike: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     var isLiked by remember { mutableStateOf(false) }
 
@@ -35,6 +36,7 @@ fun HighlightCard(
         modifier = Modifier
             .fillMaxWidth()
             .background(color = Gray.Gray200, shape = RoundedCornerShape(8.dp))
+            .clickable { onClick() }
             .padding(16.dp)
     ) {
         Column {

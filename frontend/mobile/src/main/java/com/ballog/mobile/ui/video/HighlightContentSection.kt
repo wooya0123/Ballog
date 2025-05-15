@@ -42,6 +42,7 @@ fun HighlightContentSection(
     onUploadClick: () -> Unit,
     onTogglePlayer: () -> Unit,
     quarterOptions: List<String>,
+    onHighlightClick: (String) -> Unit = {},
     viewModel: VideoViewModel = viewModel()
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -89,7 +90,8 @@ fun HighlightContentSection(
                         startTime = "${highlight.startMin}:${highlight.startSec}",
                         endTime = "${highlight.endMin}:${highlight.endSec}",
                         onEdit = { onEditClick(highlight) },
-                        onLike = { /* TODO */ }
+                        onLike = { /* TODO */ },
+                        onClick = { onHighlightClick("${highlight.startMin}:${highlight.startSec}") }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -141,14 +143,17 @@ fun VideoPlaceholderBox(
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
     var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
-
-    val shouldReleasePlayer by viewModel.shouldReleasePlayer.collectAsState()
-
+    
     val exoPlayer = remember(selectedQuarter) {
         ExoPlayer.Builder(context).build().apply {
             playWhenReady = false
         }
     }
+    
+    // ExoPlayer 인스턴스를 공유 상태에 저장
+    viewModel.setCurrentExoPlayer(exoPlayer)
+
+    val shouldReleasePlayer by viewModel.shouldReleasePlayer.collectAsState()
 
     DisposableEffect(selectedQuarter) {
         onDispose {
@@ -204,7 +209,7 @@ fun VideoPlaceholderBox(
             } else {
                 AsyncImage(
                     model = thumbnailUri,
-                    contentDescription = "Video Thumbnail",
+                    contentDescription = "비디오 썸네일",
                     modifier = Modifier.fillMaxSize(),
                     onLoading = { isLoading = true },
                     onSuccess = { isLoading = false },
