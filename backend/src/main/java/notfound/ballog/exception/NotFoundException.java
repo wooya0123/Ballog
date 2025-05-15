@@ -5,7 +5,7 @@ import notfound.ballog.common.response.BaseResponseStatus;
 
 @Getter
 public class NotFoundException extends RuntimeException {
-    private BaseResponseStatus status;
+    private final BaseResponseStatus status;
 
     public NotFoundException(BaseResponseStatus status) {
         super(status.getMessage());

@@ -31,13 +31,18 @@ import java.util.Optional;
 public class VideoService {
 
     private final VideoRepository videoRepository;
+
     private final HighlightRepository highlightRepository;
+
     private final MatchRepository matchRepository;
+
     private final QuarterRepository quarterRepository;
+
     private final S3Util s3Util;
 
     public AddS3UrlResponse addS3Url(AddS3UrlRequest request) {
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
+
         String presignedUrl = s3Util.generatePresignedUrl(objectKey);
 
         return AddS3UrlResponse.of(presignedUrl);
@@ -69,6 +74,7 @@ public class VideoService {
                 .plusSeconds(seconds);
 
         Video video = Video.of(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
+
         videoRepository.save(video);
     }
 
@@ -92,13 +98,16 @@ public class VideoService {
 
             // 3. 하이라이트 조회
             List<Highlight> highlightList = highlightRepository.findAllByVideo_VideoIdAndDeletedFalse(videoId);
+
             // 하이라이트가 있으면 리스트에 추가
             for (Highlight highlight : highlightList) {
                 HighlightDto highlightDto = HighlightDto.of(highlight);
                 highlightDtoList.add(highlightDto);
             }
+
             // 4. 쿼터 dto 생성
             VideoDto videoDto = VideoDto.of(video, highlightDtoList);
+
             videoDtoList.add(videoDto);
         }
 
@@ -109,7 +118,9 @@ public class VideoService {
     public void deleteVideo(Integer videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
+
         video.delete();
+
         videoRepository.save(video);
     }
 }

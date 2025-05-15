@@ -31,12 +31,14 @@ import java.io.IOException;
 public class VideoController {
 
     private final VideoService videoService;
+
     private final HighlightService highlightService;
 
     @Operation(summary = "s3 presigned url 발급")
     @PostMapping("/url")
     public BaseResponse<AddS3UrlResponse> addS3Url(@RequestBody AddS3UrlRequest request) {
         AddS3UrlResponse response = videoService.addS3Url(request);
+
         return BaseResponse.ok(response);
     }
 
@@ -45,6 +47,7 @@ public class VideoController {
     @PostMapping()
     public BaseResponse<Void> uploadVideo(@Valid @RequestBody AddVideoRequest request) {
         videoService.uploadVideo(request);
+
         return BaseResponse.ok();
     }
 
@@ -57,6 +60,7 @@ public class VideoController {
             Integer matchId
     ) {
         GetVideoListResponse response = videoService.getVideo(matchId);
+
         return BaseResponse.ok(response);
     }
 
@@ -69,6 +73,7 @@ public class VideoController {
             Integer videoId
     ) {
         videoService.deleteVideo(videoId);
+
         return BaseResponse.ok();
     }
 
@@ -84,6 +89,7 @@ public class VideoController {
         log.info("영상 아이디 ------------ {}", videoId);
 
         highlightService.extractHighlight(videoId, file);
+
         return BaseResponse.ok();
     }
 
@@ -92,6 +98,7 @@ public class VideoController {
     @PatchMapping("/highlight")
     public BaseResponse<Void> updateHighlight(@Valid @RequestBody UpdateHighlightRequest request) {
         highlightService.updateHighlight(request);
+
         return BaseResponse.ok();
     }
 
@@ -103,6 +110,7 @@ public class VideoController {
             @PathVariable Integer highlightId
     ){
         highlightService.deleteHighlight(highlightId);
+
         return BaseResponse.ok();
     }
 
@@ -111,6 +119,7 @@ public class VideoController {
     @PostMapping("/highlight")
     public BaseResponse<AddHighlightResponse> addHighlight(@Valid @RequestBody AddHighlightRequest request) {
         AddHighlightResponse response = highlightService.addHighlight(request);
+
         return BaseResponse.ok(response);
     }
 

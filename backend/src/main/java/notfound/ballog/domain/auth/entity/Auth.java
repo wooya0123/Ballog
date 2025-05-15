@@ -34,7 +34,6 @@ public class Auth {
     @Column(nullable = false)
     private String password;
 
-    @Column
     private String refreshToken;
 
     @Column(nullable = false)

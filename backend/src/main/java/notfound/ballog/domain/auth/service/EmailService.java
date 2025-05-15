@@ -34,18 +34,23 @@ public class EmailService {
     @Transactional
     public void sendEmailCode(SendEmailRequest request) {
         String email = request.getEmail();
+
         // 1. 랜덤 6자리 숫자 코드 생성
         String authCode = String.valueOf(ThreadLocalRandom.current().nextInt(100_000, 1_000_000));
 
         // 2. Redis에 저장 (키: verify:email:{email}, 값: code, TTL)
         String key = "verify:email:" + email;
+
         redisTemplate.opsForValue().set(key, authCode, Duration.ofMillis(timeOutMs));
 
         // 3) HTML 메일 전송을 위해 MimeMessage 사용
         try {
             MimeMessage mime = javaMailSender.createMimeMessage();
+
             MimeMessageHelper helper = new MimeMessageHelper(mime, "UTF-8");
+
             helper.setTo(email);
+
             helper.setSubject("[Ballog] 이메일 인증 코드");
 
             // HTML 본문
@@ -57,15 +62,18 @@ public class EmailService {
                     .append("</div>")
                     .append("<p>5분 이내에 입력해주세요.</p>")
                     .append("</body></html>");
+
             helper.setText(html.toString(), true);
 
             javaMailSender.send(mime);
 
         } catch (MessagingException | MailException e) {
             log.error("메일 전송/생성 실패", e);
+
             throw new ValidationException(BaseResponseStatus.EMAIL_AUTH_CODE_SEND_FAIL);
         } catch (Exception e) {
             log.error("sendEmailCode 실패, key={}, timeoutMs={}", key, timeOutMs, e);
+
             throw new InternalServerException(BaseResponseStatus.EMAIL_AUTH_CODE_SEND_FAIL);
         }
     }
@@ -73,7 +81,9 @@ public class EmailService {
     @Transactional
     public void verifyEmailCode(VerifyEmailRequest request) {
         String email = request.getEmail();
+
         String authCode = request.getAuthCode();
+
         String key = "verify:email:" + email;
 
         // 1. Redis에서 코드 조회

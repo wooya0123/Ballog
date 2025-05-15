@@ -12,6 +12,7 @@ import java.util.List;
 @Builder
 public class GetVideoListResponse {
     private Integer totalQuarters;
+
     private List<VideoDto> quarterList;
 
     public static GetVideoListResponse of(Integer totalQuarters, List<VideoDto> quarterList) {

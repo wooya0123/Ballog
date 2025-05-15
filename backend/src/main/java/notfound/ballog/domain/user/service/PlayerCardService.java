@@ -19,11 +19,13 @@ import java.util.UUID;
 public class PlayerCardService {
 
     private final PlayerCardRepository playerCardRepository;
+
     private final UserRepository userRepository;
 
     @Transactional
     public void addPlayerCard(User savedUser) {
         PlayerCard newPlayerCard = PlayerCard.addBaseCard(savedUser);
+
         playerCardRepository.save(newPlayerCard);
     }
 

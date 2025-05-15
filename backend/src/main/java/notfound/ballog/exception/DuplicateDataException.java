@@ -5,7 +5,7 @@ import notfound.ballog.common.response.BaseResponseStatus;
 
 @Getter
 public class DuplicateDataException extends RuntimeException {
-    private BaseResponseStatus status;
+    private final BaseResponseStatus status;
 
     public DuplicateDataException(BaseResponseStatus status) {
         super(status.getMessage());

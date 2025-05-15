@@ -5,10 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.auth.dto.JwtTokenDto;
-import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.user.dto.UserIdDto;
-
-import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
