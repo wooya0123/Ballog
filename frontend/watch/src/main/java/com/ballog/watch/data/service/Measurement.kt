@@ -29,6 +29,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import com.ballog.watch.data.util.VibrationUtil
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.Priority
 import com.google.android.gms.wearable.DataClient
@@ -116,6 +117,9 @@ fun MeasurementScreen(onComplete: () -> Unit) {
         measurementCount++
         errorMessage = null
 
+        // 진동 피드백 추가
+        VibrationUtil.vibrate(context)
+
         // 4개 모두 측정 완료시 완료 화면 표시 및 파일 저장
         if (measurementCount == 4) {
             showCompletionScreen = true
@@ -130,11 +134,10 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                 action = Intent.ACTION_MAIN
                 addCategory(Intent.CATEGORY_LAUNCHER)
                 setPackage("com.samsung.android.wear.shealth")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
             context.startActivity(intent)
-            Toast.makeText(context, "볼로그를 선택해주세요", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Ballog를 선택해주세요", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Log.e("SamsungHealth", "실행 실패: ${e.message}")
             Toast.makeText(context, "삼성 헬스를 실행할 수 없습니다", Toast.LENGTH_LONG).show()
@@ -284,7 +287,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                     color = BallogWhite,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 6.dp)
                 )
             }
 
@@ -305,7 +308,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "삼성 헬스에서 볼로그를\n선택해주세요",
+                            text = "삼성 헬스에서 Ballog를\n선택해주세요",
                             color = BallogCyan,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
@@ -316,9 +319,9 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                     }
                 } else {
                     Text(
-                        text = "신나게 뛰세요\n볼로그가 측정해드릴게요!",
+                        text = "경기장 데이터를 \n 모바일에 전송해주세요!",
                         color = BallogCyan,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
@@ -346,7 +349,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                         BallogButton(
                             text = "데이터 전송",
                             onClick = { sendDataToPhone() },
-                            modifier = Modifier.padding(top = 16.dp)
+                            modifier = Modifier.padding(top = 8.dp)
                         )
                     }
                 }
