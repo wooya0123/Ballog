@@ -1,6 +1,5 @@
 package com.ballog.mobile.ui.team
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,8 +30,6 @@ import com.ballog.mobile.ui.match.TeamMatchTab
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.TeamViewModel
-
-private const val TAG = "TeamDetailScreen"
 
 @Composable
 fun TeamDetailScreen(
