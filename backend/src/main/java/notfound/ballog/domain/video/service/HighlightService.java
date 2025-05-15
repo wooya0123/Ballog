@@ -91,6 +91,8 @@ public class HighlightService {
                 .bodyToMono(ExtractHighlightResponse.class)
                 .block();
 
+        System.out.println("highlightResponse: ----------------------" + highlightResponse);
+
         // DB에 하이라이트 저장
         List<HighlightDto> highlightList = highlightResponse.getHighlightList();
         for (HighlightDto highlightDto : highlightList) {
