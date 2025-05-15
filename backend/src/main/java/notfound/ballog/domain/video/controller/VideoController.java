@@ -77,9 +77,10 @@ public class VideoController {
     )
     public BaseResponse<Void> extractHighlight(
             @RequestPart("file") MultipartFile file,
-            @RequestPart("videoId") String videoIdStr
+            @RequestPart("videoId") Integer videoId
     ) throws IOException {
-        Integer videoId = Integer.parseInt(videoIdStr);
+        System.out.println("비디오 아이디 -------------------------------------" +videoId);
+
         highlightService.extractHighlight(videoId, file);
         return BaseResponse.ok();
     }
