@@ -17,6 +17,10 @@ import com.ballog.mobile.util.FileUtils
 import com.ballog.mobile.util.VideoUtils
 import com.ballog.mobile.viewmodel.VideoViewModel
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import com.ballog.mobile.data.dto.HighlightAddRequest
 import com.ballog.mobile.data.dto.HighlightUpdateRequest
 
@@ -32,15 +36,18 @@ fun MatchVideoTab(matchId: Int) {
     var expanded by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteVideoDialog by remember { mutableStateOf(false) }
     var editingHighlight by remember { mutableStateOf(HighlightUiState()) }
+    var deleteVideoId by remember { mutableStateOf(-1) }
+
     val videoViewModel: VideoViewModel = viewModel()
     val videoUiState by videoViewModel.videoUiState.collectAsState()
+    val context = LocalContext.current
     
     val quarterOptions = remember(videoUiState.totalQuarters) {
         (1..videoUiState.totalQuarters).map { "$it 쿼터" }
     }
-
-    val context = LocalContext.current
 
     val quarterData = remember(quarterOptions) {
         mutableStateMapOf<String, QuarterVideoData>().apply {
@@ -158,7 +165,9 @@ fun MatchVideoTab(matchId: Int) {
             onDeleteVideo = {
                 val videoId = current.videoId
                 if (videoId > 0) {
-                    videoViewModel.deleteVideo(videoId, matchId)
+                    // 삭제 확인 모달을 표시하기 위한 상태 업데이트
+                    deleteVideoId = videoId
+                    showDeleteVideoDialog = true
                 } else {
                     // 유효한 videoId가 없는 경우 로컬 상태만 초기화
                     quarterData[selectedQuarter] = QuarterVideoData(
@@ -168,6 +177,16 @@ fun MatchVideoTab(matchId: Int) {
             },
             onUploadClick = {
                 launcher.launch("video/*")
+            },
+            onHighlightClick = { timestamp ->
+                // 비디오가 보이지 않는 경우 보이게 변경
+                if (!current.showPlayer) {
+                    quarterData[selectedQuarter] = current.copy(showPlayer = true)
+                }
+                
+                // 타임스탬프로 이동
+                Log.d("MatchVideoTab", "🔍 하이라이트 클릭: $timestamp 지점으로 이동")
+                videoViewModel.seekToTimestamp(timestamp)
             }
         )
     }
@@ -217,8 +236,11 @@ fun MatchVideoTab(matchId: Int) {
                     sheetState.hide()
                     showAddSheet = false
                     Log.d("MatchVideoTab", "✅ 하이라이트 추가 요청 완료")
+                    // 토스트 메시지 표시
+                    Toast.makeText(context, "하이라이트가 추가되었습니다.", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Log.e("MatchVideoTab", "❌ 하이라이트 추가 실패", e)
+                    Toast.makeText(context, "하이라이트 추가에 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
             } else if (showEditSheet && updatedHighlight.id.isNotEmpty()) {
                 Log.d("MatchVideoTab", "✏️ 하이라이트 수정 시작")
@@ -241,8 +263,11 @@ fun MatchVideoTab(matchId: Int) {
                     sheetState.hide()
                     showEditSheet = false
                     Log.d("MatchVideoTab", "✅ 하이라이트 수정 요청 완료")
+                    // 토스트 메시지 표시
+                    Toast.makeText(context, "하이라이트가 수정되었습니다.", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Log.e("MatchVideoTab", "❌ 하이라이트 수정 실패", e)
+                    Toast.makeText(context, "하이라이트 수정에 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -273,17 +298,76 @@ fun MatchVideoTab(matchId: Int) {
             },
             onConfirm = confirmAction,
             onDelete = {
-                Log.d("MatchVideoTab", "🗑️ 하이라이트 삭제 시작")
-                Log.d("MatchVideoTab", "📋 하이라이트 ID: ${editingHighlight.id}")
-                
-                coroutineScope.launch {
-                    videoViewModel.deleteHighlight(editingHighlight.id.toInt(), matchId)
-                    sheetState.hide()
-                    showEditSheet = false
-                }
+                Log.d("MatchVideoTab", "🗑️ 하이라이트 삭제 다이얼로그 표시")
+                showDeleteDialog = true
             },
             videoUri = currentData().videoUrl.let(Uri::parse),
             confirmButtonText = "저장하기"
+        )
+    }
+    
+    // 하이라이트 삭제 확인 다이얼로그
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("하이라이트 삭제") },
+            text = { Text("정말로 삭제하시겠어요?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        Log.d("MatchVideoTab", "🗑️ 하이라이트 삭제 시작")
+                        Log.d("MatchVideoTab", "📋 하이라이트 ID: ${editingHighlight.id}")
+                        
+                        coroutineScope.launch {
+                            videoViewModel.deleteHighlight(editingHighlight.id.toInt(), matchId)
+                            sheetState.hide()
+                            showEditSheet = false
+                            showDeleteDialog = false
+                            Toast.makeText(context, "하이라이트가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
+    
+    // 영상 삭제 확인 다이얼로그
+    if (showDeleteVideoDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteVideoDialog = false },
+            title = { Text("영상 삭제") },
+            text = { Text("${selectedQuarter}의 영상을 정말로 삭제하시겠습니까? 되돌릴 수 없습니다.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        Log.d("MatchVideoTab", "🗑️ 쿼터 영상 삭제 시작")
+                        Log.d("MatchVideoTab", "📋 영상 ID: $deleteVideoId")
+                        
+                        // 실제 삭제 실행
+                        videoViewModel.deleteVideo(deleteVideoId, matchId)
+                        showDeleteVideoDialog = false
+                        Toast.makeText(context, "${selectedQuarter}의 영상이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                ) {
+                    Text("삭제")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteVideoDialog = false }
+                ) {
+                    Text("취소")
+                }
+            }
         )
     }
 }

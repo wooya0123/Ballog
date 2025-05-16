@@ -53,6 +53,18 @@ data class SaveVideoRequest(
     val videoUrl: String
 )
 
+data class SaveVideoResponse(
+    val isSuccess: Boolean,
+    val code: Int,
+    val message: String,
+    val result: Any? // Map이나 다른 형식으로도 올 수 있으므로 Any?로 변경
+)
+
+// 서버 응답의 result가 이 형식이 아닐 수 있음
+data class SaveVideoResult(
+    val videoId: Int
+)
+
 data class HighlightAddRequest(
     val videoId: Int,
     val highlightName: String,
@@ -91,4 +103,22 @@ data class BaseResponse(
     val code: Int,
     val message: String,
     val result: Any? = null
+)
+
+data class HighlightExtractionRequest(
+    val videoId: Int,
+    val videoUrl: String
+)
+
+data class HighlightExtractionResponse(
+    val isSuccess: Boolean,
+    val code: Int,
+    val message: String,
+    val result: List<ExtractedHighlight>
+)
+
+data class ExtractedHighlight(
+    val startTime: String,  // "00:01:23" 형식
+    val endTime: String,    // "00:01:36" 형식
+    val confidence: Float   // 하이라이트 신뢰도 (0.0 ~ 1.0)
 )

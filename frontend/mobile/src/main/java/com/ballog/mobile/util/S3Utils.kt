@@ -233,7 +233,7 @@ object S3Utils {
     suspend fun putFileToPresignedUrl(url: String, file: File): Boolean = withContext(Dispatchers.IO) {
         try {
             val client = okhttp3.OkHttpClient()
-            val mediaType = "video/mp4".toMediaType() // ✅ 명시적으로 설정
+             val mediaType = "video/mp4".toMediaType() // ✅ 명시적으로 설정
             val requestBody = file.asRequestBody(mediaType)
 
             val request = okhttp3.Request.Builder()

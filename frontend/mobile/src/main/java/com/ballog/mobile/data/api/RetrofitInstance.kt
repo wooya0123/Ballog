@@ -5,6 +5,8 @@ import com.ballog.mobile.data.local.TokenManager
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import okhttp3.logging.HttpLoggingInterceptor
+import android.util.Log
 
 object RetrofitInstance {
     private const val BASE_URL = "https://k12a404.p.ssafy.io/api/"
@@ -33,8 +35,18 @@ object RetrofitInstance {
     }
 
     private fun createOkHttpClient(tokenManager: TokenManager): OkHttpClient {
+        val loggingInterceptor = HttpLoggingInterceptor { message ->
+            Log.d("OkHttp", message)
+        }.apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         return OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(tokenManager))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(180, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(180, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(180, java.util.concurrent.TimeUnit.SECONDS)
             .build()
     }
 

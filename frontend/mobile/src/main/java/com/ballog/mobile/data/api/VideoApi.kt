@@ -3,6 +3,8 @@ package com.ballog.mobile.data.api
 import com.ballog.mobile.data.dto.*
 import retrofit2.Response
 import retrofit2.http.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 interface VideoApi {
 
@@ -22,7 +24,7 @@ interface VideoApi {
     @POST("v1/videos")
     suspend fun saveVideo(
         @Body request: SaveVideoRequest
-    ): Response<BaseResponse>
+    ): Response<SaveVideoResponse>
 
     // 4. 쿼터 영상 삭제
     @DELETE("v1/videos/{videoId}")
@@ -47,4 +49,12 @@ interface VideoApi {
     suspend fun deleteHighlight(
         @Path("highlightId") highlightId: Int
     ): Response<BaseResponse>
+
+    // 8. 하이라이트 자동 추출
+    @Multipart
+    @POST("v1/videos/highlight/auto")
+    suspend fun extractHighlights(
+        @Part file: MultipartBody.Part,
+        @Part("videoId") videoId: Int
+    ): Response<HighlightExtractionResponse>
 }
