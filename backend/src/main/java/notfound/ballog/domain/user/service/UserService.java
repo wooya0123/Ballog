@@ -1,6 +1,6 @@
 package notfound.ballog.domain.user.service;
 
-import jakarta.transaction.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.entity.Auth;
@@ -10,10 +10,12 @@ import notfound.ballog.domain.quarter.repository.GameReportRepository;
 import notfound.ballog.domain.user.entity.User;
 import notfound.ballog.domain.user.repository.UserRepository;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
+import notfound.ballog.domain.user.response.AiRecommendResponse;
 import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
 import notfound.ballog.exception.NotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +24,16 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
     private final AuthRepository authRepository;
     private final GameReportRepository gameReportRepository;
     private final PlayerCardService playerCardService;
-//    private final OpenAIService openAIService;
+    private final OpenAIService openAIService;
+    private final WikiCrawlService wikiCrawlService;
+    private final ObjectMapper objectMapper;
 
     // 회원가입
     @Transactional
@@ -144,38 +149,48 @@ public class UserService {
                                         heartRateList);
     }
 
-//     // 선수 추천 기능
-//    public String getRecommendedPlayer(UUID userId) {
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
-//
-//        // 최대 5개의 쿼터 리포트 조회
-//        List<GameReport> gameReportList =
-//                gameReportRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
-//
-//        if (gameReportList.isEmpty()) {
-//            throw new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND);
-//        }
-//
-//        // 게임 리포트 데이터를 JSON 형태로 변환
-//        List<Map<String, Object>> gameDataList = new ArrayList<>();
-//        for (GameReport gameReport : gameReportList) {
-//            gameDataList.add((Map<String, Object>) gameReport.getReportData());
-//        }
-//
-//        // GPT 프롬프트 구성
-//        String prompt = "다음은 풋살 경기에서 얻은 5개의 게임 데이터입니다:\n\n" +
-//                gameDataList.toString() +
-//                "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로축구선수를 추천해주세요. " +
-//                "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " +
-//                "distance는 이동 거리(m), avgHeartRate는 평균 심박수, " +
-//                "heatmap은 경기장에서의 위치 히트맵입니다.";
-//
-//        // OpenAI API 호출하여 응답 받기
-//        String recommendation = openAIService.getCompletionFromGPT(prompt);
-//
-//        return recommendation;
-//    }
+    public AiRecommendResponse getAiRecommend(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
+        List<GameReport> gameReportList =
+                gameReportRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+
+        if (gameReportList.isEmpty()) {
+            throw new NotFoundException(BaseResponseStatus.GAME_REPORT_NOT_FOUND);
+        }
+
+        // 게임 리포트 데이터를 JSON 형태로 변환
+        List<Map<String, Object>> gameDataList = new ArrayList<>();
+        for (GameReport gameReport : gameReportList) {
+            gameDataList.add((Map<String, Object>) gameReport.getReportData());
+        }
+
+        String prompt = "다음은 풋살 경기에서 얻은 5개의 게임 데이터입니다:\n\n" +
+                gameDataList.toString() +
+                "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로축구선수를 추천해주세요. " +
+                "유저 이름은 " + user.getNickname() + " 입니다." +
+                "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " + user.getNickname() +
+                "distance는 이동 거리(m), avgHeartRate는 평균 심박수, " +
+                "heatmap은 경기장에서의 위치 히트맵입니다.";
+
+        Map<String, Object> resp = openAIService.getCompletionFromGPT(prompt);
+
+        Map<String, Object> recommendedPlayer = (Map<String, Object>) resp.get("recommendedPlayer");
+
+        String wikiUrl = (String) recommendedPlayer.get("namuwiki");
+
+        if (wikiUrl != null && !wikiUrl.isEmpty()) {
+            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
+
+            if (imageUrl != null) {
+                recommendedPlayer.remove("namuwiki");
+                recommendedPlayer.put("imageUrl", imageUrl);
+            }
+        }
+
+        return objectMapper.convertValue(resp, AiRecommendResponse.class);
+    }
     
 }
 
