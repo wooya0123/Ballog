@@ -6,7 +6,9 @@ import com.ballog.mobile.data.dto.MatchRegisterRequest
 import com.ballog.mobile.data.dto.MatchReportResponse
 import com.ballog.mobile.data.dto.TeamMatchRegisterRequest
 import com.ballog.mobile.data.model.ApiResponse
-import com.ballog.mobile.data.model.MatchReportRequest
+import com.ballog.mobile.data.dto.DayMatchesRequest
+import com.ballog.mobile.data.dto.DayMatchesResponse
+import com.ballog.mobile.data.dto.MatchReportRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -58,5 +60,11 @@ interface MatchApi {
         @Header("Authorization") token: String,
         @Body request: MatchReportRequest
     ): Response<ApiResponse<MatchReportResponse>>
+
+    @POST("v1/matches")
+    suspend fun getDayMatches(
+        @Header ("Authorization") token: String,
+        @Body request: DayMatchesRequest
+    ): Response<ApiResponse<DayMatchesResponse>>
 
 }

@@ -4,14 +4,16 @@ import android.content.Context
 import android.util.Log
 import com.ballog.mobile.BallogApplication
 import com.ballog.mobile.data.api.MatchApi
+import com.ballog.mobile.data.dto.DayMatchesRequest
 import com.ballog.mobile.data.dto.GpsLocation
 import com.ballog.mobile.data.dto.MatchReportResponse
 import com.ballog.mobile.data.model.Exercise
 import com.ballog.mobile.data.model.GpsPoint
-import com.ballog.mobile.data.model.GameReportData
-import com.ballog.mobile.data.model.MatchReportData
-import com.ballog.mobile.data.model.MatchReportRequest
-import com.ballog.mobile.data.model.QuarterReport
+import com.ballog.mobile.data.dto.GameReportData
+import com.ballog.mobile.data.dto.MatchItemDto
+import com.ballog.mobile.data.dto.MatchReportData
+import com.ballog.mobile.data.dto.MatchReportRequest
+import com.ballog.mobile.data.dto.QuarterReport
 import com.ballog.mobile.data.repository.MatchRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,22 +40,53 @@ class MatchReportService(
     private val _quarterReportList = MutableStateFlow<List<QuarterReport>>(emptyList())
     val quarterReportList: StateFlow<List<QuarterReport>> = _quarterReportList.asStateFlow()
 
+    private val _selectedQuarterList = MutableStateFlow<List<String>>(emptyList())
+    val selectedQuarterList: StateFlow<List<String>> = _selectedQuarterList.asStateFlow()
+
+    private val _selectedMatchId = MutableStateFlow<Int>(0)
+    val selectedMatchId: StateFlow<Int> = _selectedMatchId.asStateFlow()
+
+    private val _dayMatchesList = MutableStateFlow<List<MatchItemDto>>(emptyList())
+    val dayMatchesList: StateFlow<List<MatchItemDto>> = _dayMatchesList.asStateFlow()
+
+
+    fun addSelectedQuarter(id: String) {
+        _selectedQuarterList.value = _selectedQuarterList.value + id
+    }
+    fun removeSelectedQuarter(id: String) {
+        _selectedQuarterList.value = _selectedQuarterList.value - id
+    }
+
+    fun setSelectedMatchId(id: Int) {
+        _selectedMatchId.value = id
+    }
+
+    fun deleteReport(id: String){
+        _quarterReportList.value = _quarterReportList.value.filter { it.id != id }
+    }
+
+    suspend fun fetchDayMatches(days: List<String>) {
+        val result = getDayMatches(days)
+        _dayMatchesList.value = result
+    }
     /**
      * 삼성 헬스 데이터를 가져와 경기 리포트를 생성하고 서버에 전송합니다.
      */
-    suspend fun createMatchReport() {
+    suspend fun createMatchReport(usedId: List<String>) {
         Log.d(TAG, "[createMatchReport] 호출됨")
         // 1. 삼성 헬스 데이터 가져오기
-        val exerciseList = samsungHealthDataService.getExercise()
+        val healthDataList = samsungHealthDataService.getExercise()
+
+        val exerciseList = healthDataList.filter { exercise ->
+            exercise.id !in usedId
+        }
         Log.d(TAG, "[createMatchReport] exerciseList.size = ${exerciseList.size}")
         Log.d(TAG, "[createMatchReport] exerciseList = $exerciseList")
         if (exerciseList.isEmpty()) {
             Log.e(TAG, "[createMatchReport] 삼성 헬스 데이터가 없습니다")
             return
         }
-        exerciseList.map { exercise ->
-            println(exercise.startTime)
-        }
+
 
         // 2. 경기장 모서리 좌표 가져오기
         val fieldCorners = matchRepository.getFieldCorners()
@@ -338,12 +371,40 @@ class MatchReportService(
         return result
     }
 
+    suspend fun getDayMatches(days: List<String>): List<MatchItemDto> {
+        Log.d(TAG, "[getDayMatches] 입력 days: $days")
+        val convertDays = days.map { convertDateFormat(it) }
+        Log.d(TAG, "[getDayMatches] 변환된 convertDays: $convertDays")
+
+        return try {
+            val token = tokenManager.getAccessToken()
+            val response = matchApi.getDayMatches(
+                token = "Bearer $token",
+                request = DayMatchesRequest(convertDays)
+            )
+            Log.d(TAG, "[getDayMatches] 서버 응답: isSuccessful=${response.isSuccessful}, code=${response.code()}, body=${response.body()}, errorBody=${response.errorBody()?.string()}")
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                Log.d(TAG, "[getDayMatches] 성공: ${response.body()!!.result!!.matchList}")
+                response.body()!!.result!!.matchList
+            } else {
+                Log.e(TAG, "[getDayMatches] 실패: code=${response.code()}, message=${response.message()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "[getDayMatches] 예외 발생: ${e.message}", e)
+            emptyList()
+        }
+    }
+
     private fun convertDateFormat(input: String): String {
         val inputFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")
         val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val date = LocalDate.parse(input, inputFormatter)
         return date.format(outputFormatter)
     }
+
+
+
 }
 
 object MatchReportServiceSingleton {

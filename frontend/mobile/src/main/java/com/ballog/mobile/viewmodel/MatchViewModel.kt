@@ -256,18 +256,12 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     // 샘플: 상태 전환 메서드 (나중에 실제 연동 로직으로 대체)
-    fun setWatchChecking() {
-        android.util.Log.d("MatchViewModel", "상태 전환: WatchChecking")
-        _uiState.value = MatchUiState.WaitingForStadiumData
+
+    fun setLoading() {
+        android.util.Log.d("MatchViewModel", "상태 전환: Loading")
+        _uiState.value = MatchUiState.Loading
     }
-    fun setWatchNotConnected() {
-        android.util.Log.d("MatchViewModel", "상태 전환: WatchNotConnected")
-        _uiState.value = MatchUiState.WaitingForStadiumData
-    }
-    fun setWatchConnected() {
-        android.util.Log.d("MatchViewModel", "상태 전환: WatchConnected")
-        _uiState.value = MatchUiState.WaitingForStadiumData
-    }
+
     fun setNoData() {
         android.util.Log.d("MatchViewModel", "상태 전환: NoData")
         _uiState.value = MatchUiState.NoData
