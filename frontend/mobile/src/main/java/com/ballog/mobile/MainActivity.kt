@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -17,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.ballog.mobile.data.model.AuthResult
 import com.ballog.mobile.data.repository.MatchRepository
 import com.ballog.mobile.navigation.AppNavHost
 import com.ballog.mobile.navigation.Routes
@@ -28,9 +26,7 @@ import com.google.android.gms.wearable.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.ballog.mobile.data.util.OnboardingPrefs
 
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     private val TAG = "MainActivity"
@@ -89,14 +85,14 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                     try {
                         repository.saveFieldDataFromWatch(
                             lat1 = dataMap.getDouble("lat1"),
-                            lon1 = dataMap.getDouble("lng1"),
+                            lon1 = dataMap.getDouble("lon1"),
                             lat2 = dataMap.getDouble("lat2"),
-                            lon2 = dataMap.getDouble("lng2"),
+                            lon2 = dataMap.getDouble("lon2"),
                             lat3 = dataMap.getDouble("lat3"),
-                            lon3 = dataMap.getDouble("lng3"),
+                            lon3 = dataMap.getDouble("lon3"),
                             lat4 = dataMap.getDouble("lat4"),
-                            lon4 = dataMap.getDouble("lng4"),
-                            timestamp = dataMap.getLong("time")
+                            lon4 = dataMap.getDouble("lon4"),
+                            timestamp = dataMap.getLong("timestamp")
                         )
                         Log.d(TAG, "경기장 모서리 데이터 저장 완료")
                     } catch (e: Exception) {

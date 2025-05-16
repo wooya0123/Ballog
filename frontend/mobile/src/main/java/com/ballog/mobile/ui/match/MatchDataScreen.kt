@@ -74,8 +74,6 @@ fun MatchDataScreen(
                 scope.launch {
                     try {
                         matchReportService.createMatchReport()
-                        if(quarterReportList.isEmpty())
-                            viewModel.setNoData()
                     } catch (e: Exception) {
                         viewModel.setNoData()
                     }
