@@ -39,6 +39,7 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.buildCalendar
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -56,14 +57,25 @@ fun TeamMatchTab(
     val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월"))
     val selectedDateStr = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
-    LaunchedEffect(currentMonth) {
-        val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
-        android.util.Log.d("TeamMatchTab", "📡 fetchTeamMatches 요청: teamId=$teamId, month=$formattedMonth")
-        viewModel.fetchTeamMatches(teamId, formattedMonth)
-    }
+     var showLoading by remember { mutableStateOf(true) }
+
+     LaunchedEffect(currentMonth) {
+         val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+         android.util.Log.d("TeamMatchTab", "📡 fetchTeamMatches 요청: teamId=$teamId, month=$formattedMonth")
+
+         val startTime = System.currentTimeMillis()
+         viewModel.fetchTeamMatches(teamId, formattedMonth)
+         val duration = System.currentTimeMillis() - startTime
+         val minLoadingTime = 500L
+         if (duration < minLoadingTime) {
+             delay(minLoadingTime - duration)
+         }
+         showLoading = false
+     }
 
 
-    Column(
+
+     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 24.dp)
@@ -71,20 +83,20 @@ fun TeamMatchTab(
             .background(Gray.Gray100),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        when (matchState) {
-            is MatchState.Loading -> {
-                MatchSkeletonCard()
-            }
-            is MatchState.Error -> {
-                Text(
-                    text = "에러: ${(matchState as MatchState.Error).message}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = pretendard,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            is MatchState.Success -> {
+         when {
+             showLoading -> {
+                 MatchSkeletonCard()
+             }
+             matchState is MatchState.Error -> {
+                 Text(
+                     text = "에러: ${(matchState as MatchState.Error).message}",
+                     fontSize = 16.sp,
+                     fontWeight = FontWeight.Medium,
+                     fontFamily = pretendard,
+                     modifier = Modifier.padding(16.dp)
+                 )
+             }
+             matchState is MatchState.Success -> {
                 val matches = (matchState as MatchState.Success).matches
                 val calendarData = buildCalendar(currentMonth, matches).map { week ->
                     week.map { marker ->

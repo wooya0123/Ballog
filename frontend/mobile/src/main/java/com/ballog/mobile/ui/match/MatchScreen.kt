@@ -27,6 +27,7 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.buildCalendar
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -39,10 +40,21 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
     val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월"))
     val selectedDateStr = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
+    var showLoading by remember { mutableStateOf(true) }
+
     LaunchedEffect(currentMonth) {
-        android.util.Log.d("MatchScreen", "📡 fetchMyMatches 요청: ${currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))}")
+        val startTime = System.currentTimeMillis()
         viewModel.fetchMyMatches(currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+        val duration = System.currentTimeMillis() - startTime
+        val minLoadingTime = 500L // 최소 0.5초 유지
+
+        if (duration < minLoadingTime) {
+            delay(minLoadingTime - duration)
+        }
+
+        showLoading = false
     }
+
 
     Column {
         TopNavItem(title = "매치", type = TopNavType.MAIN_BASIC)
@@ -56,11 +68,11 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (matchState) {
-                is MatchState.Loading -> {
+            when {
+                showLoading -> {
                     MatchSkeletonCard()
                 }
-                is MatchState.Error -> {
+                matchState is MatchState.Error -> {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -77,7 +89,7 @@ fun MatchScreen(navController: NavController, viewModel: MatchViewModel = viewMo
                         )
                     }
                 }
-                is MatchState.Success -> {
+                matchState is MatchState.Success -> {
                     val matches = (matchState as MatchState.Success).matches
                     val calendarData = buildCalendar(currentMonth, matches).map { week ->
                         week.map { marker ->
