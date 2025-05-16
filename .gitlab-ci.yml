@@ -51,6 +51,11 @@ deploy:
         echo "AWS_S3_BUCKET: $AWS_S3_BUCKET" >> backend/src/main/resources/env.yml &&
         echo "AWS_ACCESS_KEY: $AWS_ACCESS_KEY" >> backend/src/main/resources/env.yml &&
         echo "AWS_SECRET_KEY: $AWS_SECRET_KEY" >> backend/src/main/resources/env.yml &&
+
+        echo "openai_api_key: $openai_api_key" >> backend/src/main/resources/env.yml &&
+        echo "openai_api_url: $openai_api_url" >> backend/src/main/resources/env.yml &&
+        echo "openai_model: $openai_model" >> backend/src/main/resources/env.yml &&
+
         
         # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
         echo "DB_URL=$DB_URL" > .env &&
