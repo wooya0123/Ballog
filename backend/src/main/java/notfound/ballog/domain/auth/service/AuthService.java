@@ -1,6 +1,5 @@
 package notfound.ballog.domain.auth.service;
 
-import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import notfound.ballog.domain.user.dto.UserIdDto;
 import notfound.ballog.domain.user.entity.User;
 import notfound.ballog.domain.user.service.UserService;
 import notfound.ballog.exception.DuplicateDataException;
-import notfound.ballog.exception.NotFoundException;
 import notfound.ballog.exception.ValidationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,15 +32,19 @@ import java.util.UUID;
 public class AuthService {
 
     private final CustomUserDetailsService customUserDetailsService;
+
     private final PasswordEncoder passwordEncoder;
+
     private final JwtTokenProvider jwtTokenProvider;
 
     private final AuthRepository authRepository;
+
     private final UserService userService;
 
     @Transactional
     public void signUp(SignUpRequest request){
         String email = request.getEmail();
+
         String password = passwordEncoder.encode(request.getPassword());
 
         // 이메일로 유저 조회 -> 탈퇴한 사용자면 복구, 이미 있는 사용자는 예외 처리
@@ -53,10 +55,13 @@ public class AuthService {
             // 탈퇴한 사용자라면 복구하고 저장
             if (!auth.getIsActive()) {
                 User user = auth.getUser();
+
                 user.reactivate(request.getNickname(), request.getBirthDate(), request.getProfileImageUrl());
+
                 User savedUser = userService.reactivateUser(user);
 
                 auth.reactivate(savedUser, email, password);
+
                 authRepository.save(auth);
             } else {
                 throw new DuplicateDataException(BaseResponseStatus.DUPLICATE_EMAIL);
@@ -64,10 +69,12 @@ public class AuthService {
         } else {
             // 1. 신규 유저 생성
             User newUser = request.toUserEntity(request);
+
             User savedUser = userService.signUp(newUser);
 
             // 2. 신규 Auth 생성
             Auth newAuth = request.toAuthEntity(savedUser, email, password);
+
             authRepository.save(newAuth);
         }
     }
@@ -75,6 +82,7 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request){
         String email = request.getEmail();
+
         String password = request.getPassword();
 
         // 1. 이메일로 auth 조회 -> CustomUserDetails 생성
@@ -88,15 +96,20 @@ public class AuthService {
         // 3. 기본 인증 토큰 생성 -> JWT 토큰 생성
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(null, null, customUserDetails.getAuthorities());
+
         authentication.setDetails(customUserDetails);
+
         JwtTokenDto token = jwtTokenProvider.generateToken(authentication);
 
         // 4. refreshToken 저장
         Auth auth = customUserDetails.getAuth();
+
         auth.changeRefreshToken(token.getRefreshToken());
+
         Auth savedAuth = authRepository.save(auth);
 
         UserIdDto userIdDto = UserIdDto.of(savedAuth);
+
         return LoginResponse.of(token, userIdDto);
     }
 
@@ -105,7 +118,9 @@ public class AuthService {
         // DB에 저장된 refresh 토큰 삭제
         Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
                         .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
+
         auth.changeRefreshToken(null);
+
         authRepository.save(auth);
     }
 
@@ -129,8 +144,11 @@ public class AuthService {
 
         // 4. 토큰 재발급
         Authentication authentication = jwtTokenProvider.getAuthentication(refreshToken);
+
         JwtTokenDto token = jwtTokenProvider.generateToken(authentication);
+
         auth.changeRefreshToken(token.getRefreshToken());
+
         authRepository.save(auth);
 
         return TokenRefreshResponse.of(token);
@@ -139,6 +157,7 @@ public class AuthService {
     @Transactional
     public CheckEmailResponse checkEmail(String email) {
         boolean isExist = authRepository.existsByEmailAndIsActiveTrue(email);
+
         return CheckEmailResponse.of(!isExist);
     }
 
@@ -146,8 +165,11 @@ public class AuthService {
     public void signOut(UUID userId) {
         Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new ValidationException(BaseResponseStatus.USER_NOT_FOUND));
+
         auth.changeIsActive(false);
+
         auth.changeRefreshToken(null);
+
         authRepository.save(auth);
     }
 }

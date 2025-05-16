@@ -7,9 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.SQLDelete;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

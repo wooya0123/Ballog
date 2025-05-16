@@ -5,7 +5,7 @@ import notfound.ballog.common.response.BaseResponseStatus;
 
 @Getter
 public class ValidationException extends RuntimeException {
-    private BaseResponseStatus status;
+    private final BaseResponseStatus status;
 
     public ValidationException(BaseResponseStatus status) {
         super(status.getMessage());

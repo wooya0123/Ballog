@@ -28,8 +28,11 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+
     private final AuthRepository authRepository;
+
     private final GameReportRepository gameReportRepository;
+
     private final PlayerCardService playerCardService;
     private final OpenAIService openAIService;
     private final WikiCrawlService wikiCrawlService;
@@ -51,9 +54,12 @@ public class UserService {
     public GetUserResponse getUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
         Auth auth = authRepository.findByUser_UserIdAndIsActiveTrue(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
         String email = auth.getEmail();
+
         return GetUserResponse.of(user, email);
     }
 
@@ -62,6 +68,7 @@ public class UserService {
     public void updateUser(UUID userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
+
         user.updateUser(request);
     }
 
@@ -88,7 +95,7 @@ public class UserService {
 
         // 3. gameReport에서 값 꺼내서 담아주기
         for (GameReport gameReport : gameReportList) {
-            Map<String, Object> reportData = (Map<String, Object>) gameReport.getReportData();
+            Map<String, Object> reportData = gameReport.getReportData();
 
             List<List<Integer>> heatmap = (List<List<Integer>>) reportData.get("heatmap");
             heatmapList.add(heatmap);

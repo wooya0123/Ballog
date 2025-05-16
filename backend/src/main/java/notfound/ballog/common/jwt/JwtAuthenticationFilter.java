@@ -26,6 +26,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     /** Header에서 토큰 추출 */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
+
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         } else {
@@ -41,7 +42,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
         // body에 BaseResponse 담기
         BaseResponse<Void> body = BaseResponse.error(status);
+
         String json = new ObjectMapper().writeValueAsString(body);
+
         httpResponse.getWriter().write(json);
     }
 
@@ -84,6 +87,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
             // 6. 토큰이 정상이면 인증 정보 꺼내서 Spring Security Context에 저장 -> Controller에서 인증된 사용자 정보 사용 가능
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 7. 다음 필터 실행
