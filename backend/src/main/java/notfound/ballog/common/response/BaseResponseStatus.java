@@ -29,6 +29,8 @@ public enum BaseResponseStatus {
     EMAIL_AUTH_CODE_SEND_FAIL(false, 1007, "이메일 확인 코드 전송 중 오류가 발생했습니다."),
     EXPIRED_EMAIL_AUTH_CODE(false, 1008, "이메일 인증 코드가 없거나 만료되었습니다."),
     INVALID_EMAIL_AUTH_CODE(false, 1009, "유효하지 않은 이메일 인증 코드입니다."),
+    RECOMMAND_PLAYER_GPT_ERROR(false, 1010, "OpenAI API 호출 중 오류 발생"),
+
 
     // 유저 관련 로직 에러 (2000번대)
     USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다."),

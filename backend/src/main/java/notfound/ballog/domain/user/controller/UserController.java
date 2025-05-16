@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
+import notfound.ballog.domain.user.response.AiRecommendResponse;
 import notfound.ballog.domain.user.response.GetPlayerCardResponse;
 import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
@@ -61,4 +62,10 @@ public class UserController {
 
         return BaseResponse.ok(response);
     }
+
+    @PostMapping("/ai-recommand")
+    public BaseResponse<AiRecommendResponse> getAiRecommend(@AuthenticationPrincipal UUID userId) {
+        return BaseResponse.ok(userService.getAiRecommend(userId));
+    }
+
 }
