@@ -2,9 +2,11 @@ package com.ballog.mobile.ui.match
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +39,7 @@ import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.MatchViewModel
 import com.ballog.mobile.viewmodel.buildCalendar
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -53,40 +57,46 @@ fun TeamMatchTab(
     val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월"))
     val selectedDateStr = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
-    LaunchedEffect(currentMonth) {
-        val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
-        android.util.Log.d("TeamMatchTab", "📡 fetchTeamMatches 요청: teamId=$teamId, month=$formattedMonth")
-        viewModel.fetchTeamMatches(teamId, formattedMonth)
-    }
+     var showLoading by remember { mutableStateOf(true) }
+
+     LaunchedEffect(currentMonth) {
+         val formattedMonth = currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+         android.util.Log.d("TeamMatchTab", "📡 fetchTeamMatches 요청: teamId=$teamId, month=$formattedMonth")
+
+         val startTime = System.currentTimeMillis()
+         viewModel.fetchTeamMatches(teamId, formattedMonth)
+         val duration = System.currentTimeMillis() - startTime
+         val minLoadingTime = 500L
+         if (duration < minLoadingTime) {
+             delay(minLoadingTime - duration)
+         }
+         showLoading = false
+     }
 
 
-    Column(
+
+     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(horizontal = 24.dp)
             .verticalScroll(rememberScrollState())
             .background(Gray.Gray100),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        when (matchState) {
-            is MatchState.Loading -> {
-                Text(
-                    text = "불러오는 중...",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = pretendard,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            is MatchState.Error -> {
-                Text(
-                    text = "에러: ${(matchState as MatchState.Error).message}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = pretendard,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            is MatchState.Success -> {
+         when {
+             showLoading -> {
+                 MatchSkeletonCard()
+             }
+             matchState is MatchState.Error -> {
+                 Text(
+                     text = "에러: ${(matchState as MatchState.Error).message}",
+                     fontSize = 16.sp,
+                     fontWeight = FontWeight.Medium,
+                     fontFamily = pretendard,
+                     modifier = Modifier.padding(16.dp)
+                 )
+             }
+             matchState is MatchState.Success -> {
                 val matches = (matchState as MatchState.Success).matches
                 val calendarData = buildCalendar(currentMonth, matches).map { week ->
                     week.map { marker ->
@@ -109,15 +119,23 @@ fun TeamMatchTab(
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     if (filteredMatches.isEmpty()) {
-                        Text(
-                            text = "경기 일정이 없습니다",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = pretendard
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "경기 일정이 없습니다",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = pretendard,
+                                color = Gray.Gray500, // 색상 옅게
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     } else {
                         filteredMatches.forEach { match ->
                             MatchCard(

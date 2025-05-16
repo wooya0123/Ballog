@@ -33,7 +33,6 @@ fun MatchCard(
     val timeRange = "${formatTime(startTime)} - ${formatTime(endTime)}"
     Column(
         modifier = modifier
-            .padding(horizontal = 24.dp)
             .fillMaxWidth()
             .wrapContentHeight()
             .background(Gray.Gray200, RoundedCornerShape(8.dp))

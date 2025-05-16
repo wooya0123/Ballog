@@ -25,12 +25,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.ui.draw.rotate
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.animateContentSize
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import com.ballog.mobile.ui.theme.pretendard
 
 @Composable
@@ -42,11 +41,16 @@ fun DropDown(
     onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    var parentWidth by remember { mutableStateOf(0) }
+
+    Box(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
-                .height(48.dp)
                 .fillMaxWidth()
+                .height(48.dp)
+                .onGloballyPositioned { coordinates ->
+                    parentWidth = coordinates.size.width
+                }
                 .background(Gray.Gray100, RoundedCornerShape(4.dp))
                 .border(1.dp, Gray.Gray300, RoundedCornerShape(4.dp))
                 .clickable { onExpandedChange(!expanded) }
@@ -60,13 +64,14 @@ fun DropDown(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = pretendard
-
             )
+
             val rotationAngle by animateFloatAsState(
                 targetValue = if (expanded) 180f else 0f,
                 animationSpec = tween(durationMillis = 300, easing = EaseInOut),
                 label = "rotateDropdownArrow"
             )
+
             Icon(
                 painter = painterResource(id = R.drawable.ic_navigate_down),
                 contentDescription = "Dropdown Arrow",
@@ -77,39 +82,41 @@ fun DropDown(
             )
         }
 
-        AnimatedVisibility(
-            visible = expanded,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
+        // 드롭다운 메뉴
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
+            modifier = Modifier
+                .width(with(LocalDensity.current) { parentWidth.toDp() }) // 버튼과 동일한 너비
+                .clip(RoundedCornerShape(4.dp))
+                .background(Gray.Gray200)
+                .border(1.dp, Gray.Gray300, RoundedCornerShape(4.dp))
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Gray.Gray200)
-                    .border(1.dp, Gray.Gray300, RoundedCornerShape(4.dp))
-                    .animateContentSize()
-            ) {
-                items.forEach { item ->
-                    Text(
-                        text = item,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onItemSelected(item)
-                                onExpandedChange(false)
-                            }
-                            .padding(vertical = 12.dp, horizontal = 16.dp),
-                        color = if (item == selectedItem) Primary else Gray.Gray800,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = pretendard
-                    )
-                }
+            items.forEach { item ->
+                DropdownMenuItem(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp), // ✅ 내부 여백만 유지
+                    text = {
+                        Text(
+                            text = item,
+                            color = if (item == selectedItem) Primary else Gray.Gray800,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = pretendard
+                        )
+                    },
+                    onClick = {
+                        onItemSelected(item)
+                        onExpandedChange(false)
+                    }
+                )
             }
         }
-
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
