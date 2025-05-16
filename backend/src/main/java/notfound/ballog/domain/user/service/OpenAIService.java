@@ -22,13 +22,13 @@ public class OpenAIService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${openai.api.key}")
+    @Value("${OPENAI_API_KEY}")
     private String apiKey;
 
-    @Value("${openai.api.url}")
+    @Value("${OPENAI_API_URL}")
     private String apiUrl;
 
-    @Value("${openai.model}")
+    @Value("${OPENAI_MODEL}")
     private String model;
 
     public Map<String, Object> getCompletionFromGPT(String prompt) {

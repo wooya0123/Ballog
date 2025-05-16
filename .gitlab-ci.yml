@@ -52,9 +52,9 @@ deploy:
         echo "AWS_ACCESS_KEY: $AWS_ACCESS_KEY" >> backend/src/main/resources/env.yml &&
         echo "AWS_SECRET_KEY: $AWS_SECRET_KEY" >> backend/src/main/resources/env.yml &&
 
-        echo "openai_api_key: $openai_api_key" >> backend/src/main/resources/env.yml &&
-        echo "openai_api_url: $openai_api_url" >> backend/src/main/resources/env.yml &&
-        echo "openai_model: $openai_model" >> backend/src/main/resources/env.yml &&
+        echo "OPENAI_API_KEY: $OPENAI_API_KEY" >> backend/src/main/resources/env.yml &&
+        echo "OPENAI_API_URL: $OPENAI_API_URL" >> backend/src/main/resources/env.yml &&
+        echo "OPENAI_MODEL: $OPENAI_MODEL" >> backend/src/main/resources/env.yml &&
 
         
         # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
