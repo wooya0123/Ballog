@@ -160,11 +160,6 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                 sendLocationsToPhone(dataClient, locationsList)
                 isDataSending = false
                 isDataSent = true
-
-                // 5초 후에 운동 앱 실행
-                delay(5000)
-                launchSamsungHealthRunning(context)
-                onComplete()
             } catch (e: Exception) {
                 errorMessage = "데이터 전송 실패: ${e.message}"
                 isDataSending = false
@@ -274,149 +269,185 @@ fun MeasurementScreen(onComplete: () -> Unit) {
             }
         }
     } else if (showCompletionScreen) {
-        // 측정 완료 화면
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // 완료 메시지 또는 전송 완료 메시지
-            item {
-                Text(
-                    text = if (isDataSent) "데이터 전송 완료!" else "측정 완료!",
-                    color = BallogWhite,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
+        if (isDataSent) {
+            // 1) 전송 완료 후, 화면 중앙에 카운트다운 텍스트
+            var uiCountdown by remember { mutableStateOf(5) }
+            LaunchedEffect(isDataSent) {
+                // 5→1초 카운트다운
+                for (sec in 5 downTo 1) {
+                    uiCountdown = sec
+                    delay(1000)
+                }
+                // 카운트다운 끝나면 헬스 앱 실행
+                launchSamsungHealthRunning(context)
+                onComplete()
             }
 
-            // 안내 메시지
-            item {
-                if (isDataSent) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "5초 후 삼성 헬스로 이동합니다",
-                            color = BallogWhite,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "삼성 헬스에서 Ballog를\n선택해주세요",
-                            color = BallogCyan,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-
-                    }
-                } else {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // 중앙에 모아진 텍스트
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
-                        text = "경기장 데이터를 \n 모바일에 전송해주세요!",
-                        color = BallogCyan,
+                        text = "경기장 측정 완료!",
+                        color = BallogWhite,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "$uiCountdown 초 후 삼성 헬스로 이동합니다",
+                        color = BallogWhite,
                         fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "삼성 헬스에서\nBallog를 선택해주세요",
+                        color = BallogCyan,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // 1) 상단 영역: weight 1.2f — 완료 메시지 + 안내 메시지
+                Box(
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 16.dp)
+                            .wrapContentHeight(),               // 높이는 콘텐츠에 맞춰
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp) // 텍스트 간격
+                    ) {
+                        // 완료 헤더
+                        Text(
+                            text = "측정 완료!",
+                            color = BallogWhite,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
-            // 데이터 전송 버튼 또는 진행 상태
-            if (!isDataSent) {
-                item {
-                    if (isDataSending) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                        if (isDataSent) {
+                            // Samsung Health 이동 안내
                             Text(
-                                text = "데이터 전송 중...",
+                                text = "5초 후 삼성 헬스로 이동합니다",
                                 color = BallogWhite,
-                                fontSize = 14.sp
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Text(
+                                text = "삼성 헬스에서 Ballog를\n선택해주세요",
+                                color = BallogCyan,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            // 데이터 전송 전 안내
+                            Text(
+                                text = "경기장 데이터를\n모바일에 전송해주세요!",
+                                color = BallogCyan,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    } else {
-                        BallogButton(
-                            text = "데이터 전송",
-                            onClick = { sendDataToPhone() },
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
                     }
                 }
-            }
 
-            // 오류 메시지 표시
-            if (errorMessage != null) {
-                item {
-                    Text(
-                        text = errorMessage!!,
-                        color = MaterialTheme.colors.error,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                    )
+                // 2) 하단 영역: weight 1f — 버튼 또는 로딩 표시 (위치/크기 동일)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        isDataSending -> CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp)
+                        )
+
+                        !isDataSent -> BallogButton(
+                            text = "데이터 전송",
+                            onClick = { sendDataToPhone() },
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .height(40.dp)
+                        )
+
+                        else -> { /* 전송 완료 후에는 빈 상태 */
+                        }
+                    }
                 }
             }
         }
     } else {
         // 스크롤 가능한 측정 화면
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (measurementCount < 4) {
-                // 모서리 번호 표시
-                item {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // 1) 상단 영역: weight 1.2f
+            Box(
+                modifier = Modifier
+                    .weight(1.2f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                // Box 안에 Column을 두고
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter), // Box 바닥 중앙에 붙이고
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = "${corners[measurementCount]} 모서리",
                         color = BallogCyan,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        fontSize = 18.sp
                     )
-                }
-
-                // 측정 버튼
-                item {
-                    BallogButton(
-                        text = "측정",
-                        onClick = { onMeasureClick() },
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-
-                // 측정 상태 표시
-                item {
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "$measurementCount/4 측정 완료",
                         fontSize = 14.sp,
-                        color = BallogWhite,
-                        modifier = Modifier.padding(top = 16.dp)
+                        color = BallogWhite
                     )
-                }
-
-                // 오류 메시지 표시
-                if (errorMessage != null) {
-                    item {
+                    if (errorMessage != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = errorMessage!!,
                             color = MaterialTheme.colors.error,
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
+            }
+
+            // 2) 하단 영역: 버튼
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                BallogButton(
+                    text = "측정",
+                    onClick = { onMeasureClick() },
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(40.dp)
+                )
             }
         }
     }

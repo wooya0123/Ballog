@@ -12,23 +12,38 @@ import com.ballog.watch.ui.theme.BallogCyan
 
 @Composable
 fun InstructionScreen(onContinueClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "경기장을 한바퀴 돌면서 각 모서리에서 측정 버튼을 눌러주세요",
-            textAlign = TextAlign.Center,
-            color = BallogCyan,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        BallogButton(
-            text = "시작하기",
-            onClick = onContinueClick,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 상단 절반: 중앙 텍스트
+        Box(
+            modifier = Modifier
+                .weight(1.2f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Text(
+                text = """
+                    경기장을 한바퀴 돌면서
+                    각 모서리에서 측정 버튼을 눌러주세요
+                """.trimIndent(),
+                textAlign = TextAlign.Center,
+                color = BallogCyan
+            )
+        }
+
+        // 하단 절반: 중앙 버튼 (HomeScreen 과 동일한 위치)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            BallogButton(
+                text = "시작하기",
+                onClick = onContinueClick,
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)  // 너비 80%
+                    .height(40.dp)       // 고정 높이
+            )
+        }
     }
 }
