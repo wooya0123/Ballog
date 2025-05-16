@@ -1,4 +1,4 @@
-package com.ballog.mobile.data.model
+package com.ballog.mobile.data.dto
 
 data class GameReportData(
     val startTime: String,
@@ -30,4 +30,4 @@ data class MatchReportData(
 data class MatchReportRequest(
     val matchDate: String,
     val reportDataList: List<MatchReportData>
-) 
+)

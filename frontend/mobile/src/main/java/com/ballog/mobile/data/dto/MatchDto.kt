@@ -68,4 +68,10 @@ data class MatchReportResponse(
     val matchName: String
 )
 
+data class DayMatchesRequest(
+    val days: List<String>
+)
 
+data class DayMatchesResponse(
+    val matchList: List<MatchItemDto>
+)
