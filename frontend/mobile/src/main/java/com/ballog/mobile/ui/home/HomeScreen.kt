@@ -37,7 +37,6 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
         }
     }
 
-
     var showPlayerCard by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
@@ -49,10 +48,10 @@ fun HomeScreen(viewModel: ProfileViewModel = viewModel()) {
     val sprintList = statistics?.sprint?.map { it.toFloat() } ?: emptyList()
     val heartRateList = statistics?.heartRate?.map { it.toFloat() } ?: emptyList()
 
-    val distanceText = distanceList.average().format1f()
-    val speedText = speedList.average().format1f()
-    val sprintText = sprintList.average().format1f()
-    val heartRateText = heartRateList.average().format1f()
+    val distanceText = distanceList.safeAverage()
+    val speedText = speedList.safeAverage()
+    val sprintText = sprintList.safeAverage()
+    val heartRateText = heartRateList.safeAverage()
 
     val distanceNorm = normalize(distanceList.map { it.toFloat() })
     val speedNorm = normalize(speedList.map { it.toFloat() })
@@ -181,3 +180,11 @@ fun normalize(list: List<Float>): List<Float> {
 }
 
 fun Double.format1f(): String = String.format("%.1f", this)
+
+fun List<Number>.safeAverage(): String {
+    return if (this.isNotEmpty()) {
+        (this.map { it.toDouble() }.average()).format1f()
+    } else {
+        "– "
+    }
+}
