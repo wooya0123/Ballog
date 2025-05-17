@@ -7,10 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -19,8 +17,6 @@ import com.ballog.mobile.R
 import com.ballog.mobile.ui.components.*
 import com.ballog.mobile.ui.theme.Gray
 import com.ballog.mobile.ui.theme.pretendard
-import com.ballog.mobile.util.getVideoDurationInSec
-import com.ballog.mobile.util.isValidHighlightTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,61 +46,20 @@ fun HighlightBottomSheet(
         Spacer(modifier = Modifier.height(24.dp))
 
         val confirmAction = {
-            // 저장할 때 패딩 처리
-            // MM:SS 형식으로 저장된 경우 처리
-            val startTime = if (highlightState.startMin.contains(":")) {
-                val parts = highlightState.startMin.split(":")
-                val min = parts.getOrNull(0)?.padStart(2, '0') ?: "00"
-                val sec = parts.getOrNull(1)?.padStart(2, '0') ?: "00"
-                "$min:$sec"
-            } else {
-                // 개별 필드로 저장된 경우
-                val min = highlightState.startMin.ifEmpty { "0" }.padStart(2, '0')
-                val sec = highlightState.startSec.ifEmpty { "0" }.padStart(2, '0')
-                "$min:$sec"
-            }
-            
-            val endTime = if (highlightState.endMin.contains(":")) {
-                val parts = highlightState.endMin.split(":")
-                val min = parts.getOrNull(0)?.padStart(2, '0') ?: "00"
-                val sec = parts.getOrNull(1)?.padStart(2, '0') ?: "00"
-                "$min:$sec"
-            } else {
-                // 개별 필드로 저장된 경우
-                val min = highlightState.endMin.ifEmpty { "0" }.padStart(2, '0')
-                val sec = highlightState.endSec.ifEmpty { "0" }.padStart(2, '0')
-                "$min:$sec"
-            }
-            
-            val padded = highlightState.copy(
-                startMin = startTime,
-                startSec = "",
-                endMin = endTime,
-                endSec = ""
-            )
-
-            // 시간 유효성 검사 - 시작 시간이 종료 시간보다 작은지만 확인
-            val isValid = try {
-                val startParts = startTime.split(":")
-                val endParts = endTime.split(":")
-                
-                val startSec = startParts[0].toInt() * 60 + startParts[1].toInt()
-                val endSec = endParts[0].toInt() * 60 + endParts[1].toInt()
-                
-                startSec < endSec
-            } catch (e: Exception) {
-                false
-            }
+            // 시간 형식 정규화 및 유효성 검사
+            val normalizedHighlight = normalizeTimeFormat(highlightState)
+            val (isValid, message) = validateTimeRange(normalizedHighlight)
 
             if (isValid) {
-                onStateChange(padded)
+                onStateChange(normalizedHighlight)
                 onConfirm()
             } else {
-                Toast.makeText(context, "시작 시간은 종료 시간보다 작아야 합니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
         }
 
         if (onDelete == null) {
+            // 추가 모드
             BallogButton(
                 onClick = confirmAction,
                 label = confirmButtonText,
@@ -113,6 +68,7 @@ fun HighlightBottomSheet(
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
+            // 수정 모드
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,12 +95,72 @@ fun HighlightBottomSheet(
     }
 }
 
+// 타임스탬프 형식 정규화 함수
+private fun normalizeTimeFormat(state: HighlightUiState): HighlightUiState {
+    // 시작 시간 정규화
+    val (normalizedStartMin, normalizedStartSec) = normalizeTime(
+        state.startMin, 
+        state.startSec
+    )
+    
+    // 종료 시간 정규화
+    val (normalizedEndMin, normalizedEndSec) = normalizeTime(
+        state.endMin, 
+        state.endSec
+    )
+    
+    return state.copy(
+        startMin = normalizedStartMin,
+        startSec = normalizedStartSec,
+        endMin = normalizedEndMin,
+        endSec = normalizedEndSec
+    )
+}
+
+// MM:SS 또는 개별 분/초 입력을 정규화
+private fun normalizeTime(minutes: String, seconds: String): Pair<String, String> {
+    if (minutes.contains(":")) {
+        // MM:SS 형식으로 저장된 경우
+        val parts = minutes.split(":")
+        val min = parts.getOrNull(0)?.padStart(2, '0') ?: "00"
+        val sec = parts.getOrNull(1)?.padStart(2, '0') ?: "00"
+        return min to sec
+    }
+    
+    // 개별 필드로 저장된 경우
+    val min = minutes.ifEmpty { "0" }.padStart(2, '0')
+    val sec = seconds.ifEmpty { "0" }.padStart(2, '0')
+    return min to sec
+}
+
+// 시간 범위 유효성 검사
+private fun validateTimeRange(state: HighlightUiState): Pair<Boolean, String> {
+    try {
+        val startMinutes = state.startMin.toInt()
+        val startSeconds = state.startSec.toInt()
+        val endMinutes = state.endMin.toInt()
+        val endSeconds = state.endSec.toInt()
+        
+        val startTotalSeconds = startMinutes * 60 + startSeconds
+        val endTotalSeconds = endMinutes * 60 + endSeconds
+        
+        return if (startTotalSeconds < endTotalSeconds) {
+            true to ""
+        } else {
+            false to "시작 시간은 종료 시간보다 작아야 합니다."
+        }
+    } catch (e: Exception) {
+        return false to "시간 형식이 올바르지 않습니다."
+    }
+}
+
 @Composable
 fun HighlightForm(
     state: HighlightUiState,
     onStateChange: (HighlightUiState) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+        // 제목 입력
         FormFieldWithLabel("하이라이트 제목") {
             Input(
                 value = state.title,
@@ -155,85 +171,97 @@ fun HighlightForm(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 시간 값 처리 - MM:SS 형식 또는 개별 필드
-        val startMinValue: String
-        val startSecValue: String
+        // 시작 시간 추출
+        val (startMinValue, startSecValue) = extractTimeValues(state.startMin, state.startSec)
         
-        if (state.startMin.contains(":")) {
-            // MM:SS 형식으로 저장된 경우
-            val parts = state.startMin.split(":")
-            startMinValue = parts.getOrNull(0) ?: ""
-            startSecValue = parts.getOrNull(1) ?: ""
-        } else {
-            // 개별 필드로 저장된 경우
-            startMinValue = state.startMin
-            startSecValue = state.startSec
-        }
-        
-        val endMinValue: String
-        val endSecValue: String
-        
-        if (state.endMin.contains(":")) {
-            // MM:SS 형식으로 저장된 경우
-            val parts = state.endMin.split(":")
-            endMinValue = parts.getOrNull(0) ?: ""
-            endSecValue = parts.getOrNull(1) ?: ""
-        } else {
-            // 개별 필드로 저장된 경우
-            endMinValue = state.endMin
-            endSecValue = state.endSec
-        }
-
+        // 시작 시간 입력
         FormFieldWithLabel("시작 지점") {
             TimeInputFields(
                 min = startMinValue,
                 onMinChange = { 
-                    if (state.startMin.contains(":")) {
-                        // 분:초 형식으로 저장된 경우
-                        onStateChange(state.copy(startMin = "$it:$startSecValue"))
-                    } else {
-                        // 기존 방식
-                        onStateChange(state.copy(startMin = it)) 
-                    }
+                    updateTimeState(state, onStateChange, isStart = true, isMin = true, it)
                 },
                 sec = startSecValue,
                 onSecChange = { 
-                    if (state.startMin.contains(":")) {
-                        // 분:초 형식으로 저장된 경우
-                        onStateChange(state.copy(startMin = "$startMinValue:$it"))
-                    } else {
-                        // 기존 방식
-                        onStateChange(state.copy(startSec = it)) 
-                    }
+                    updateTimeState(state, onStateChange, isStart = true, isMin = false, it)
                 }
             )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // 종료 시간 추출
+        val (endMinValue, endSecValue) = extractTimeValues(state.endMin, state.endSec)
+        
+        // 종료 시간 입력
         FormFieldWithLabel("종료 지점") {
             TimeInputFields(
                 min = endMinValue,
                 onMinChange = { 
-                    if (state.endMin.contains(":")) {
-                        // 분:초 형식으로 저장된 경우
-                        onStateChange(state.copy(endMin = "$it:$endSecValue"))
-                    } else {
-                        // 기존 방식
-                        onStateChange(state.copy(endMin = it)) 
-                    }
+                    updateTimeState(state, onStateChange, isStart = false, isMin = true, it)
                 },
                 sec = endSecValue,
                 onSecChange = { 
-                    if (state.endMin.contains(":")) {
-                        // 분:초 형식으로 저장된 경우
-                        onStateChange(state.copy(endMin = "$endMinValue:$it"))
-                    } else {
-                        // 기존 방식
-                        onStateChange(state.copy(endSec = it)) 
-                    }
+                    updateTimeState(state, onStateChange, isStart = false, isMin = false, it)
                 }
             )
+        }
+    }
+}
+
+// 시간 값 추출 함수
+private fun extractTimeValues(minutes: String, seconds: String): Pair<String, String> {
+    return if (minutes.contains(":")) {
+        // MM:SS 형식으로 저장된 경우
+        val parts = minutes.split(":")
+        val min = parts.getOrNull(0) ?: ""
+        val sec = parts.getOrNull(1) ?: ""
+        min to sec
+    } else {
+        // 개별 필드로 저장된 경우
+        minutes to seconds
+    }
+}
+
+// 시간 상태 업데이트 함수
+private fun updateTimeState(
+    state: HighlightUiState,
+    onStateChange: (HighlightUiState) -> Unit,
+    isStart: Boolean,
+    isMin: Boolean,
+    value: String
+) {
+    if (isStart) {
+        // 시작 시간 업데이트
+        if (state.startMin.contains(":")) {
+            // MM:SS 형식일 경우
+            val parts = state.startMin.split(":")
+            val min = if (isMin) value else parts.getOrNull(0) ?: ""
+            val sec = if (!isMin) value else parts.getOrNull(1) ?: ""
+            onStateChange(state.copy(startMin = "$min:$sec"))
+        } else {
+            // 개별 필드일 경우
+            if (isMin) {
+                onStateChange(state.copy(startMin = value))
+            } else {
+                onStateChange(state.copy(startSec = value))
+            }
+        }
+    } else {
+        // 종료 시간 업데이트
+        if (state.endMin.contains(":")) {
+            // MM:SS 형식일 경우
+            val parts = state.endMin.split(":")
+            val min = if (isMin) value else parts.getOrNull(0) ?: ""
+            val sec = if (!isMin) value else parts.getOrNull(1) ?: ""
+            onStateChange(state.copy(endMin = "$min:$sec"))
+        } else {
+            // 개별 필드일 경우
+            if (isMin) {
+                onStateChange(state.copy(endMin = value))
+            } else {
+                onStateChange(state.copy(endSec = value))
+            }
         }
     }
 }
@@ -277,12 +305,10 @@ private fun TimeInputFields(
         )
         Text(
             ":",
-            style = TextStyle(
-                fontFamily = pretendard,
-                color = Color.Gray,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp
-            )
+            fontFamily = pretendard,
+            color = Gray.Gray500,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp
         )
         // 초(seconds) 입력 필드
         Input(

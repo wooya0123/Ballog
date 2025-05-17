@@ -40,72 +40,65 @@ fun HighlightCard(
             .padding(16.dp)
     ) {
         Column {
-            TitleRow(title = title, onEdit = onEdit)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    color = Gray.Gray800,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = pretendard,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_edit),
+                    contentDescription = "편집",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { onEdit() },
+                    tint = Gray.Gray700
+                )
+            }
+            
             Spacer(modifier = Modifier.height(8.dp))
-            TimeLikeRow(
-                startTime = startTime,
-                endTime = endTime,
-                isLiked = isLiked,
-                onLike = {
-                    isLiked = !isLiked
-                    onLike()
-                }
-            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HighlightTimeStamp(startTime = startTime, endTime = endTime)
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Icon(
+                    painter = painterResource(id = if (isLiked) R.drawable.ic_heart_fill else R.drawable.ic_heart),
+                    contentDescription = if (isLiked) "좋아요 취소" else "좋아요",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { 
+                            isLiked = !isLiked
+                            onLike() 
+                        },
+                    tint = Color.Red
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun TitleRow(title: String, onEdit: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            color = Gray.Gray800,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            fontFamily = pretendard,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_edit),
-            contentDescription = "편집",
-            modifier = Modifier
-                .size(20.dp)
-                .clickable { onEdit() },
-            tint = Gray.Gray700
-        )
-    }
-}
-
-@Composable
-private fun TimeLikeRow(
-    startTime: String,
-    endTime: String,
-    isLiked: Boolean,
-    onLike: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TimeStamp(startTime = startTime, endTime = endTime)
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Icon(
-            painter = painterResource(id = if (isLiked) R.drawable.ic_heart_fill else R.drawable.ic_heart),
-            contentDescription = if (isLiked) "좋아요 취소" else "좋아요",
-            modifier = Modifier
-                .size(20.dp)
-                .clickable { onLike() },
-            tint = Color.Red // ❤️ 항상 빨간색으로 표시
-        )
-    }
+private fun HighlightTimeStamp(startTime: String, endTime: String) {
+    Text(
+        text = "$startTime ~ $endTime",
+        color = Gray.Gray600,
+        fontSize = 14.sp,
+        fontFamily = pretendard,
+        fontWeight = FontWeight.Normal
+    )
 }
 
 @Preview(showBackground = true)

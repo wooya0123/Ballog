@@ -31,6 +31,11 @@ fun MatchVideoTab(matchId: Int) {
 
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+    
+    // ViewModel과 상태 초기화
+    val videoViewModel: VideoViewModel = viewModel()
+    val videoUiState by videoViewModel.videoUiState.collectAsState()
 
     var selectedQuarter by remember { mutableStateOf("1 쿼터") }
     var expanded by remember { mutableStateOf(false) }
@@ -40,63 +45,128 @@ fun MatchVideoTab(matchId: Int) {
     var showDeleteVideoDialog by remember { mutableStateOf(false) }
     var editingHighlight by remember { mutableStateOf(HighlightUiState()) }
     var deleteVideoId by remember { mutableStateOf(-1) }
-
-    val videoViewModel: VideoViewModel = viewModel()
-    val videoUiState by videoViewModel.videoUiState.collectAsState()
-    val context = LocalContext.current
     
+    // 쿼터 옵션 계산
     val quarterOptions = remember(videoUiState.totalQuarters) {
         (1..videoUiState.totalQuarters).map { "$it 쿼터" }
     }
 
+    // QuarterData 컬렉션 초기화
     val quarterData = remember(quarterOptions) {
         mutableStateMapOf<String, QuarterVideoData>().apply {
             quarterOptions.forEach { this[it] = QuarterVideoData() }
         }
     }
 
+    // 현재 선택된 쿼터 데이터 획득 함수
     fun currentData(): QuarterVideoData = quarterData[selectedQuarter] ?: QuarterVideoData()
 
+    // 초기 데이터 로드
     LaunchedEffect(Unit) {
+        Log.d("MatchVideoTab", "🔄 초기 데이터 로드 시작")
         videoViewModel.getMatchVideos(matchId)
     }
+    
+    // API 응답으로 쿼터 데이터 업데이트 및 썸네일 로드 트리거를 하나로 통합
+    LaunchedEffect(videoUiState.quarterList) {
+        if (videoUiState.quarterList.isNotEmpty()) {
+            Log.d("MatchVideoTab", "🧩 API 응답 기반으로 quarterData 초기화")
+            
+            // 현재 선택된 쿼터 저장
+            val currentQuarter = selectedQuarter
+            var isFirstLoad = true
+            var firstQuarterVideo: String? = null
+            
+            // 기존 quarterData 초기화
+            quarterData.clear()
+            quarterOptions.forEach { quarter ->
+                quarterData[quarter] = QuarterVideoData(
+                    quarterNumber = quarter.filter { it.isDigit() }.toIntOrNull() ?: 1
+                )
+            }
+            
+            // API 응답의 quarterList로 업데이트
+            videoUiState.quarterList.forEach { video ->
+                val quarter = "${video.quarterNumber ?: 1} 쿼터"
+                
+                // 비디오 URL이 있는 경우만 추가
+                if (video.videoUrl?.isNotBlank() == true) {
+                    // 첫 번째 쿼터인지 확인하고 저장 
+                    if (quarter == "1 쿼터") {
+                        firstQuarterVideo = quarter
+                    }
+                    // 처음 발견된 비디오가 있는 쿼터 저장 (1쿼터 비디오가 없을 경우 대비)
+                    else if (firstQuarterVideo == null) {
+                        firstQuarterVideo = quarter
+                    }
+                    
+                    quarterData[quarter] = QuarterVideoData(
+                        videoId = video.videoId ?: -1,
+                        quarterNumber = video.quarterNumber ?: 1,
+                        videoUrl = video.videoUrl ?: "",
+                        highlights = video.highlights,
+                        // 첫 진입 시 showPlayer 상태 설정
+                        showPlayer = false
+                    )
+                    
+                    Log.d("MatchVideoTab", "🧩 $quarter → videoUrl=${video.videoUrl}, highlight=${video.highlights.size}개")
+                } else {
+                    Log.d("MatchVideoTab", "⚠️ $quarter → 비디오 URL 없음")
+                }
+            }
+            
+            // 쿼터 선택 처리
+            if (quarterOptions.isNotEmpty()) {
+                // 항상 1쿼터로 시작
+                val targetQuarter = if ("1 쿼터" in quarterOptions) "1 쿼터" else quarterOptions.first()
+                selectedQuarter = targetQuarter
+                Log.d("MatchVideoTab", "🔄 초기 진입 시 1쿼터로 설정: $targetQuarter")
+                
+                // 1쿼터 비디오 있으면 썸네일 로드 트리거
+                if (quarterData[targetQuarter]?.videoUrl?.isNotBlank() == true) {
+                    // 썸네일 로드 트리거
+                    coroutineScope.launch {
+                        // 먼저 플레이어 모드로 충분히 표시하여 썸네일 생성 보장
+                        kotlinx.coroutines.delay(300)
+                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = true) ?: QuarterVideoData()
+                        
+                        kotlinx.coroutines.delay(1000)
+                        
+                        // 그 후 썸네일 모드로 전환
+                        Log.d("MatchVideoTab", "🖼️ 첫 진입 시 썸네일 모드로 전환 중...")
+                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
+                        
+                        // 자동 클릭 시뮬레이션 - 필요한 경우
+                        kotlinx.coroutines.delay(200)
+                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = true) ?: QuarterVideoData()
+                        
+                        // 확실하게 썸네일 노출을 위해 다시 플레이어 모드로 변경
+                        kotlinx.coroutines.delay(200)
+                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
+                    }
+                }
+            }
+            
+            // 선택된 쿼터에 비디오가 없는 경우 처리
+            if (quarterData[selectedQuarter]?.videoUrl?.isBlank() == true && firstQuarterVideo != null) {
+                Log.d("MatchVideoTab", "⚠️ 선택된 쿼터($selectedQuarter)에 비디오가 없어 로드할 수 없음")
+            }
+        }
+    }
 
-    // 쿼터 옵션이 변경되었는데 현재 선택된 쿼터가 유효하지 않은 경우 첫 번째 쿼터로 변경
+    // 쿼터 옵션 변경 감지 - 이미 다른 로직에서 처리되므로 간소화
     LaunchedEffect(quarterOptions) {
         if (selectedQuarter !in quarterOptions && quarterOptions.isNotEmpty()) {
             selectedQuarter = quarterOptions.first()
         }
     }
 
-    LaunchedEffect(videoUiState.quarterList) {
-        Log.d("MatchVideoTab", "🧩 API 응답 기반으로 quarterData 초기화")
-        // 기존 quarterData 초기화
-        quarterData.clear()
-        quarterOptions.forEach { quarter ->
-            quarterData[quarter] = QuarterVideoData(
-                quarterNumber = quarter.filter { it.isDigit() }.toIntOrNull() ?: 1
-            )
-        }
-        
-        // API 응답의 quarterList로 업데이트
-        videoUiState.quarterList.forEach { video ->
-            val quarter = "${video.quarterNumber ?: 1} 쿼터"
-            quarterData[quarter] = QuarterVideoData(
-                videoId = video.videoId ?: -1,
-                quarterNumber = video.quarterNumber ?: 1,
-                videoUrl = video.videoUrl ?: "",
-                highlights = video.highlights,
-                showPlayer = quarterData[quarter]?.showPlayer ?: false  // 기존 showPlayer 상태 유지
-            )
-            Log.d("MatchVideoTab", "🧩 $quarter → videoUrl=${video.videoUrl}, highlight=${video.highlights.size}개")
-        }
-    }
-
+    // 비디오 업로드 런처
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             Log.d("MatchVideoTab", "📁 영상 URI 선택됨: $uri")
 
-            // 모든 쿼터의 showPlayer false
+            // 모든 쿼터의 showPlayer false로 설정
             quarterData.forEach { (key, value) ->
                 quarterData[key] = value.copy(showPlayer = false)
             }
@@ -127,8 +197,22 @@ fun MatchVideoTab(matchId: Int) {
         } ?: Log.w("MatchVideoTab", "⛔ 영상 URI가 null입니다.")
     }
 
+    // UI 렌더링
     Column(modifier = Modifier.fillMaxSize()) {
         val current = currentData()
+        
+        // 첫 진입 시 showPlayer가 false이면서 videoUrl이 있는 경우를 위한 처리
+        LaunchedEffect(current) {
+            if (current.videoUrl.isNotBlank() && !current.showPlayer) {
+                Log.d("MatchVideoTab", "🔄 첫 렌더링 시 비디오 감지 - 썸네일 표시 준비")
+                
+                // 썸네일 표시 트리거를 위한 작업
+                kotlinx.coroutines.delay(200)
+                quarterData[selectedQuarter] = current.copy(showPlayer = true)
+                kotlinx.coroutines.delay(500)
+                quarterData[selectedQuarter] = current.copy(showPlayer = false)
+            }
+        }
 
         HighlightContentSection(
             videoUri = current.videoUrl.takeIf { it.isNotBlank() }?.let { Uri.parse(it) },
@@ -191,6 +275,7 @@ fun MatchVideoTab(matchId: Int) {
         )
     }
 
+    // 하이라이트 추가/수정 동작 처리
     val confirmAction: () -> Unit = {
         val updatedHighlight = editingHighlight.copy(
             startMin = editingHighlight.startMin.padStart(2, '0'),
@@ -273,6 +358,7 @@ fun MatchVideoTab(matchId: Int) {
         }
     }
 
+    // 바텀시트 및 다이얼로그 표시
     if (showAddSheet) {
         HighlightBottomSheet(
             title = "하이라이트 구간 추가",
