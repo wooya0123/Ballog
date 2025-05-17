@@ -21,6 +21,8 @@ import com.ballog.mobile.R
 import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.components.ButtonColor
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 
 @Composable
 fun MatchDataCard(
@@ -30,7 +32,10 @@ fun MatchDataCard(
     endTime: String,
     buttonText: String,
     modifier: Modifier = Modifier,
-    onButtonClick: (() -> Unit)? = null
+    onButtonClick: (() -> Unit)? = null,
+    checked: Boolean = false,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -51,6 +56,16 @@ fun MatchDataCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Checkbox(
+                    checked = checked,
+                    onCheckedChange = onCheckedChange,
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Gray.Gray800,
+                        checkmarkColor = Color.White,
+                        uncheckedColor = Gray.Gray400
+                    ),
+                    modifier = Modifier.padding(end = 8.dp)
+                )
                 Text(
                     text = date,
                     fontSize = 16.sp,
@@ -60,7 +75,7 @@ fun MatchDataCard(
                     modifier = Modifier.weight(1f)
                 )
                 BallogButton(
-                    onClick = { /* TODO: 삭제 콜백 구현 필요시 전달 */ },
+                    onClick = { onDeleteClick?.invoke() },
                     type = ButtonType.ICON_ONLY,
                     buttonColor = ButtonColor.ALERT,
                     icon = painterResource(id = R.drawable.ic_trash),
