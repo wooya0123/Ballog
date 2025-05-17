@@ -117,32 +117,36 @@ fun MatchVideoTab(matchId: Int) {
             
             // 쿼터 선택 처리
             if (quarterOptions.isNotEmpty()) {
-                // 항상 1쿼터로 시작
-                val targetQuarter = if ("1 쿼터" in quarterOptions) "1 쿼터" else quarterOptions.first()
-                selectedQuarter = targetQuarter
-                Log.d("MatchVideoTab", "🔄 초기 진입 시 1쿼터로 설정: $targetQuarter")
+                // 초기 실행시에만 1쿼터로 시작하고, 영상 삭제 후에는 현재 쿼터 유지
+                if (selectedQuarter.isEmpty() || selectedQuarter !in quarterOptions) {
+                    val targetQuarter = if ("1 쿼터" in quarterOptions) "1 쿼터" else quarterOptions.first()
+                    selectedQuarter = targetQuarter
+                    Log.d("MatchVideoTab", "🔄 초기 진입 시 1쿼터로 설정: $targetQuarter")
+                } else {
+                    Log.d("MatchVideoTab", "🔄 기존 쿼터 유지: $selectedQuarter")
+                }
                 
-                // 1쿼터 비디오 있으면 썸네일 로드 트리거
-                if (quarterData[targetQuarter]?.videoUrl?.isNotBlank() == true) {
+                // 현재 쿼터 비디오 있으면 썸네일 로드 트리거
+                if (quarterData[selectedQuarter]?.videoUrl?.isNotBlank() == true) {
                     // 썸네일 로드 트리거
                     coroutineScope.launch {
                         // 먼저 플레이어 모드로 충분히 표시하여 썸네일 생성 보장
                         kotlinx.coroutines.delay(300)
-                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = true) ?: QuarterVideoData()
+                        quarterData[selectedQuarter] = quarterData[selectedQuarter]?.copy(showPlayer = true) ?: QuarterVideoData()
                         
                         kotlinx.coroutines.delay(1000)
                         
                         // 그 후 썸네일 모드로 전환
                         Log.d("MatchVideoTab", "🖼️ 첫 진입 시 썸네일 모드로 전환 중...")
-                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
+                        quarterData[selectedQuarter] = quarterData[selectedQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
                         
                         // 자동 클릭 시뮬레이션 - 필요한 경우
                         kotlinx.coroutines.delay(200)
-                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = true) ?: QuarterVideoData()
+                        quarterData[selectedQuarter] = quarterData[selectedQuarter]?.copy(showPlayer = true) ?: QuarterVideoData()
                         
                         // 확실하게 썸네일 노출을 위해 다시 플레이어 모드로 변경
                         kotlinx.coroutines.delay(200)
-                        quarterData[targetQuarter] = quarterData[targetQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
+                        quarterData[selectedQuarter] = quarterData[selectedQuarter]?.copy(showPlayer = false) ?: QuarterVideoData()
                     }
                 }
             }
@@ -253,10 +257,13 @@ fun MatchVideoTab(matchId: Int) {
                     deleteVideoId = videoId
                     showDeleteVideoDialog = true
                 } else {
-                    // 유효한 videoId가 없는 경우 로컬 상태만 초기화
+                    // 유효한 videoId가 없는 경우 로컬 상태만 초기화하지만 현재 선택된 쿼터는 유지
+                    val currentQuarterNumber = selectedQuarter.filter { it.isDigit() }.toIntOrNull() ?: 1
                     quarterData[selectedQuarter] = QuarterVideoData(
-                        quarterNumber = selectedQuarter.filter { it.isDigit() }.toIntOrNull() ?: 1
+                        quarterNumber = currentQuarterNumber
                     )
+                    // 선택된 쿼터는 그대로 유지
+                    Log.d("MatchVideoTab", "🔄 쿼터 유지: $selectedQuarter")
                 }
             },
             onUploadClick = {
