@@ -36,6 +36,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun HighlightContentSection(
@@ -156,6 +158,14 @@ fun VideoPlaceholderBox(
     var playerReady by remember { mutableStateOf(false) }
     var videoLoading by remember { mutableStateOf(false) }
     var isVisibleState by remember { mutableStateOf(false) }
+    
+    // 사용자 시크 여부 추적
+    var isUserSeeking by remember { mutableStateOf(false) }
+    var lastPosition by remember { mutableStateOf(0L) }
+    var positionUpdateTime by remember { mutableStateOf(0L) }
+    
+    // 하이라이트에서 시크 중인지 추적
+    var isHighlightSeeking by remember { mutableStateOf(false) }
     
     // 디버깅 로그 - 컴포넌트 진입 시 상태 기록
     LaunchedEffect(Unit) {
@@ -282,9 +292,26 @@ fun VideoPlaceholderBox(
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
                     Player.STATE_READY -> {
-                        videoLoading = false
+                        // 하이라이트에서 시크 중이 아닌 경우에만 로딩 종료
+                        if (!isHighlightSeeking) {
+                            videoLoading = false
+                        } else {
+                            // 하이라이트 시크 후 로딩 완료 시 짧은 지연 후 로딩창 숨김
+                            kotlinx.coroutines.MainScope().launch {
+                                // 로딩창을 약간 더 유지
+                                kotlinx.coroutines.delay(300)
+                                videoLoading = false
+                                isHighlightSeeking = false
+                                Log.d("VideoPlaceholderBox", "🎯 하이라이트 시크 로딩 완료")
+                            }
+                        }
+                        
                         playerReady = true
                         isVisibleState = true
+                        
+                        // 로딩 완료 시 현재 시간 기록 (나중에 빠른 시간 내 위치 변경 감지에 사용)
+                        positionUpdateTime = System.currentTimeMillis()
+                        lastPosition = exoPlayer.currentPosition
                         
                         // 재생 준비 완료 시 항상 시작 위치로 이동
                         if (shouldResetPosition) {
@@ -296,8 +323,18 @@ fun VideoPlaceholderBox(
                         Log.d("VideoPlaceholderBox", "✅ 비디오 준비 완료: $selectedQuarter")
                     }
                     Player.STATE_BUFFERING -> {
-                        videoLoading = true
-                        Log.d("VideoPlaceholderBox", "⏳ 비디오 버퍼링 중: $selectedQuarter")
+                        // 사용자 시크 중일 때는 로딩 인디케이터를 표시하지 않음
+                        // 하이라이트에서 시크 중일 때는 로딩 인디케이터를 표시함
+                        if (!isUserSeeking || isHighlightSeeking) {
+                            videoLoading = true
+                            if (isHighlightSeeking) {
+                                Log.d("VideoPlaceholderBox", "⏳ 비디오 버퍼링 중: $selectedQuarter (하이라이트 시크)")
+                            } else {
+                                Log.d("VideoPlaceholderBox", "⏳ 비디오 버퍼링 중: $selectedQuarter (프로그래밍 방식)")
+                            }
+                        } else {
+                            Log.d("VideoPlaceholderBox", "⏳ 비디오 버퍼링 중: $selectedQuarter (사용자 시크 - 로딩 표시 안함)")
+                        }
                     }
                     Player.STATE_ENDED -> {
                         Log.d("VideoPlaceholderBox", "🔚 비디오 재생 완료: $selectedQuarter")
@@ -307,7 +344,51 @@ fun VideoPlaceholderBox(
                     }
                 }
             }
+            
+            // 재생 상태 변경 감지
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                Log.d("VideoPlaceholderBox", "🎮 재생 상태 변경: $isPlaying")
+            }
+            
+            // 플레이어 위치 변경 감지 (시크 포함)
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo, 
+                newPosition: Player.PositionInfo, 
+                reason: Int
+            ) {
+                // 재생 중이 아닐 때 발생한 위치 변화는 사용자의 시크로 간주
+                val currentTime = System.currentTimeMillis()
+                val timeDiff = currentTime - positionUpdateTime
+                
+                if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                    // 명시적 시크 이벤트
+                    isUserSeeking = true
+                    Log.d("VideoPlaceholderBox", "👆 사용자 시크 감지 (discontinuity): ${oldPosition.positionMs} → ${newPosition.positionMs}")
+                    
+                    // 짧은 지연 후 상태 초기화
+                    kotlinx.coroutines.MainScope().launch {
+                        kotlinx.coroutines.delay(500)
+                        isUserSeeking = false
+                    }
+                }
+                
+                // 다음 비교를 위해 현재 위치와 시간 업데이트
+                lastPosition = exoPlayer.currentPosition
+                positionUpdateTime = currentTime
+            }
         })
+    }
+
+    // VideoViewModel에 사용자 시크 감지 메서드 추가
+    LaunchedEffect(viewModel) {
+        viewModel.isSeekingFromHighlight.collect { isFromHighlight ->
+            if (isFromHighlight) {
+                isUserSeeking = false // 하이라이트에서 호출한 경우 사용자 시크가 아님
+                isHighlightSeeking = true // 하이라이트에서 호출한 경우 하이라이트 시크임을 표시
+                videoLoading = true // 하이라이트에서 호출한 경우 로딩창 표시
+                Log.d("VideoPlaceholderBox", "🎯 하이라이트 카드에서 시크 호출 감지 - 로딩창 표시")
+            }
+        }
     }
 
     // 비디오 영역 UI
@@ -334,7 +415,7 @@ fun VideoPlaceholderBox(
                     PlayerView(it).apply {
                         player = exoPlayer
                         useController = true
-                        setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     }
                 },
                 modifier = Modifier.fillMaxSize(),

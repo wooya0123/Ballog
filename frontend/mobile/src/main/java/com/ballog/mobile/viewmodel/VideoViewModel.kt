@@ -43,6 +43,10 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
 
     private var _currentExoPlayer = MutableStateFlow<ExoPlayer?>(null)
     private val currentExoPlayer: StateFlow<ExoPlayer?> = _currentExoPlayer.asStateFlow()
+    
+    // 하이라이트 카드에서 시크했는지 여부 추적
+    private val _isSeekingFromHighlight = MutableStateFlow(false)
+    val isSeekingFromHighlight: StateFlow<Boolean> = _isSeekingFromHighlight.asStateFlow()
 
     fun setError(message: String?) {
         _error.value = message
@@ -552,6 +556,9 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
             // 밀리초로 변환
             val positionMs = (minutes * 60 + seconds) * 1000L
             
+            // 하이라이트에서 호출된 시크임을 표시
+            _isSeekingFromHighlight.value = true
+            
             // 해당 위치로 이동
             Log.d("VideoViewModel", "🎯 타임스탬프로 이동: $timestamp (${positionMs}ms)")
             currentPlayer.seekTo(positionMs)
@@ -560,8 +567,15 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
             if (!currentPlayer.isPlaying) {
                 currentPlayer.play()
             }
+            
+            // 짧은 지연 후 상태 초기화 (로딩이 충분히 오래 표시되도록)
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(300)
+                _isSeekingFromHighlight.value = false
+            }
         } catch (e: Exception) {
             Log.e("VideoViewModel", "❌ 타임스탬프 이동 실패", e)
+            _isSeekingFromHighlight.value = false
         }
     }
 }
