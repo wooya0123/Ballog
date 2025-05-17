@@ -1,17 +1,21 @@
 package notfound.ballog.domain.video.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.entity.Highlight;
+import notfound.ballog.domain.video.entity.Like;
 import notfound.ballog.domain.video.entity.Video;
 import notfound.ballog.domain.video.repository.HighlightRepository;
+import notfound.ballog.domain.video.repository.LikeRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
 import notfound.ballog.domain.video.request.AddHighlightRequest;
 import notfound.ballog.domain.video.request.ExtractHighlightRequest;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
+import notfound.ballog.domain.video.request.UpdateLikeRequest;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
 import notfound.ballog.domain.video.response.ExtractHighlightResponse;
 import notfound.ballog.exception.DuplicateDataException;
@@ -25,14 +29,15 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class HighlightService {
 
+    private final LikeRepository likeRepository;
     private final HighlightRepository highlightRepository;
     private final VideoRepository videoRepository;
     private final WebClient webClient;
@@ -104,5 +109,46 @@ public class HighlightService {
             Highlight highlight = Highlight.of(video, highlightDto);
             highlightRepository.save(highlight);
         }
+    }
+
+
+    @org.springframework.transaction.annotation.Transactional
+    public void updateLikes(UUID userId, @Valid UpdateLikeRequest request) {
+        List<Integer> highlightIds = request.getHighlightIds();
+
+        // 모든 하이라이트가 존재하는지 먼저 확인
+        List<Highlight> highlights = highlightRepository.findAllById(highlightIds);
+        if (highlights.size() != highlightIds.size()) {
+            throw new NotFoundException(BaseResponseStatus.HIGHLIGHT_NOT_FOUND);
+        }
+
+        // 이 사용자와 이 하이라이트들에 대한 기존 좋아요 가져오기
+        List<Like> existingLikes = likeRepository.findAllByLikedUserIdAndHighlightIdIn(userId, highlightIds);
+
+        // 빠른 조회를 위한 맵 생성
+        Map<Integer, Like> likeMap = existingLikes.stream()
+                .collect(Collectors.toMap(Like::getHighlightId, like -> like));
+
+        List<Like> likesToSave = new ArrayList<>();
+
+        for (Integer highlightId : highlightIds) {
+            if (likeMap.containsKey(highlightId)) {
+                // 기존 좋아요 토글
+                Like existingLike = likeMap.get(highlightId);
+                existingLike.toggleLikeStatus();
+                likesToSave.add(existingLike);
+            } else {
+                // 새 좋아요 생성
+                Like newLike = Like.builder()
+                        .highlightId(highlightId)
+                        .likedUserId(userId)
+                        .isLiked(true)
+                        .build();
+                likesToSave.add(newLike);
+            }
+        }
+
+        // 모든 좋아요를 일괄 저장
+        likeRepository.saveAll(likesToSave);
     }
 }
