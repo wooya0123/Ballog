@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,7 +49,7 @@ fun HighlightContentSection(
     Column(modifier = Modifier.fillMaxSize()) {
         VideoPlaceholderBox(
             videoUri = videoUri,
-            showPlayer = showPlayer,
+            showPlayer = true,
             onTogglePlayer = onTogglePlayer,
             selectedQuarter = selectedQuarter,
             viewModel = viewModel
@@ -142,6 +143,7 @@ fun VideoPlaceholderBox(
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
+    var isThumbnailLoading by remember { mutableStateOf(true) }
     var thumbnailUri by remember(videoUri, selectedQuarter) { mutableStateOf(videoUri) }
     
     val exoPlayer = remember(selectedQuarter) {
@@ -175,6 +177,7 @@ fun VideoPlaceholderBox(
 
     LaunchedEffect(videoUri, selectedQuarter) {
         isLoading = true
+        isThumbnailLoading = true
         thumbnailUri = videoUri
 
         videoUri?.let {
@@ -187,6 +190,17 @@ fun VideoPlaceholderBox(
         }
     }
 
+    // 플레이어의 준비 상태를 추적
+    LaunchedEffect(exoPlayer) {
+        exoPlayer.addListener(object : androidx.media3.common.Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == androidx.media3.common.Player.STATE_READY) {
+                    isLoading = false
+                }
+            }
+        })
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -196,25 +210,59 @@ fun VideoPlaceholderBox(
     ) {
         if (videoUri != null) {
             if (showPlayer) {
-                AndroidView(
-                    factory = {
-                        PlayerView(it).apply {
-                            player = exoPlayer
-                            useController = true
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                    update = { it.player = exoPlayer }
-                )
+                // 로딩 중일 때는 검은색 배경만 표시
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(androidx.compose.ui.graphics.Color.Black),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 4.dp
+                        )
+                    }
+                } else {
+                    // 로딩이 완료되면 ExoPlayer 표시
+                    AndroidView(
+                        factory = {
+                            PlayerView(it).apply {
+                                player = exoPlayer
+                                useController = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        update = { it.player = exoPlayer }
+                    )
+                }
             } else {
-                AsyncImage(
-                    model = thumbnailUri,
-                    contentDescription = "비디오 썸네일",
-                    modifier = Modifier.fillMaxSize(),
-                    onLoading = { isLoading = true },
-                    onSuccess = { isLoading = false },
-                    onError = { isLoading = false }
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // 썸네일 로딩 중일 때는 회색 배경만 표시
+                    if (isThumbnailLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Gray.Gray300),
+                            contentAlignment = androidx.compose.ui.Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(36.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else {
+                        // 썸네일 로딩이 완료되면 썸네일 표시
+                        AsyncImage(
+                            model = thumbnailUri,
+                            contentDescription = "비디오 썸네일",
+                            modifier = Modifier.fillMaxSize(),
+                            onLoading = { isThumbnailLoading = true },
+                            onSuccess = { isThumbnailLoading = false },
+                            onError = { isThumbnailLoading = false }
+                        )
+                    }
+                }
             }
         }
     }
