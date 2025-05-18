@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InternalServerException.class)
     public BaseResponse<BaseResponseStatus> InternalServerExceptionHandler(InternalServerException e) {
         log.error("InternalServerException {} {} {}", e.getMessage(), e.getCause(), e.getStackTrace() );
-        return BaseResponse.error(BaseResponseStatus.INTERNAL_SERVER_ERROR);
+        return BaseResponse.error(e.getStatus());
     }
 
     @ExceptionHandler(DuplicateDataException.class)

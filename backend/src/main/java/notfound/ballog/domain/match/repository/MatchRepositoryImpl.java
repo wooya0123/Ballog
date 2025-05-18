@@ -87,4 +87,19 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
                 .fetchOne();
     }
 
+    @Override
+    public List<MatchDto> findMatchesByUserIdAndMatchDates(UUID userId, List<LocalDate> matchDates) {
+        return queryFactory
+                .select(Projections.constructor(MatchDto.class,
+                        match.matchId,
+                        match.matchName,
+                        match.matchDate,
+                        match.startTime,
+                        match.endTime))
+                .from(match)
+                .join(participant).on(participant.matchId.eq(match.matchId).and(participant.userId.eq(userId)))
+                .where(match.matchDate.in(matchDates))
+                .fetch();
+    }
+
 }
