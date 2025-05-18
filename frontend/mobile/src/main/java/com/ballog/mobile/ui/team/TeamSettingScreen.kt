@@ -89,7 +89,7 @@ fun TeamSettingScreen(
 
         Column(
             modifier = Modifier
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 16.dp)
         ) {
             SettingMenuItem(
                 text = "팀 수정",
