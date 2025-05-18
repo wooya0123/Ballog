@@ -15,4 +15,6 @@ public interface MatchRepositoryCustom {
 
     AddQuarterAndGameReportResponse findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate);
 
+    List<MatchDto> findMatchesByUserIdAndMatchDates(UUID userId, List<LocalDate> matchDates);
+
 }
