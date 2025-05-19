@@ -30,10 +30,18 @@ public class WikiCrawlService {
             System.out.println("Status: " + res.statusCode());
             System.out.println(res.body().substring(0, 500));  // 실제 리턴된 HTML 일부
 
+            log.info("▶ HTTP Status: {} for URL: {}", res.statusCode(), wikiUrl);
+            // body 가 너무 크면 substring
+            String body = res.body();
+            log.debug("▶ Response snippet:\n{}", body.length() > 1000
+                    ? body.substring(0, 1000) + "…"
+                    : body);
+
             // style="...width:XYZpx..." 에서 XYZ가 395~405 사이인 div들만 선택
             Elements containers = doc.select(
                     "div[style~=(?i)width\\s*:\\s*(39[5-9]|40[0-5])px]"
             );
+            log.info("▶ style 범위 div 개수: {}", containers.size());
 
             for (Element container : containers) {
                 // 그 안의 table > tbody > tr > td > div > span > span > img[src] 중
@@ -43,6 +51,7 @@ public class WikiCrawlService {
                 );
                 if (img != null) {
                     String src = img.attr("src");
+                    log.info("▶ Found img[src]: {}", src);
                     return src.startsWith("//") ? "https:" + src : src;
                 }
             }
@@ -50,7 +59,7 @@ public class WikiCrawlService {
             log.warn("style=width:400px div 내에 img[src]를 찾을 수 없습니다: {}", wikiUrl);
             return null;
         } catch (IOException e) {
-            log.error("나무위키 이미지 크롤링 오류: {}", e.getMessage());
+            log.error("나무위키 이미지 크롤링 중 에러 발생 URL={}", wikiUrl, e);
             return null;
         }
     }
