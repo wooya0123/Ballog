@@ -1,6 +1,5 @@
 package notfound.ballog.domain.video.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.common.utils.S3Util;
@@ -22,6 +21,7 @@ import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.exception.NotFoundException;
 import notfound.ballog.exception.ValidationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -31,6 +31,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VideoService {
 
     private final LikeRepository likeRepository;
@@ -77,7 +78,6 @@ public class VideoService {
     }
 
 
-    @Transactional
     public GetVideoListResponse getVideo(Integer matchId, UUID userId) {
         // 1. 총 쿼터 수 조회
         Integer totalQuarters = quarterRepository.countByMatchId(matchId);
