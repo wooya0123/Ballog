@@ -58,7 +58,7 @@ fun MyPageScreen(navController: NavHostController, rootNavController: NavHostCon
             .background(Gray.Gray100)
     ) {
         TopNavItem(
-            title = "마이 페이지",
+            title = "내 정보",
             type = TopNavType.MAIN_BASIC,
             navController = navController
         )

@@ -38,25 +38,25 @@ fun SectionHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp + 2.dp) // 아래 경계선 높이만큼 추가
+            .height(48.dp + 2.dp) // 아래 경계선 높이 포함
     ) {
+        val rotationAngle by animateFloatAsState(
+            targetValue = if (isExpanded) 90f else 0f,
+            animationSpec = tween(durationMillis = 300, easing = EaseInOut),
+            label = "rotateSectionIcon"
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
-                .background(Gray.Gray100),
+                .background(Gray.Gray100)
+                .clickable { onToggle() },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val rotationAngle by animateFloatAsState(
-                targetValue = if (isExpanded) 90f else 0f,
-                animationSpec = tween(durationMillis = 300, easing = EaseInOut),
-                label = "rotateSectionIcon"
-            )
-
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clickable { onToggle() },
+                    .size(48.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

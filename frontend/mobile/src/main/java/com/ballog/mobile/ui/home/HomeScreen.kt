@@ -34,7 +34,7 @@ fun HomeScreen(
     val statistics by viewModel.userStatistics.collectAsState()
     val playerCardInfo by viewModel.playerCardInfo.collectAsState()
 
-    val nickname = statistics?.nickname ?: "불러오는 중..."
+    val nickname = statistics?.nickname ?: ""
 
     // 닉네임이 바뀔 때마다 콜백 호출
     LaunchedEffect(nickname) {
@@ -79,7 +79,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TopNavItem(
-                title = "${nickname}님, 안녕하세요!",
+                title = if (!nickname.isNullOrBlank()) "${nickname}님, 안녕하세요!" else "-",
                 type = TopNavType.MAIN_BASIC
             )
 

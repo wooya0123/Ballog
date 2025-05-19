@@ -2,7 +2,6 @@ package com.ballog.mobile.ui.team
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,19 +13,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ballog.mobile.R
 import com.ballog.mobile.navigation.TopNavItem
 import com.ballog.mobile.navigation.TopNavType
@@ -34,7 +25,6 @@ import com.ballog.mobile.ui.components.BallogButton
 import com.ballog.mobile.ui.components.ButtonColor
 import com.ballog.mobile.ui.components.ButtonType
 import com.ballog.mobile.ui.theme.Gray
-import com.ballog.mobile.ui.theme.Primary
 import com.ballog.mobile.ui.theme.System
 import com.ballog.mobile.ui.theme.pretendard
 import com.ballog.mobile.viewmodel.TeamViewModel
@@ -89,7 +79,7 @@ fun TeamSettingScreen(
 
         Column(
             modifier = Modifier
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 16.dp)
         ) {
             SettingMenuItem(
                 text = "팀 수정",
