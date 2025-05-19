@@ -148,9 +148,9 @@ public class TeamService {
 
     @Transactional
     public void updateTeamCard(Integer teamId) {
-        TeamCardDto teamCardDto = playerCardRepository.calculateTeamAverages(teamId);
+        PlayerCardRepository.TeamCardProjection projection = playerCardRepository.calculateTeamAverages(teamId);
         
-        if (teamCardDto == null || teamCardDto.getMemberCount() == 0) {
+        if (projection == null || projection.getMemberCount() == 0) {
             log.info("팀 ID {}에 속한 팀원이 없거나 선수 카드가 없습니다.", teamId);
             return;
         }
@@ -158,13 +158,13 @@ public class TeamService {
         TeamCard teamCard = teamCardRepository.findById(teamId)
                 .orElseThrow(() -> new InternalServerException(BaseResponseStatus.TEAM_NOT_FOUND));
         
-        teamCard.setAvgSpeed(teamCardDto.getAvgSpeed());
-        teamCard.setAvgStamina(teamCardDto.getAvgStamina());
-        teamCard.setAvgAttack(teamCardDto.getAvgAttack());
-        teamCard.setAvgDefense(teamCardDto.getAvgDefense());
-        teamCard.setAvgRecovery(teamCardDto.getAvgRecovery());
+        teamCard.setAvgSpeed(projection.getAvgSpeed());
+        teamCard.setAvgStamina(projection.getAvgStamina());
+        teamCard.setAvgAttack(projection.getAvgAttack());
+        teamCard.setAvgDefense(projection.getAvgDefense());
+        teamCard.setAvgRecovery(projection.getAvgRecovery());
         
-        log.info("팀 ID {}의 팀 카드 업데이트 완료. 팀원 수: {}", teamId, teamCardDto.getMemberCount());
+        log.info("팀 ID {}의 팀 카드 업데이트 완료. 팀원 수: {}", teamId, projection.getMemberCount());
     }
 
 }
