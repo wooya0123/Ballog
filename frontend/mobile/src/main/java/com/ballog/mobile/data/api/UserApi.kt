@@ -11,6 +11,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
+import retrofit2.http.POST
 
 interface UserApi {
 
@@ -37,7 +38,7 @@ interface UserApi {
         @Header("Authorization") token: String
     ): Response<ApiResponse<PlayerCardResponseDto>>
 
-    @GET("v1/users/ai-recommend")
+    @POST("v1/users/ai-recommend")
     suspend fun getAiRecommend(
         @Header("Authorization") token: String
     ): Response<ApiResponse<AiRecommendDto>>

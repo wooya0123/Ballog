@@ -58,36 +58,15 @@ class ExerciseMetricsCalculator(
         }
 
         // 선택된 정규화 방식 적용
-        if (useFieldBasedNormalization && fieldCorners != null && false) {
-            // 1. 경기장 좌표 기반 정규화 사용
-            Log.i(TAG, "정규화 방식: 경기장 좌표 기반 (80% 이상 포함)")
-
-            val minLat = fieldCorners.minOf { it.latitude }
-            val maxLat = fieldCorners.maxOf { it.latitude }
-            val minLng = fieldCorners.minOf { it.longitude }
-            val maxLng = fieldCorners.maxOf { it.longitude }
-
-            gpsPoints.forEach { point ->
-                val normalizedLat = (point.latitude - minLat) / (maxLat - minLat)
-                val normalizedLng = (point.longitude - minLng) / (maxLng - minLng)
-
-                val row = (normalizedLat * (ROWS-1)).toInt().coerceIn(0, ROWS-1)
-                val col = (normalizedLng * (COLS-1)).toInt().coerceIn(0, COLS-1)
-
-                val key = Pair(row, col)
-                cellCounts[key] = (cellCounts[key] ?: 0) + 1
-            }
-        } else {
             // 2. Min-Max 정규화 사용
             Log.i(TAG, "정규화 방식: Min-Max (80% 미만 포함 또는 경기장 좌표 없음)")
 
+            // 모든 GPS 포인트를 사용하여 Min-Max 계산
             val minLat = gpsPoints.minOf { it.latitude }
             val maxLat = gpsPoints.maxOf { it.latitude }
             val minLng = gpsPoints.minOf { it.longitude }
             val maxLng = gpsPoints.maxOf { it.longitude }
 
-            Log.d(TAG, "GPS 포인트 범위: 남서(${minLat}, ${minLng}), 북동(${maxLat}, ${maxLng})")
-
             gpsPoints.forEach { point ->
                 val normalizedLat = (point.latitude - minLat) / (maxLat - minLat)
                 val normalizedLng = (point.longitude - minLng) / (maxLng - minLng)
@@ -97,22 +76,88 @@ class ExerciseMetricsCalculator(
 
                 val key = Pair(row, col)
                 cellCounts[key] = (cellCounts[key] ?: 0) + 1
-            }
+
         }
 
         // 최대 카운트 찾기
         val maxCount = cellCounts.values.maxOrNull() ?: 1
         Log.d(TAG, "셀별 최대 카운트: $maxCount, 총 채워진 셀 수: ${cellCounts.size}")
 
-        // 1-10 범위로 정규화하여 그리드에 저장
-        cellCounts.forEach { (pos, count) ->
-            // 안전 검사 추가: 배열 범위를 벗어나지 않도록
-            if (pos.first in 0 until ROWS && pos.second in 0 until COLS) {
-                val normalizedValue = if (count == 0) 0 else {
-                    // 방문 횟수가 1 이상이면 최소값 1 보장, 최대 10까지 정규화
-                    1 + ((count - 1) * 9) / maxCount.coerceAtLeast(1)
+        // 백분위수 기반 정규화 - 히트맵에 더 적합한 방식
+        // 방문 횟수를 정렬하여 백분위수 계산
+        val sortedCounts = cellCounts.values.filter { it > 0 }.sorted()
+
+        if (sortedCounts.isNotEmpty()) {
+            // 히트맵 강도에 대한 임계값 계산 (0-100% 범위에서)
+            val thresholds = mutableListOf<Int>()
+
+            // 주변에 영향을 주는 효과를 위해 상위 백분위 기준으로 임계값 설정
+            // 상위 5%는 10, 상위 15%는 8, 상위 30%는 6, 상위 50%는 4, 나머지는 2
+            val percentiles = listOf(0.95, 0.85, 0.7, 0.5)
+
+            for (p in percentiles) {
+                val index = (sortedCounts.size * p).toInt().coerceAtMost(sortedCounts.size - 1)
+                thresholds.add(sortedCounts[index])
+            }
+
+            Log.d(TAG, "히트맵 임계값: $thresholds")
+
+            // 임계값 기반으로 각 셀에 값 할당
+            cellCounts.forEach { (pos, count) ->
+                if (pos.first in 0 until ROWS && pos.second in 0 until COLS) {
+                    val normalizedValue = when {
+                        count == 0 -> 0
+                        count >= thresholds[0] -> 10  // 상위 5%
+                        count >= thresholds[1] -> 8   // 상위 5-15%
+                        count >= thresholds[2] -> 6   // 상위 15-30%
+                        count >= thresholds[3] -> 4   // 상위 30-50%
+                        else -> 2                     // 하위 50%
+                    }
+                    grid[pos.first][pos.second] = normalizedValue
                 }
-                grid[pos.first][pos.second] = normalizedValue
+            }
+
+            // 주변 영향 확산 - 주변 셀들에 영향 주기
+            val tempGrid = Array(ROWS) { row -> IntArray(COLS) { col -> grid[row][col] } }
+
+            for (row in 0 until ROWS) {
+                for (col in 0 until COLS) {
+                    if (grid[row][col] > 0) {
+                        // 주변 셀들에 영향 주기 (상하좌우)
+                        val neighbors = listOf(
+                            Pair(row-1, col), Pair(row+1, col),
+                            Pair(row, col-1), Pair(row, col+1)
+                        )
+
+                        for ((r, c) in neighbors) {
+                            if (r in 0 until ROWS && c in 0 until COLS) {
+                                // 주변 셀의 값이 현재 셀의 영향을 받을 수 있는 경우에만 업데이트
+                                val spreadValue = grid[row][col] - 2
+                                if (spreadValue > tempGrid[r][c]) {
+                                    tempGrid[r][c] = spreadValue
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 확산된 값 적용
+            for (row in 0 until ROWS) {
+                for (col in 0 until COLS) {
+                    grid[row][col] = tempGrid[row][col]
+                }
+            }
+        } else {
+            // 방문한 셀이 없는 경우, 기본 방식 적용
+            cellCounts.forEach { (pos, count) ->
+                if (pos.first in 0 until ROWS && pos.second in 0 until COLS) {
+                    val normalizedValue = if (count == 0) 0 else {
+                        val ratio = count.toDouble() / maxCount
+                        (1 + (ratio * 9)).toInt().coerceIn(1, 10)
+                    }
+                    grid[pos.first][pos.second] = normalizedValue
+                }
             }
         }
 

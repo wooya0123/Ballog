@@ -46,7 +46,7 @@ data class PlayerCardStatsDto(
     val recovery: Int
 )
 
-data class recommendedPlayer(
+data class RecommendedPlayer(
     val name: String,
     val position: String,
     val style: String,
@@ -57,5 +57,5 @@ data class recommendedPlayer(
 data class AiRecommendDto(
     val conclusion: String,
     val analysis: String,
-    val recommendedPlayer: recommendedPlayer
+    val recommendedPlayer: RecommendedPlayer
 )
