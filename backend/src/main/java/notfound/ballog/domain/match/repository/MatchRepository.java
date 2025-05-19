@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MatchRepository extends JpaRepository<Match, Integer>, MatchRepositoryCustom {
 
-    @Query("select m.matchId, m.matchName from Match m where m.matchId = :matchId")
+    @Query("select new notfound.ballog.domain.quarter.response.AddQuarterAndGameReportResponse(m.matchId, m.matchName) from Match m where m.matchId = :matchId")
     AddQuarterAndGameReportResponse findMatchByUserIdAndMatchId(Integer matchId);
 
 }
