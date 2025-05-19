@@ -1,6 +1,11 @@
 package com.ballog.mobile.ui.match
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
@@ -75,7 +80,11 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
             modifier = Modifier
         )
 
-        if (myRecordExpanded) {
+        AnimatedVisibility(
+            visible = myRecordExpanded,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
             if (selectedQuarter?.reportData != null) {
                 val report = selectedQuarter.reportData
                 val reportCards = listOf(
@@ -94,7 +103,6 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
                     }
                 }
             } else {
-                // 경기 기록이 없는 경우
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -120,7 +128,12 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
                 onToggle = { playerListExpanded = !playerListExpanded },
                 modifier = Modifier
             )
-            if (playerListExpanded) {
+
+            AnimatedVisibility(
+                visible = playerListExpanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     participants.forEach { player ->
                         TeamPlayerCard(
