@@ -19,13 +19,16 @@ public class WikiCrawlService {
             Document doc = Jsoup.connect(wikiUrl)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                             "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .ignoreHttpErrors(true)    // 403 에러를 던지지 않음
+                    .timeout(10_000)
                     .get();
 
             Connection.Response res = Jsoup.connect(wikiUrl)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                             "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                    .header("Referer", wikiUrl)
-                    .ignoreHttpErrors(true)    // 403 페이지도 받아옴
+                    .referrer(wikiUrl)               // 필요하다면
+                    .ignoreHttpErrors(true)          // 403 페이지도 body 로 받음
+                    .timeout(10_000)
                     .execute();
             System.out.println("Status: " + res.statusCode());
             System.out.println(res.body().substring(0, 500));  // 실제 리턴된 HTML 일부
