@@ -11,11 +11,11 @@ import notfound.ballog.domain.user.request.AddS3ImageUrlRequest;
 @AllArgsConstructor
 @Builder
 public class AddS3ImageUrlResponse {
-    private String imageUrl;
+    private String s3Url;
 
-    public static AddS3ImageUrlResponse of(String imageUrl) {
+    public static AddS3ImageUrlResponse of(String presignedUrl) {
         return AddS3ImageUrlResponse.builder()
-                .imageUrl(imageUrl)
+                .s3Url(presignedUrl)
                 .build();
     }
 }

@@ -10,4 +10,6 @@ public interface VideoRepository extends JpaRepository<Video, Integer> {
     List<Video> findAllByMatch_MatchIdAndDeletedFalse(Integer matchId);
 
     Optional<Video> findByMatch_MatchIdAndQuarterNumberAndDeletedFalse(Integer matchId, Integer quarterNumber);
+
+    Optional<Video> findByVideoUrl(String videoUrl);
 }
