@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,29 +15,29 @@ public class WikiCrawlService {
 
     public String getPlayerImageUrl(String wikiUrl) {
         try {
-            // 나무위키 페이지 가져오기
             Document doc = Jsoup.connect(wikiUrl)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                            "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
                     .get();
-            
-            // 정확한 위치의 이미지 선택 (테이블 > tbody > tr > td > div > span > span > img.Bt0LH91h)
-            Element img = doc.selectFirst("table tbody tr td div span span img.Bt0LH91h");
-            
-            if (img != null) {
-                // data-src 먼저 확인 (지연 로딩)
-                String dataSrc = img.attr("data-src");
-                if (!dataSrc.isEmpty()) {
-                    return dataSrc.startsWith("//") ? "https:" + dataSrc : dataSrc;
-                }
-                
-                // 그 다음 src 확인
-                String src = img.attr("src");
-                if (!src.isEmpty()) {
+
+            // style="...width:XYZpx..." 에서 XYZ가 395~405 사이인 div들만 선택
+            Elements containers = doc.select(
+                    "div[style~=(?i)width\\s*:\\s*(39[5-9]|40[0-5])px]"
+            );
+
+            for (Element container : containers) {
+                // 그 안의 table > tbody > tr > td > div > span > span > img[src] 중
+                // data: URL이 아닌 실제 src를 가진 첫 번째 이미지를 찾는다
+                Element img = container.selectFirst(
+                        "table > tbody > tr > td > div > span > span img[src]:not([src^=data:])"
+                );
+                if (img != null) {
+                    String src = img.attr("src");
                     return src.startsWith("//") ? "https:" + src : src;
                 }
             }
 
-            log.warn("선수 이미지를 찾을 수 없습니다: {}", wikiUrl);
+            log.warn("style=width:400px div 내에 img[src]를 찾을 수 없습니다: {}", wikiUrl);
             return null;
         } catch (IOException e) {
             log.error("나무위키 이미지 크롤링 오류: {}", e.getMessage());
