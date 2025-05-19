@@ -83,8 +83,6 @@ fun MatchDataScreen(
                 scope.launch {
                     try {
                         matchReportService.createMatchReport(idStore.getAll())
-                        if(quarterReportList.isEmpty())
-                            viewModel.setNoData()
                         if(stateFlag.value){
                             matchReportService.fetchDayMatches(quarterReportList
                                 .map { it. date }
@@ -233,7 +231,7 @@ fun MatchDataScreen(
                     IconButton(onClick = { stateFlag.value = true
                         viewModel.setLoading() }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_upload),
+                            painter = painterResource(id = R.drawable.ic_reload),
                             contentDescription = "새로고침",
                             tint = Gray.Gray700
                         )
@@ -291,7 +289,7 @@ fun MatchDataScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -304,13 +302,36 @@ fun MatchDataScreen(
                     IconButton(onClick = { stateFlag.value = true
                         viewModel.setLoading()}) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_upload),
+                            painter = painterResource(id = R.drawable.ic_reload),
                             contentDescription = "새로고침",
                             tint = Gray.Gray700
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+                val allChecked = cardList.isNotEmpty() && cardList.all { selectedQuarterList.contains(it.id) }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 10.dp)
+                ) {
+                    androidx.compose.material3.Checkbox(
+                        checked = allChecked,
+                        onCheckedChange = {
+                            if (allChecked) {
+                                matchReportService.uncheckAllQuarters()
+                            } else {
+                                matchReportService.checkAllQuarters(cardList.map { it.id })
+                            }
+                        },
+                        enabled = cardList.isNotEmpty()
+                    )
+                    Text(
+                        text = if (allChecked) "전체해제" else "전체체크",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = pretendard,
+                        color = Color.Black
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -370,6 +391,7 @@ fun MatchDataScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
+                        .padding(start = 24.dp, end = 24.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 BallogButton(
@@ -392,6 +414,7 @@ fun MatchDataScreen(
                                         idStore.add(quarter.id)
                                     }
                                     setSelectedTab(NavigationTab.MATCH)
+                                    viewModel.setLoading()
                                     matchTabNavController.navigate("match/detail/${matchReportResponse.matchId}/${matchReportResponse.matchName}")
                                 }
                             }
@@ -403,6 +426,7 @@ fun MatchDataScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
+                        .padding(start = 24.dp, end = 24.dp)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))

@@ -15,8 +15,8 @@ class ExerciseMetricsCalculator(
     }
 
     fun calculateHeatmap(gpsPoints: List<GpsPoint>): List<List<Int>> {
-        val ROWS = 10
-        val COLS = 16
+        val ROWS = 16
+        val COLS = 10
 
         val grid = Array(ROWS) { IntArray(COLS) { 0 } }
         val cellCounts = mutableMapOf<Pair<Int, Int>, Int>()
@@ -58,7 +58,7 @@ class ExerciseMetricsCalculator(
         }
 
         // 선택된 정규화 방식 적용
-        if (useFieldBasedNormalization && fieldCorners != null) {
+        if (useFieldBasedNormalization && fieldCorners != null && false) {
             // 1. 경기장 좌표 기반 정규화 사용
             Log.i(TAG, "정규화 방식: 경기장 좌표 기반 (80% 이상 포함)")
 
@@ -109,7 +109,8 @@ class ExerciseMetricsCalculator(
             // 안전 검사 추가: 배열 범위를 벗어나지 않도록
             if (pos.first in 0 until ROWS && pos.second in 0 until COLS) {
                 val normalizedValue = if (count == 0) 0 else {
-                    1 + ((count * 9) / maxCount)  // 1-10 범위로 정규화
+                    // 방문 횟수가 1 이상이면 최소값 1 보장, 최대 10까지 정규화
+                    1 + ((count - 1) * 9) / maxCount.coerceAtLeast(1)
                 }
                 grid[pos.first][pos.second] = normalizedValue
             }

@@ -61,7 +61,7 @@ interface MatchApi {
         @Body request: MatchReportRequest
     ): Response<ApiResponse<MatchReportResponse>>
 
-    @POST("v1/matches")
+    @POST("v1/matches/date")
     suspend fun getDayMatches(
         @Header ("Authorization") token: String,
         @Body request: DayMatchesRequest
