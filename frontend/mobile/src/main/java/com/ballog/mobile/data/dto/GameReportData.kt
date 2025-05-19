@@ -28,6 +28,6 @@ data class MatchReportData(
 )
 
 data class MatchReportRequest(
-    val matchDate: String,
+    val matchId: Int,
     val reportDataList: List<MatchReportData>
 )

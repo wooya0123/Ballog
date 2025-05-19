@@ -16,7 +16,6 @@ fun HeatMapOverlay(
 ) {
     val cols = 16
     val rows = 10
-    val alphaMap = listOf(0f, 0.2f, 0.4f, 0.6f, 0.8f, 0.9f)
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val spacingRatio = 0.2f  // 셀 대비 spacing 비율 (20%)
@@ -40,7 +39,15 @@ fun HeatMapOverlay(
         for (x in 0 until cols) {
             for (y in 0 until rows) {
                 val intensity = heatData.getOrNull(x)?.getOrNull(y) ?: 0
-                val alpha = alphaMap.getOrElse(intensity.coerceIn(0, 5)) { 0f }
+                val alpha = when (intensity) {
+                    0 -> 0.1f
+                    1, 2 -> 0.3f
+                    3, 4 -> 0.5f
+                    5, 6 -> 0.6f
+                    7, 8 -> 0.7f
+                    9, 10 -> 0.9f
+                    else -> 0f
+                }
 
                 val left = offsetX + x * (cellWidth + spacingX)
                 val top = offsetY + y * (cellHeight + spacingY)

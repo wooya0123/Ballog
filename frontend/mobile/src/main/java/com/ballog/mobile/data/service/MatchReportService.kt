@@ -57,6 +57,15 @@ class MatchReportService(
         _selectedQuarterList.value = _selectedQuarterList.value - id
     }
 
+    // 전체 체크
+    fun checkAllQuarters(ids: List<String>) {
+        _selectedQuarterList.value = ids
+    }
+    // 전체 해제
+    fun uncheckAllQuarters() {
+        _selectedQuarterList.value = emptyList()
+    }
+
     fun setSelectedMatchId(id: Int) {
         _selectedMatchId.value = id
     }
@@ -122,7 +131,7 @@ class MatchReportService(
             Log.d(TAG, "[sendMatchReport] reportDataList: $reportDataList")
             // 4. 서버에 전송
             val request = MatchReportRequest(
-                matchDate = convertDateFormat(_quarterReportList.value.firstOrNull()!!.date),
+                matchId = _selectedMatchId.value,
                 reportDataList = reportDataList
             )
             Log.d(TAG, "[sendMatchReport] 서버 전송 시작: $request")

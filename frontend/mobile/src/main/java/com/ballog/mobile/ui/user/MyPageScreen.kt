@@ -62,7 +62,6 @@ fun MyPageScreen(navController: NavHostController, rootNavController: NavHostCon
             type = TopNavType.MAIN_BASIC,
             navController = navController
         )
-        Spacer(modifier = Modifier.height(16.dp))
         // 메뉴 리스트 영역
         Column(
             modifier = Modifier

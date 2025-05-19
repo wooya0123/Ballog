@@ -69,7 +69,7 @@ data class MatchReportResponse(
 )
 
 data class DayMatchesRequest(
-    val days: List<String>
+    val dates: List<String>
 )
 
 data class DayMatchesResponse(

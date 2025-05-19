@@ -135,7 +135,7 @@ fun HomeScreen(
                             onClick = onNavigateToStatisticsPage,
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_edit),
+                                painter = painterResource(id = R.drawable.ic_report),
                                 contentDescription = "통계 상세 이동",
                                 tint = Gray.Gray700
                             )
