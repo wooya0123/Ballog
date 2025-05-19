@@ -4,7 +4,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.domain.match.dto.MatchDto;
-import notfound.ballog.domain.quarter.response.AddQuarterAndGameReportResponse;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -74,18 +73,6 @@ public class MatchRepositoryImpl implements MatchRepositoryCustom {
 //                )
 //                .fetchOne();
 //    }
-
-    @Override
-    public AddQuarterAndGameReportResponse findMatchIdByUserIdAndMatchDate(UUID userId, LocalDate matchDate) {
-        return queryFactory
-                .select(Projections.constructor(AddQuarterAndGameReportResponse.class,
-                        match.matchId,
-                        match.matchName))
-                .from(match)
-                .join(participant).on(match.matchId.eq(participant.matchId).and(participant.userId.eq(userId)))
-                .where(match.matchDate.eq(matchDate))
-                .fetchOne();
-    }
 
     @Override
     public List<MatchDto> findMatchesByUserIdAndMatchDates(UUID userId, List<LocalDate> matchDates) {

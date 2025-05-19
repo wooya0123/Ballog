@@ -32,7 +32,7 @@ public class QuarterService {
 
     @Transactional
     public AddQuarterAndGameReportResponse addQuarterAndGameReport(UUID userId, AddQuarterAndGameReportRequest req){
-        AddQuarterAndGameReportResponse resp = matchRepository.findMatchIdByUserIdAndMatchDate(userId, req.getMatchDate());
+        AddQuarterAndGameReportResponse resp = matchRepository.findMatchByUserIdAndMatchId(req.getMatchId());
 
         if(resp.getMatchId() == null){
             // 원래 여기서 매치 추가하고 그 매치 아이디로 쿼터 등록하고 경기 기록 등록 (자동 등록 버전)
