@@ -5,25 +5,23 @@ import org.springframework.stereotype.Service;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @Service
+@Slf4j
 public class NaverCrawlService {
-    private static final Logger log = LoggerFactory.getLogger(NaverCrawlService.class);
 
     // 네이버 검색 URL 템플릿 (query 파라미터만 URLEncoder로 교체)
     private static final String NAVER_SEARCH_URL =
             "https://search.naver.com/search.naver?where=nexearch&query=%s";
 
-    // 브라우저 위장용 User-Agent
-    private static final String USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                    "(KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36";
+//    // 브라우저 위장용 User-Agent
+//    private static final String USER_AGENT =
+//            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+//                    "(KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36";
 
     /**
      * 주어진 선수 이름으로 네이버 검색을 수행해,
@@ -40,7 +38,7 @@ public class NaverCrawlService {
 
             // 2) 페이지 요청 (timeout 5초, referrer 포함)
             Document doc = Jsoup.connect(url)
-                    .userAgent(USER_AGENT)
+//                    .userAgent(USER_AGENT)
                     .referrer("https://search.naver.com")
                     .timeout(5_000)
                     .get();

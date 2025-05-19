@@ -197,8 +197,8 @@ public class UserService {
 
 
         if (wikiUrl != null && !wikiUrl.isEmpty()) {
-            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
-//            String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
+//            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
+            String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
 
             if (imageUrl != null) {
                 recommendedPlayer.remove("namuwiki");
