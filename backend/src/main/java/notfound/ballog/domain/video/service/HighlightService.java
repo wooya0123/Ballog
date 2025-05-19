@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
+import notfound.ballog.domain.match.entity.Match;
+import notfound.ballog.domain.match.repository.MatchRepository;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.entity.Highlight;
 import notfound.ballog.domain.video.entity.Like;
@@ -13,14 +15,16 @@ import notfound.ballog.domain.video.repository.HighlightRepository;
 import notfound.ballog.domain.video.repository.LikeRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
 import notfound.ballog.domain.video.request.AddHighlightRequest;
-import notfound.ballog.domain.video.request.ExtractHighlightRequest;
 import notfound.ballog.domain.video.request.UpdateHighlightRequest;
 import notfound.ballog.domain.video.request.UpdateLikeRequest;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
 import notfound.ballog.domain.video.response.ExtractHighlightResponse;
+import notfound.ballog.domain.video.response.GetLikeResponse;
 import notfound.ballog.exception.DuplicateDataException;
 import notfound.ballog.exception.NotFoundException;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HighlightService {
 
+    private final MatchRepository matchRepository;
     private final LikeRepository likeRepository;
     private final HighlightRepository highlightRepository;
     private final VideoRepository videoRepository;
@@ -112,7 +117,7 @@ public class HighlightService {
     }
 
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void updateLikes(UUID userId, @Valid UpdateLikeRequest request) {
         List<Integer> highlightIds = request.getHighlightIds();
 
@@ -150,5 +155,94 @@ public class HighlightService {
 
         // 모든 좋아요를 일괄 저장
         likeRepository.saveAll(likesToSave);
+    }
+
+
+    @Transactional
+    public GetLikeResponse getLikedHighlights(UUID userId, Integer cursorId, Pageable pageable) {
+        // 1. Slice 객체로 좋아요 데이터 조회
+        Slice<Like> likesSlice = likeRepository.findLikedHighlightsWithCursor(userId, cursorId, pageable);
+
+        List<Like> likes = likesSlice.getContent();
+        if (likes.isEmpty()) {
+            return GetLikeResponse.builder()
+                    .highlights(Collections.emptyList())
+                    .hasNext(false)
+                    .nextCursorId(null)
+                    .build();
+        }
+
+        // 2. 다음 페이지 여부 및 다음 커서 ID 설정
+        boolean hasNext = likesSlice.hasNext();
+        Integer nextCursorId = hasNext ? likes.get(likes.size() - 1).getHighlightId() : null;
+
+        // 3. 하이라이트 ID 추출
+        List<Integer> highlightIds = likes.stream()
+                .map(Like::getHighlightId)
+                .collect(Collectors.toList());
+
+        // 4. 하이라이트 정보 조회
+        List<Highlight> highlights = highlightRepository.findAllById(highlightIds);
+
+        // 5. 하이라이트에서 비디오 ID 추출
+        List<Integer> videoIds = highlights.stream()
+                .map(highlight -> highlight.getVideo().getVideoId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 6. 비디오 정보 조회
+        List<Video> videos = videoRepository.findAllById(videoIds);
+
+        // 7. 비디오에서 매치 ID 추출
+        List<Integer> matchIds = videos.stream()
+                .map(video -> video.getMatch().getMatchId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 8. 매치 정보 조회
+        List<Match> matches = matchRepository.findAllById(matchIds);
+
+        // 9. 빠른 조회를 위한 맵 생성
+        Map<Integer, Highlight> highlightMap = highlights.stream()
+                .collect(Collectors.toMap(Highlight::getHighlightId, h -> h));
+
+        Map<Integer, Video> videoMap = videos.stream()
+                .collect(Collectors.toMap(Video::getVideoId, v -> v));
+
+        Map<Integer, Match> matchMap = matches.stream()
+                .collect(Collectors.toMap(Match::getMatchId, m -> m));
+
+        // 10. 응답 구성
+        List<GetLikeResponse.LikedHighlightInfo> highlightInfos = new ArrayList<>();
+
+        for (Like like : likes) {
+            Highlight highlight = highlightMap.get(like.getHighlightId());
+            if (highlight == null) continue;
+
+            Video video = videoMap.get(highlight.getVideo().getVideoId());
+            if (video == null) continue;
+
+            Match match = matchMap.get(video.getMatch().getMatchId());
+            if (match == null) continue;
+
+            GetLikeResponse.LikedHighlightInfo info = GetLikeResponse.LikedHighlightInfo.builder()
+                    .matchId(match.getMatchId())
+                    .matchName(match.getMatchName())
+                    .matchDate(match.getMatchDate().toString())
+                    .startTime(match.getStartTime() != null ? match.getStartTime().toString() : null)
+                    .endTime(match.getEndTime() != null ? match.getEndTime().toString() : null)
+                    .highlightName(highlight.getHighlightName())
+                    .highlightStartTime(highlight.getStartTime().toString())
+                    .quarterNumber(video.getQuarterNumber())
+                    .build();
+
+            highlightInfos.add(info);
+        }
+
+        return GetLikeResponse.builder()
+                .highlights(highlightInfos)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
     }
 }

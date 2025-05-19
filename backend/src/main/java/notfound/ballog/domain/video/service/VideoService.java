@@ -10,8 +10,10 @@ import notfound.ballog.domain.quarter.repository.QuarterRepository;
 import notfound.ballog.domain.video.dto.HighlightDto;
 import notfound.ballog.domain.video.dto.VideoDto;
 import notfound.ballog.domain.video.entity.Highlight;
+import notfound.ballog.domain.video.entity.Like;
 import notfound.ballog.domain.video.entity.Video;
 import notfound.ballog.domain.video.repository.HighlightRepository;
+import notfound.ballog.domain.video.repository.LikeRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
 import notfound.ballog.domain.video.request.AddS3UrlRequest;
 import notfound.ballog.domain.video.request.AddVideoRequest;
@@ -25,11 +27,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class VideoService {
 
+    private final LikeRepository likeRepository;
     private final VideoRepository videoRepository;
     private final HighlightRepository highlightRepository;
     private final MatchRepository matchRepository;
@@ -74,7 +78,7 @@ public class VideoService {
 
 
     @Transactional
-    public GetVideoListResponse getVideo(Integer matchId) {
+    public GetVideoListResponse getVideo(Integer matchId, UUID userId) {
         // 1. 총 쿼터 수 조회
         Integer totalQuarters = quarterRepository.countByMatchId(matchId);
 
@@ -84,24 +88,31 @@ public class VideoService {
             return GetVideoListResponse.emptyOf(totalQuarters);
         }
 
-        // 3. 응답 객체 구성
-        List<VideoDto> videoDtoList = new ArrayList<>();
-        for (Video video : videoList) {
-            Integer videoId = video.getVideoId();
-            List<HighlightDto> highlightDtoList = new ArrayList<>();
+        // 3. 각 영상별로 하이라이트 목록과, 각 하이라이트에 대해 사용자가 좋아요를 눌렀는지 여부를 포함한 DTO 생성
+        List<VideoDto> videoDtoList = videoList.stream()
+                .map(video -> {
+                    Integer videoId = video.getVideoId();
+                    List<Highlight> highlightList = highlightRepository.findAllByVideo_VideoIdAndDeletedFalse(videoId);
 
-            // 3. 하이라이트 조회
-            List<Highlight> highlightList = highlightRepository.findAllByVideo_VideoIdAndDeletedFalse(videoId);
-            // 하이라이트가 있으면 리스트에 추가
-            for (Highlight highlight : highlightList) {
-                HighlightDto highlightDto = HighlightDto.of(highlight);
-                highlightDtoList.add(highlightDto);
-            }
-            // 4. 쿼터 dto 생성
-            VideoDto videoDto = VideoDto.of(video, highlightDtoList);
-            videoDtoList.add(videoDto);
-        }
+                    // 각 하이라이트별로, 현재 사용자가 좋아요를 눌렀는지 여부를 판단하여 DTO로 변환
+                    List<HighlightDto> highlightDtoList = highlightList.stream()
+                            .map(highlight -> {
+                                // likeRepository를 통해 해당 하이라이트에 대해 사용자가 좋아요를 눌렀는지 조회
+                                boolean isLiked = likeRepository.findAllByLikedUserIdAndHighlightIdIn(
+                                        userId, List.of(highlight.getHighlightId()))
+                                        .stream()
+                                        .anyMatch(Like::getIsLiked);
+                                // 좋아요 여부를 포함하여 DTO 생성
+                                return HighlightDto.of(highlight, isLiked);
+                            })
+                            .toList();
 
+                    // 영상과 하이라이트 DTO 리스트로 VideoDto 생성
+                    return VideoDto.of(video, highlightDtoList);
+                })
+                .toList();
+
+        // 전체 쿼터 수와 영상 DTO 리스트로 응답 생성
         return GetVideoListResponse.of(totalQuarters, videoDtoList);
     }
 
