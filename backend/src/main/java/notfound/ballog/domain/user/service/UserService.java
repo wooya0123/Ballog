@@ -177,7 +177,9 @@ public class UserService {
         // 프롬프트 생성
         String prompt = "다음은 풋살 경기에서 얻은 5개의 게임 데이터입니다:\n\n" +
                 gameDataList +
-                "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로축구선수를 추천해주세요. " +
+                "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로 축구 선수를 추천해주세요. " +
+                "추천한 프로 축구 선수 이름이 나무위키 또는 위키백과에 실제 등록된 선수명인지 먼저 확인하세요.\n" +
+                "— 검색 결과 첫 페이지에서 선수명을 가져오고, 표기가 다르면 그 표기법을 사용하세요.\n\n" +
                 "유저 이름은 " + user.getNickname() + " 입니다." +
                 "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " +
                 "distance는 이동 거리(m), avgHeartRate는 평균 심박수, " +
@@ -194,8 +196,8 @@ public class UserService {
 
 
         if (wikiUrl != null && !wikiUrl.isEmpty()) {
-//            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
-            String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
+            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
+//            String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
 
             if (imageUrl != null) {
                 recommendedPlayer.remove("namuwiki");
