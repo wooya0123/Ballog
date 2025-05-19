@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import android.app.Application
 import com.ballog.mobile.data.api.RetrofitInstance
 import com.ballog.mobile.data.dto.*
+import com.ballog.mobile.data.local.TokenManager
 import com.ballog.mobile.ui.video.HighlightUiState
 import com.ballog.mobile.ui.video.QuarterVideoData
 import com.ballog.mobile.ui.video.VideoUiState
@@ -30,6 +31,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     val videoUiState: StateFlow<VideoUiState> = _videoUiState.asStateFlow()
 
     private val videoApi = RetrofitInstance.videoApi
+    private val tokenManager = RetrofitInstance.getTokenManager()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -69,19 +71,28 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             _error.value = null
             try {
-                val response = videoApi.getMatchVideos(matchId)
+                val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
+                val response = videoApi.getMatchVideos(token, matchId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val result = response.body()!!.result
-                    Log.d("VideoViewModel", "✅ 쿼터 영상 조회 성공 - 총 ${result.totalQuarters}쿼터")
-                    
-                    // quarterList가 null인 경우 빈 리스트로 처리
-                    val quarterList = result.quarterList ?: emptyList()
-                    Log.d("VideoViewModel", "📋 quarterList: ${if (quarterList.isEmpty()) "비어 있음" else quarterList}")
-                    
-                    _videoUiState.value = VideoUiState(
-                        totalQuarters = result.totalQuarters,
-                        quarterList = quarterList.map { it.toQuarterVideoData() }
-                    )
+                    val result = response.body()?.result
+                    if (result != null) {
+                        Log.d("VideoViewModel", "✅ 쿼터 영상 조회 성공 - 총 ${result.totalQuarters}쿼터")
+                        
+                        // quarterList가 null인 경우 빈 리스트로 처리
+                        val quarterList = result.quarterList
+                        val quarterListStr = if (quarterList.isEmpty()) "비어 있음" else quarterList.toString()
+                        Log.d("VideoViewModel", "📋 quarterList: $quarterListStr")
+                        
+                        val mappedQuarterList = quarterList.map { it.toQuarterVideoData() }
+                        
+                        _videoUiState.value = VideoUiState(
+                            totalQuarters = result.totalQuarters,
+                            quarterList = mappedQuarterList
+                        )
+                    } else {
+                        Log.e("VideoViewModel", "❌ API 응답 결과가 null입니다")
+                        _error.value = "데이터를 불러올 수 없습니다"
+                    }
                 } else {
                     val msg = response.body()?.message ?: "쿼터별 영상 조회 실패"
                     Log.e("VideoViewModel", "❌ API 실패 - $msg")
@@ -119,15 +130,19 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("VideoViewModel", "📤 Presigned URL 요청 바디: $json")
 
                 // 1. Presigned URL 발급 요청
-                val response = videoApi.requestUploadUrl(request)
+                val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
+                val response = videoApi.requestUploadUrl(token, request)
                 
                 Log.d("VideoViewModel", "📥 Presigned URL 응답: isSuccess=${response.body()?.isSuccess}, code=${response.body()?.code}")
                 Log.d("VideoViewModel", "📥 응답 메시지: ${response.body()?.message}")
-                Log.d("VideoViewModel", "📥 S3 URL: ${response.body()?.result?.s3Url}")
-
+                
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val presignedUrl = response.body()?.result?.s3Url
-                    if (!presignedUrl.isNullOrEmpty()) {
+                    val presignedResponse = response.body()?.result
+                    val presignedUrl = presignedResponse?.s3Url
+                    
+                    Log.d("VideoViewModel", "📥 S3 URL: $presignedUrl")
+                    
+                    if (presignedUrl != null && presignedUrl.isNotEmpty()) {
                         Log.d("VideoViewModel", "✅ Presigned URL 수신 성공: $presignedUrl")
                         Log.d("VideoViewModel", "📦 S3 업로드 시작")
 
@@ -140,7 +155,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                             Log.d("VideoViewModel", "✅ S3 업로드 성공")
                             
                             // presigned URL에서 쿼리 파라미터 제거
-                            val baseS3Url = presignedUrl.split("?")[0]
+                            val parts = presignedUrl.split("?")
+                            val baseS3Url = if (parts.isNotEmpty()) parts[0] else presignedUrl
                             Log.d("VideoViewModel", "🔗 저장할 영상 URL: $baseS3Url")
                             
                             // 3. 영상 저장 요청
@@ -151,7 +167,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                 videoUrl = baseS3Url
                             )
                             
-                            val saveResponse = videoApi.saveVideo(saveRequest)
+                            val saveResponse = videoApi.saveVideo(token, saveRequest)
                             if (saveResponse.isSuccessful && saveResponse.body()?.isSuccess == true) {
                                 Log.d("VideoViewModel", "✅ 영상 저장 성공")
                                 
@@ -160,88 +176,94 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                 Log.d("VideoViewModel", "🔍 찾을 영상 URL: $baseS3Url")
                                 
                                 // 매치 비디오 목록 조회
-                                val matchResponse = videoApi.getMatchVideos(matchId)
+                                val matchResponse = videoApi.getMatchVideos(token, matchId)
                                 if (matchResponse.isSuccessful && matchResponse.body()?.isSuccess == true) {
-                                    val quarterList = matchResponse.body()?.result?.quarterList ?: emptyList()
-                                    Log.d("VideoViewModel", "📋 매치 영상 목록 조회 성공 - ${quarterList.size}개 쿼터")
-                                    
-                                    // 방금 저장한 영상 찾기
-                                    val savedVideo = quarterList.find { it.videoUrl == baseS3Url }
-                                    val videoId = savedVideo?.videoId
-                                    
-                                    if (videoId != null) {
-                                        Log.d("VideoViewModel", "✅ 저장된 영상 ID 찾음: $videoId")
+                                    val listResult = matchResponse.body()?.result
+                                    if (listResult != null) {
+                                        val quarterList = listResult.quarterList
                                         
-                                        // 4. 오디오 파일 추출
-                                        Log.d("VideoViewModel", "🎵 오디오 추출 프로세스 시작")
-                                        Log.d("VideoViewModel", "📁 원본 비디오 파일: ${file.absolutePath}")
-                                        Log.d("VideoViewModel", "📊 비디오 파일 크기: ${file.length() / 1024}KB")
+                                        Log.d("VideoViewModel", "📋 매치 영상 목록 조회 성공 - ${quarterList.size}개 쿼터")
                                         
-                                        val audioFile = AudioUtils.extractAudioToM4a(context, file)
-                                        if (audioFile != null) {
-                                            Log.d("VideoViewModel", "✅ 오디오 파일 추출 성공")
-                                            Log.d("VideoViewModel", "📁 추출된 오디오 파일: ${audioFile.absolutePath}")
-                                            Log.d("VideoViewModel", "📊 오디오 파일 크기: ${audioFile.length() / 1024}KB")
+                                        // 방금 저장한 영상 찾기
+                                        val savedVideo = quarterList.find { video -> video.videoUrl == baseS3Url }
+                                        val videoId = savedVideo?.videoId
+                                        
+                                        if (videoId != null) {
+                                            Log.d("VideoViewModel", "✅ 저장된 영상 ID 찾음: $videoId")
                                             
-                                            try {
-                                                // 5. 하이라이트 자동 추출 요청
-                                                Log.d("VideoViewModel", "🎯 하이라이트 자동 추출 시작")
-                                                Log.d("VideoViewModel", "📤 하이라이트 추출 요청: videoId=$videoId")
+                                            // 4. 오디오 파일 추출
+                                            Log.d("VideoViewModel", "🎵 오디오 추출 프로세스 시작")
+                                            Log.d("VideoViewModel", "📁 원본 비디오 파일: ${file.absolutePath}")
+                                            Log.d("VideoViewModel", "📊 비디오 파일 크기: ${file.length() / 1024}KB")
+                                            
+                                            val audioFile = AudioUtils.extractAudioToM4a(context, file)
+                                            if (audioFile != null) {
+                                                Log.d("VideoViewModel", "✅ 오디오 파일 추출 성공")
+                                                Log.d("VideoViewModel", "📁 추출된 오디오 파일: ${audioFile.absolutePath}")
+                                                Log.d("VideoViewModel", "📊 오디오 파일 크기: ${audioFile.length() / 1024}KB")
                                                 
-                                                // 파일 파트
-                                                val audioRequestBody = audioFile.asRequestBody("audio/m4a".toMediaType())
-                                                val filePart = MultipartBody.Part.createFormData("file", audioFile.name, audioRequestBody)
-                                                
-                                                // videoId 파트 (JSON 형식이 아닌 일반 문자열로 전송)
-                                                val videoIdPart = videoId.toString()
-                                                
-                                                // API 호출
-                                                val extractionResponse = videoApi.extractHighlights(
-                                                    file = filePart,
-                                                    videoId = videoId
-                                                )
-                                                
-                                                if (extractionResponse.isSuccessful && extractionResponse.body()?.isSuccess == true) {
-                                                    Log.d("VideoViewModel", "✅ 하이라이트 추출 성공")
-                                                    val highlights = extractionResponse.body()?.result
-                                                    Log.d("VideoViewModel", "📋 추출된 하이라이트 수: ${highlights?.size ?: 0}")
-                                                    highlights?.forEachIndexed { index, highlight ->
-                                                        Log.d("VideoViewModel", "🎯 하이라이트 #${index + 1}:")
-                                                        Log.d("VideoViewModel", "- 시작 시간: ${highlight.startTime}")
-                                                        Log.d("VideoViewModel", "- 종료 시간: ${highlight.endTime}")
-                                                        Log.d("VideoViewModel", "- 신뢰도: ${highlight.confidence}")
+                                                try {
+                                                    // 5. 하이라이트 자동 추출 요청
+                                                    Log.d("VideoViewModel", "🎯 하이라이트 자동 추출 시작")
+                                                    Log.d("VideoViewModel", "📤 하이라이트 추출 요청: videoId=$videoId")
+                                                    
+                                                    // 파일 파트
+                                                    val audioRequestBody = audioFile.asRequestBody("audio/m4a".toMediaType())
+                                                    val filePart = MultipartBody.Part.createFormData("file", audioFile.name, audioRequestBody)
+                                                    
+                                                    // API 호출
+                                                    val extractionResponse = videoApi.extractHighlights(
+                                                        token = token,
+                                                        file = filePart,
+                                                        videoId = videoId
+                                                    )
+                                                    
+                                                    if (extractionResponse.isSuccessful && extractionResponse.body()?.isSuccess == true) {
+                                                        Log.d("VideoViewModel", "✅ 하이라이트 추출 성공")
+                                                        val highlights = extractionResponse.body()?.result ?: emptyList()
+                                                        
+                                                        Log.d("VideoViewModel", "📋 추출된 하이라이트 수: ${highlights.size}")
+                                                        highlights.forEachIndexed { index, highlight ->
+                                                            Log.d("VideoViewModel", "🎯 하이라이트 #${(index + 1)}")
+                                                            Log.d("VideoViewModel", "- 시작 시간: ${highlight.startTime}")
+                                                            Log.d("VideoViewModel", "- 종료 시간: ${highlight.endTime}")
+                                                            Log.d("VideoViewModel", "- 신뢰도: ${highlight.confidence}")
+                                                        }
+                                                    } else {
+                                                        Log.e("VideoViewModel", "❌ 하이라이트 추출 실패")
+                                                        Log.e("VideoViewModel", "⚠️ 응답 코드: ${extractionResponse.code()}")
+                                                        Log.e("VideoViewModel", "⚠️ 에러 메시지: ${extractionResponse.body()?.message}")
+                                                        Log.e("VideoViewModel", "⚠️ 에러 바디: ${extractionResponse.errorBody()?.string()}")
+                                                        _error.value = extractionResponse.body()?.message ?: "하이라이트 추출에 실패했습니다."
                                                     }
-                                                } else {
-                                                    Log.e("VideoViewModel", "❌ 하이라이트 추출 실패")
-                                                    Log.e("VideoViewModel", "⚠️ 응답 코드: ${extractionResponse.code()}")
-                                                    Log.e("VideoViewModel", "⚠️ 에러 메시지: ${extractionResponse.body()?.message}")
-                                                    Log.e("VideoViewModel", "⚠️ 에러 바디: ${extractionResponse.errorBody()?.string()}")
-                                                    _error.value = extractionResponse.body()?.message ?: "하이라이트 추출에 실패했습니다."
+                                                } catch (e: Exception) {
+                                                    Log.e("VideoViewModel", "🔥 하이라이트 추출 중 예외 발생", e)
+                                                    Log.e("VideoViewModel", "⚠️ 예외 종류: ${e.javaClass.simpleName}")
+                                                    Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
+                                                    _error.value = "하이라이트 추출 중 오류가 발생했습니다: ${e.message}"
+                                                } finally {
+                                                    // 오디오 파일 삭제
+                                                    Log.d("VideoViewModel", "🗑️ 임시 오디오 파일 삭제 시작")
+                                                    val deleted = audioFile.delete()
+                                                    if (deleted) {
+                                                        Log.d("VideoViewModel", "✅ 임시 오디오 파일 삭제 성공")
+                                                    } else {
+                                                        Log.e("VideoViewModel", "⚠️ 임시 오디오 파일 삭제 실패")
+                                                    }
                                                 }
-                                            } catch (e: Exception) {
-                                                Log.e("VideoViewModel", "🔥 하이라이트 추출 중 예외 발생", e)
-                                                Log.e("VideoViewModel", "⚠️ 예외 종류: ${e.javaClass.simpleName}")
-                                                Log.e("VideoViewModel", "⚠️ 예외 메시지: ${e.message}")
-                                                _error.value = "하이라이트 추출 중 오류가 발생했습니다: ${e.message}"
-                                            } finally {
-                                                // 오디오 파일 삭제
-                                                Log.d("VideoViewModel", "🗑️ 임시 오디오 파일 삭제 시작")
-                                                val deleted = audioFile.delete()
-                                                if (deleted) {
-                                                    Log.d("VideoViewModel", "✅ 임시 오디오 파일 삭제 성공")
-                                                } else {
-                                                    Log.e("VideoViewModel", "⚠️ 임시 오디오 파일 삭제 실패")
-                                                }
+                                            } else {
+                                                Log.e("VideoViewModel", "❌ 오디오 파일 추출 실패")
                                             }
                                         } else {
-                                            Log.e("VideoViewModel", "❌ 오디오 파일 추출 실패")
+                                            Log.e("VideoViewModel", "❌ 저장된 영상을 찾을 수 없음")
+                                            Log.d("VideoViewModel", "📋 조회된 영상 URL 목록:")
+                                            quarterList.forEach { video ->
+                                                val videoUrl = video.videoUrl ?: ""
+                                                Log.d("VideoViewModel", "- $videoUrl")
+                                            }
                                         }
                                     } else {
-                                        Log.e("VideoViewModel", "❌ 저장된 영상을 찾을 수 없음")
-                                        Log.d("VideoViewModel", "📋 조회된 영상 URL 목록:")
-                                        quarterList.forEach { video ->
-                                            Log.d("VideoViewModel", "- ${video.videoUrl}")
-                                        }
+                                        Log.e("VideoViewModel", "❌ API 응답 결과가 null입니다")
                                     }
                                 } else {
                                     Log.e("VideoViewModel", "❌ 매치 영상 목록 조회 실패")
@@ -284,7 +306,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("VideoViewModel", "📋 삭제할 영상 ID: $videoId")
                 Log.d("VideoViewModel", "📋 매치 ID: $matchId")
                 
-                val response = videoApi.deleteVideo(videoId)
+                val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
+                val response = videoApi.deleteVideo(token, videoId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Log.d("VideoViewModel", "✅ 영상 삭제 성공")
                     // ExoPlayer 해제 신호 전송
@@ -314,9 +337,11 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("VideoViewModel", "➕ 하이라이트 추가 시작")
                 Log.d("VideoViewModel", "📋 요청 정보: videoId=${request.videoId}, name=${request.highlightName}, start=${request.startTime}, end=${request.endTime}")
                 
-                val response = videoApi.addHighlight(request)
+                val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
+                val response = videoApi.addHighlight(token, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Log.d("VideoViewModel", "✅ 하이라이트 추가 성공: highlightId=${response.body()?.result?.highlightId}")
+                    val result = response.body()?.result
+                    Log.d("VideoViewModel", "✅ 하이라이트 추가 성공: highlightId=${result?.highlightId}")
                     
                     // 전체 매치 데이터 새로고침
                     Log.d("VideoViewModel", "🔄 매치 데이터 새로고침 시작")
@@ -344,7 +369,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("VideoViewModel", "✏️ 하이라이트 수정 시작")
                 Log.d("VideoViewModel", "📋 수정 정보: highlightId=${request.highlightId}, name=${request.highlightName}, start=${request.startTime}, end=${request.endTime}")
                 
-                val response = videoApi.updateHighlight(request)
+                val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
+                val response = videoApi.updateHighlight(token, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Log.d("VideoViewModel", "✅ 하이라이트 수정 성공")
                     
@@ -375,7 +401,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("VideoViewModel", "📋 삭제할 하이라이트 ID: $highlightId")
                 Log.d("VideoViewModel", "📋 매치 ID: $matchId")
                 
-                val response = videoApi.deleteHighlight(highlightId)
+                val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
+                val response = videoApi.deleteHighlight(token, highlightId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Log.d("VideoViewModel", "✅ 하이라이트 삭제 성공")
                     getMatchVideos(matchId)
@@ -425,21 +452,21 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                         val audioRequestBody = audioFile.asRequestBody("audio/m4a".toMediaType())
                         val filePart = MultipartBody.Part.createFormData("file", audioFile.name, audioRequestBody)
                         
-                        // videoId 파트 (JSON 형식이 아닌 일반 문자열로 전송)
-//                        val videoIdPart = videoId
-                        
                         // API 호출
+                        val token = "Bearer ${tokenManager.getAccessTokenBlocking()}"
                         val extractionResponse = videoApi.extractHighlights(
+                            token = token,
                             file = filePart,
                             videoId = videoId
                         )
                         
                         if (extractionResponse.isSuccessful && extractionResponse.body()?.isSuccess == true) {
                             Log.d("VideoViewModel", "✅ 하이라이트 추출 성공")
-                            val highlights = extractionResponse.body()?.result
-                            Log.d("VideoViewModel", "📋 추출된 하이라이트 수: ${highlights?.size ?: 0}")
-                            highlights?.forEachIndexed { index, highlight ->
-                                Log.d("VideoViewModel", "🎯 하이라이트 #${index + 1}:")
+                            val highlights = extractionResponse.body()?.result ?: emptyList()
+                            
+                            Log.d("VideoViewModel", "📋 추출된 하이라이트 수: ${highlights.size}")
+                            highlights.forEachIndexed { index, highlight ->
+                                Log.d("VideoViewModel", "🎯 하이라이트 #${(index + 1)}")
                                 Log.d("VideoViewModel", "- 시작 시간: ${highlight.startTime}")
                                 Log.d("VideoViewModel", "- 종료 시간: ${highlight.endTime}")
                                 Log.d("VideoViewModel", "- 신뢰도: ${highlight.confidence}")
