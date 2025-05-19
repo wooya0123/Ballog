@@ -1,6 +1,7 @@
 package notfound.ballog.domain.user.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,9 +19,16 @@ public class WikiCrawlService {
             Document doc = Jsoup.connect(wikiUrl)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                             "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                    .referrer("https://namu.wiki/")
-                    .timeout(10000)
                     .get();
+
+            Connection.Response res = Jsoup.connect(wikiUrl)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                            "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .header("Referer", wikiUrl)
+                    .ignoreHttpErrors(true)    // 403 페이지도 받아옴
+                    .execute();
+            System.out.println("Status: " + res.statusCode());
+            System.out.println(res.body().substring(0, 500));  // 실제 리턴된 HTML 일부
 
             // style="...width:XYZpx..." 에서 XYZ가 395~405 사이인 div들만 선택
             Elements containers = doc.select(
