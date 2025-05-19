@@ -26,6 +26,7 @@ public class WikiCrawlService {
             Elements imgs = doc.select(
                     "div[style~=(?i)width\\s*:\\s*(39[5-9]|40[0-5])px] img[src]:not([src^=data:])"
             );
+            log.info("img src: {}", imgs.first().attr("src"));
 
             for (Element img : imgs) {
                 String src = img.attr("src");
