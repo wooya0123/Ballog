@@ -66,6 +66,11 @@ deploy:
         docker-compose rm -f backend nginx &&
         docker-compose build backend nginx &&
         docker-compose up -d backend nginx
+        
+        # 사용하지 않는 이미지 정리
+        echo "사용하지 않는 Docker 이미지 정리 중..." &&
+        docker image prune -af --filter "until=24h"
       "
+      
   only:
     - dev/be

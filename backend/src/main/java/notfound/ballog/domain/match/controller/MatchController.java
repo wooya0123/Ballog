@@ -77,5 +77,4 @@ public class MatchController {
         return BaseResponse.ok(matchService.getMatchListByDate(userId, getMatchListByDateRequest));
     }
 
-
 }
