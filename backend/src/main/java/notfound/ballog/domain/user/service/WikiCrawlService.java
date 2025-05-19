@@ -25,7 +25,7 @@ public class WikiCrawlService {
             log.info("▶ HTTP Status: {}", res.statusCode());
 
             String html = res.body();
-            log.debug("▶ HTML snippet:\n{}", html.length()>1000
+            log.info("▶ HTML snippet:\n{}", html.length()>1000
                     ? html.substring(0,1000)+"…"
                     : html);
 
