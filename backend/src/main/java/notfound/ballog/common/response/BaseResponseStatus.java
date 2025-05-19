@@ -29,6 +29,8 @@ public enum BaseResponseStatus {
     EMAIL_AUTH_CODE_SEND_FAIL(false, 1007, "이메일 확인 코드 전송 중 오류가 발생했습니다."),
     EXPIRED_EMAIL_AUTH_CODE(false, 1008, "이메일 인증 코드가 없거나 만료되었습니다."),
     INVALID_EMAIL_AUTH_CODE(false, 1009, "유효하지 않은 이메일 인증 코드입니다."),
+    RECOMMAND_PLAYER_GPT_ERROR(false, 1010, "OpenAI API 호출 중 오류 발생"),
+
 
     // 유저 관련 로직 에러 (2000번대)
     USER_NOT_FOUND(false, 2000, "해당하는 사용자가 존재하지 않습니다."),
@@ -44,6 +46,7 @@ public enum BaseResponseStatus {
     URL_GENERATION_FAIL(false, 4002, "영상 업로드 url 생성에 실패했습니다."),
     VIDEO_ALREADY_EXIST(false, 4003, "이미 업로드된 영상이 있습니다."),
     HIGHLIGHT_ALREADY_EXIST(false, 4004, "이미 하이라이트를 자동 추출하였습니다."),
+    HIGHLIGHT_EXTRACT_FAIL(false, 4005, "하이라이트 추출에 실패했습니다."),
 
     // 팀 관련 로직 에러 (5000번대)
     TEAM_NOT_FOUND(false, 5000, "해당하는 팀이 존재하지 않습니다."),
@@ -58,7 +61,9 @@ public enum BaseResponseStatus {
 
 
     private final boolean isSuccess;
+
     private final int code;
+
     private final String message;
 
     BaseResponseStatus(boolean isSuccess, int code, String message) {

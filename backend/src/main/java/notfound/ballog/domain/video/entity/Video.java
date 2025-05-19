@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import notfound.ballog.domain.match.entity.Match;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;

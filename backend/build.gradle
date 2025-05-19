@@ -73,6 +73,12 @@ dependencies {
 	// aws
 	implementation('org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE')
 
+	// openai
+	implementation('com.openai:openai-java:0.31.0')
+
+	// jsoup
+	implementation 'org.jsoup:jsoup:1.15.3'
+
 }
 
 tasks.named('test') {

@@ -1,14 +1,12 @@
 package notfound.ballog.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
-import notfound.ballog.domain.user.request.UpdateProfileImageRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
+import notfound.ballog.domain.user.response.AiRecommendResponse;
 import notfound.ballog.domain.user.response.GetPlayerCardResponse;
 import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
@@ -28,12 +26,14 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+
     private final PlayerCardService playerCardService;
 
     @Operation(summary = "유저 정보 조회")
     @GetMapping()
     public BaseResponse<GetUserResponse> getUser(@AuthenticationPrincipal UUID userId) {
         GetUserResponse response = userService.getUser(userId);
+
         return BaseResponse.ok(response);
     }
 
@@ -43,6 +43,7 @@ public class UserController {
                                          @Valid @RequestBody UpdateUserRequest request
     ) {
         userService.updateUser(userId, request);
+
         return BaseResponse.ok();
     }
 
@@ -50,6 +51,7 @@ public class UserController {
     @GetMapping("/player-card")
     public BaseResponse<GetPlayerCardResponse> getMyPlayerCard(@AuthenticationPrincipal UUID userId) {
         GetPlayerCardResponse response = playerCardService.getPlayerCard(userId);
+
         return BaseResponse.ok(response);
     }
 
@@ -57,6 +59,13 @@ public class UserController {
     @GetMapping("/statistics")
     public BaseResponse<GetStatisticsResponse> getStatistics(@AuthenticationPrincipal UUID userId) {
         GetStatisticsResponse response = userService.getStatistics(userId);
+
         return BaseResponse.ok(response);
     }
+
+    @PostMapping("/ai-recommand")
+    public BaseResponse<AiRecommendResponse> getAiRecommend(@AuthenticationPrincipal UUID userId) {
+        return BaseResponse.ok(userService.getAiRecommend(userId));
+    }
+
 }

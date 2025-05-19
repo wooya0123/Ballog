@@ -51,6 +51,11 @@ deploy:
         echo "AWS_S3_BUCKET: $AWS_S3_BUCKET" >> backend/src/main/resources/env.yml &&
         echo "AWS_ACCESS_KEY: $AWS_ACCESS_KEY" >> backend/src/main/resources/env.yml &&
         echo "AWS_SECRET_KEY: $AWS_SECRET_KEY" >> backend/src/main/resources/env.yml &&
+
+        echo "OPENAI_API_KEY: $OPENAI_API_KEY" >> backend/src/main/resources/env.yml &&
+        echo "OPENAI_API_URL: $OPENAI_API_URL" >> backend/src/main/resources/env.yml &&
+        echo "OPENAI_MODEL: $OPENAI_MODEL" >> backend/src/main/resources/env.yml &&
+
         
         # 환경 변수 파일 생성 (.env 파일은 docker-compose에서 사용)
         echo "DB_URL=$DB_URL" > .env &&
@@ -66,6 +71,11 @@ deploy:
         docker-compose rm -f backend nginx &&
         docker-compose build backend nginx &&
         docker-compose up -d backend nginx
+        
+        # 사용하지 않는 이미지 정리
+        echo "사용하지 않는 Docker 이미지 정리 중..." &&
+        docker image prune -af --filter "until=24h"
       "
+      
   only:
     - dev/be

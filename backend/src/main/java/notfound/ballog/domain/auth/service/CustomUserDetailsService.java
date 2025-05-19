@@ -5,12 +5,8 @@ import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.auth.repository.AuthRepository;
 import notfound.ballog.exception.ValidationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor

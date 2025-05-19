@@ -1,56 +1,120 @@
-//package notfound.ballog.domain.user.service;
-//
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.http.HttpEntity;
-//import org.springframework.http.HttpHeaders;
-//import org.springframework.http.MediaType;
-//import org.springframework.stereotype.Service;
-//import org.springframework.web.client.RestTemplate;
-//
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class OpenAIService {
-//
-//    private final RestTemplate restTemplate;
-//
-//    @Value("${openai.api.key}")
-//    private String apiKey;
-//
-//    @Value("${openai.api.url}")
-//    private String apiUrl;
-//
-//    @Value("${openai.model}")
-//    private String model;
-//
-//    public String getCompletionFromGPT(String prompt) {
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        headers.set("Authorization", "Bearer " + apiKey);
-//
-//        Map<String, Object> requestBody = new HashMap<>();
-//        requestBody.put("model", model);
-//
-//        Map<String, String> message = new HashMap<>();
-//        message.put("role", "user");
-//        message.put("content", prompt);
-//
-//        requestBody.put("messages", List.of(message));
-//        requestBody.put("temperature", 0.7);
-//
-//        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-//
-//        try {
-//            Map<String, Object> response = restTemplate.postForObject(apiUrl, requestEntity, Map.class);
-//            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-//            Map<String, Object> messageResponse = (Map<String, Object>) choices.get(0).get("message");
-//            return (String) messageResponse.get("content");
-//        } catch (Exception e) {
-//            return "선수 추천 중 오류가 발생했습니다: " + e.getMessage();
-//        }
-//    }
-//}
+package notfound.ballog.domain.user.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import notfound.ballog.common.response.BaseResponseStatus;
+import notfound.ballog.exception.InternalServerException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OpenAIService {
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${OPENAI_API_KEY}")
+    private String apiKey;
+
+    @Value("${OPENAI_API_URL}")
+    private String apiUrl;
+
+    @Value("${OPENAI_MODEL}")
+    private String model;
+
+    public Map<String, Object> getCompletionFromGPT(String prompt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + apiKey);
+
+        Map<String, Object> requestBody = createRequestBody(createStructuredPrompt(prompt));
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            Map<String, Object> response = restTemplate.postForObject(apiUrl, requestEntity, Map.class);
+            return extractContentFromResponse(response);
+        } catch (Exception e) {
+            log.error("OpenAI API 호출 중 오류 발생", e);
+            throw new InternalServerException(BaseResponseStatus.RECOMMAND_PLAYER_GPT_ERROR);
+        }
+    }
+
+    private String createStructuredPrompt(String prompt) {
+        return prompt + "\n\n다음과 같은 JSON 구조로 응답해주세요:\n" +
+                "{\n" +
+                "  \"analysis\": \"플레이 스타일 분석 내용 (유저 이름을 사용하여 작성, 이름 뒤에 님을 붙여서 작성 {예 : 플레이어님})\",\n" +
+                "  \"recommendedPlayer\": \n" +
+                "    {\n" +
+                "      \"name\": \"선수 이름 (해외 선수 포함 이름을 한글로 번역해서 보여줌)\",\n" +
+                "      \"position\": \"포지션 (영어로 {예 : FW, CM, WB, CB, LW, RW 등등})\",\n" +
+                "      \"style\": \"플레이 스타일\",\n" +
+                "      \"reason\": \"유사한 이유 (유저 이름을 사용하여 작성, 이름 뒤에 님을 붙여서 작성 {예 : 플레이어님})\"\n" +
+                "      \"namuwiki\": \"선수 이름 으로 나무위키 문서 링크를 https://namu.wiki/w/ 뒤에 URL 인코딩된 이름을 붙여서 생성해줘\"\n" +
+                "    }\n" +
+                "  ,\n" +
+                "  \"conclusion\": \"한 줄로 짧고 간결하게 작성 (예: 활동량 기반 전술 미드필더형 선수 등등)\"\n" +
+                "}";
+    }
+
+    private Map<String, Object> createRequestBody(String structuredPrompt) {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", model);
+        
+        Map<String, String> message = new HashMap<>();
+        message.put("role", "user");
+        message.put("content", structuredPrompt);
+        
+        requestBody.put("messages", Collections.singletonList(message));
+        requestBody.put("temperature", 0.7);
+        
+        Map<String, String> responseFormat = new HashMap<>();
+        responseFormat.put("type", "json_object");
+        requestBody.put("response_format", responseFormat);
+        
+        return requestBody;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractContentFromResponse(Map<String, Object> response) {
+        if (response == null) {
+            return Map.of("error", "API 응답이 null입니다");
+        }
+
+        try {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            if (choices == null || choices.isEmpty()) {
+                throw new InternalServerException(BaseResponseStatus.RECOMMAND_PLAYER_GPT_ERROR);
+            }
+
+            Map<String, Object> messageResponse = (Map<String, Object>) choices.get(0).get("message");
+            if (messageResponse == null) {
+                throw new InternalServerException(BaseResponseStatus.RECOMMAND_PLAYER_GPT_ERROR);
+            }
+
+            String content = Optional.ofNullable(messageResponse.get("content"))
+                .map(Object::toString)
+                .orElse("{\"error\": \"API 응답에 내용이 없습니다\"}");
+
+            try {
+                return objectMapper.readValue(content, Map.class);
+            } catch (Exception e) {
+                log.error("JSON 파싱 중 오류 발생", e);
+                throw new InternalServerException(BaseResponseStatus.RECOMMAND_PLAYER_GPT_ERROR);
+            }
+        } catch (ClassCastException e) {
+            log.error("API 응답 파싱 중 형변환 오류", e);
+            throw new InternalServerException(BaseResponseStatus.RECOMMAND_PLAYER_GPT_ERROR);
+        }
+    }
+
+}

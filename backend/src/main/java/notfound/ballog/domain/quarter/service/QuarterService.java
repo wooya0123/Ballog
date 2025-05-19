@@ -32,7 +32,7 @@ public class QuarterService {
 
     @Transactional
     public AddQuarterAndGameReportResponse addQuarterAndGameReport(UUID userId, AddQuarterAndGameReportRequest req){
-        AddQuarterAndGameReportResponse resp = matchRepository.findMatchIdByUserIdAndMatchDate(userId, req.getMatchDate());
+        AddQuarterAndGameReportResponse resp = matchRepository.findMatchByUserIdAndMatchId(req.getMatchId());
 
         if(resp.getMatchId() == null){
             // 원래 여기서 매치 추가하고 그 매치 아이디로 쿼터 등록하고 경기 기록 등록 (자동 등록 버전)
@@ -81,7 +81,8 @@ public class QuarterService {
         for (ReportData reportData : req.getReportDataList()) {
             Quarter quarter = quarterMap.get(reportData.getQuarterNumber());
 
-            if (quarter != null) {
+            // 기록된 적이 없는 게임레포트만 생성, 유저아이디와 쿼터아이디로 찾았는데 있다면 이미 저장이 된 경기 기록임
+            if(!gameReportRepository.existsByUserIdAndQuarterId(userId, quarter.getQuarterId())){
                 gameReportsToSave.add(new GameReport(userId, quarter.getQuarterId(), reportData.getGameReportData(), reportData.getGameSide()));
             }
         }

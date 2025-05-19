@@ -51,7 +51,9 @@ public class HighlightService {
     public void updateHighlight(UpdateHighlightRequest request) {
         Highlight highlight = highlightRepository.findById(request.getHighlightId())
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.HIGHLIGHT_NOT_FOUND));
+
         highlight.update(request);
+
         highlightRepository.save(highlight);
     }
 
@@ -59,7 +61,9 @@ public class HighlightService {
     public void deleteHighlight(Integer highlightId) {
         Highlight highlight = highlightRepository.findById(highlightId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.HIGHLIGHT_NOT_FOUND));
+
         highlight.delete();
+
         highlightRepository.save(highlight);
     }
 
@@ -67,8 +71,11 @@ public class HighlightService {
     public AddHighlightResponse addHighlight(AddHighlightRequest request) {
         Video video = videoRepository.findById(request.getVideoId())
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
+
         Highlight highlight = Highlight.toEntity(video, request.getHighlightName(), request.getStartTime(), request.getEndTime());
+
         Highlight savedHighlight = highlightRepository.save(highlight);
+
         return AddHighlightResponse.of(savedHighlight.getHighlightId());
     }
 
@@ -104,15 +111,21 @@ public class HighlightService {
                 .block();
 
         // DB에 하이라이트 저장
-        List<HighlightDto> highlightList = highlightResponse.getHighlightList();
-        log.info("하이라이트 리스트---------------", highlightList);
-        log.info("하이라이트 갯수---------------", highlightList.size());
+        List<HighlightDto> highlightList = null;
+        if (highlightResponse != null) {
+            highlightList = highlightResponse.getHighlightList();
+            log.info("하이라이트 리스트--------------- {}", highlightList);
+        }
 
-        for (HighlightDto highlightDto : highlightList) {
-            log.info("하이라이트 -----------", highlightDto);
+        if (highlightList != null) {
+            log.info("하이라이트 갯수--------------- {}", highlightList.size());
+            for (HighlightDto highlightDto : highlightList) {
+                Highlight highlight = Highlight.of(video, highlightDto);
 
-            Highlight highlight = Highlight.of(video, highlightDto);
-            highlightRepository.save(highlight);
+                highlightRepository.save(highlight);
+            }
+        } else {
+            throw new NotFoundException(BaseResponseStatus.HIGHLIGHT_EXTRACT_FAIL);
         }
     }
 

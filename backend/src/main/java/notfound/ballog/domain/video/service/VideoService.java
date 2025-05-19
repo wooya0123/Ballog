@@ -36,13 +36,18 @@ public class VideoService {
 
     private final LikeRepository likeRepository;
     private final VideoRepository videoRepository;
+
     private final HighlightRepository highlightRepository;
+
     private final MatchRepository matchRepository;
+
     private final QuarterRepository quarterRepository;
+
     private final S3Util s3Util;
 
     public AddS3UrlResponse addS3Url(AddS3UrlRequest request) {
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
+
         String presignedUrl = s3Util.generatePresignedUrl(objectKey);
 
         return AddS3UrlResponse.of(presignedUrl);
@@ -74,6 +79,7 @@ public class VideoService {
                 .plusSeconds(seconds);
 
         Video video = Video.of(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
+
         videoRepository.save(video);
     }
 
@@ -120,7 +126,9 @@ public class VideoService {
     public void deleteVideo(Integer videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
+
         video.delete();
+
         videoRepository.save(video);
     }
 }

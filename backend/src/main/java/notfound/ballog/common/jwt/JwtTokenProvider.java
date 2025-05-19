@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.auth.dto.JwtTokenDto;
-import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.auth.repository.AuthRepository;
 import notfound.ballog.domain.auth.service.CustomUserDetails;
 import notfound.ballog.domain.auth.service.CustomUserDetailsService;
@@ -35,6 +34,7 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
 
     private final AuthRepository authRepository;
+
     private Key signingKey;
 
     @Value("${jwt.secret}")
@@ -53,6 +53,7 @@ public class JwtTokenProvider {
     public void init() {
         // Base64로 인코딩된 secret 문자열을 디코딩 → HMAC-SHA256 키 객체 생성
         byte[] keyBytes = Decoders.BASE64.decode(secret);
+
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -153,7 +154,9 @@ public class JwtTokenProvider {
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userId, null, authorities);
+
             auth.setDetails(customUserDetails);
+
             return auth;
         } catch (ExpiredJwtException e) {
             throw new ValidationException(BaseResponseStatus.EXPIRED_TOKEN);

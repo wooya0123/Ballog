@@ -8,10 +8,8 @@ import notfound.ballog.domain.match.entity.Match;
 import notfound.ballog.domain.match.entity.Participant;
 import notfound.ballog.domain.match.repository.MatchRepository;
 import notfound.ballog.domain.match.repository.ParticipantRepository;
-import notfound.ballog.domain.match.request.PersonalMatchAddRequest;
-import notfound.ballog.domain.match.request.TeamMatchAddRequest;
-import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
-import notfound.ballog.domain.match.request.UpdateTeamMatchRequest;
+import notfound.ballog.domain.match.request.*;
+import notfound.ballog.domain.match.response.GetMatchListByDateResponse;
 import notfound.ballog.domain.match.response.MatchDetailResponse;
 import notfound.ballog.domain.quarter.dto.GameReportDto;
 import notfound.ballog.domain.quarter.repository.QuarterRepository;
@@ -137,6 +135,12 @@ public class MatchService {
                 .collect(Collectors.toList());
 
         participantRepository.saveAll(participants);
+    }
+
+    public GetMatchListByDateResponse getMatchListByDate(UUID userId, GetMatchListByDateRequest req){
+        List<MatchDto> matchList = matchRepository.findMatchesByUserIdAndMatchDates(userId, req.getDates());
+
+        return new GetMatchListByDateResponse(matchList);
     }
 
 }

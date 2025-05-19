@@ -1,14 +1,11 @@
 package notfound.ballog.domain.match.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
-import notfound.ballog.domain.match.request.PersonalMatchAddRequest;
-import notfound.ballog.domain.match.request.TeamMatchAddRequest;
-import notfound.ballog.domain.match.request.UpdatePersonalMatchRequest;
-import notfound.ballog.domain.match.request.UpdateTeamMatchRequest;
+import notfound.ballog.domain.match.request.*;
+import notfound.ballog.domain.match.response.GetMatchListByDateResponse;
 import notfound.ballog.domain.match.response.MatchDetailResponse;
 import notfound.ballog.domain.match.response.PersonalMatchListResponse;
 import notfound.ballog.domain.match.response.TeamMatchListResponse;
@@ -72,6 +69,12 @@ public class MatchController {
     public BaseResponse<Void> updatePersonalMatch(@RequestBody UpdateTeamMatchRequest updateTeamMatchRequest){
         matchService.updateTeamMatch(updateTeamMatchRequest);
         return BaseResponse.ok();
+    }
+
+    @PostMapping("/date")
+    @Operation(summary = "날짜별 모든 매치 리스트 조회")
+    public BaseResponse<GetMatchListByDateResponse> getMatchListByDate(@AuthenticationPrincipal UUID userId, @RequestBody GetMatchListByDateRequest getMatchListByDateRequest){
+        return BaseResponse.ok(matchService.getMatchListByDate(userId, getMatchListByDateRequest));
     }
 
 }

@@ -12,9 +12,13 @@ import notfound.ballog.domain.user.entity.PlayerCard;
 @Builder
 public class PlayerCardStatListDto {
     private Integer speed;
+
     private Integer stamina;
+
     private Integer attack;
+
     private Integer defense;
+
     private Integer recovery;
 
     public static PlayerCardStatListDto of(PlayerCard playerCard) {

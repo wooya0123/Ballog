@@ -13,7 +13,9 @@ import notfound.ballog.domain.user.entity.PlayerCard;
 @Builder
 public class GetPlayerCardResponse {
     private String nickname;
+
     private String profileImageUrl;
+
     private PlayerCardStatListDto cardStats;
 
     public static GetPlayerCardResponse of(String profileImageUrl, PlayerCard playerCard, PlayerCardStatListDto cardStatList) {
