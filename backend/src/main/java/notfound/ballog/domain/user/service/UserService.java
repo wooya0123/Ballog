@@ -36,6 +36,7 @@ public class UserService {
     private final PlayerCardService playerCardService;
     private final OpenAIService openAIService;
     private final WikiCrawlService wikiCrawlService;
+    private final NaverCrawlService naverCrawlService;
     private final ObjectMapper objectMapper;
 
     // 회원가입
@@ -170,25 +171,31 @@ public class UserService {
         // 게임 리포트 데이터를 JSON 형태로 변환
         List<Map<String, Object>> gameDataList = new ArrayList<>();
         for (GameReport gameReport : gameReportList) {
-            gameDataList.add((Map<String, Object>) gameReport.getReportData());
+            gameDataList.add(gameReport.getReportData());
         }
 
+        // 프롬프트 생성
         String prompt = "다음은 풋살 경기에서 얻은 5개의 게임 데이터입니다:\n\n" +
-                gameDataList.toString() +
+                gameDataList +
                 "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로축구선수를 추천해주세요. " +
                 "유저 이름은 " + user.getNickname() + " 입니다." +
-                "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " + user.getNickname() +
+                "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " +
                 "distance는 이동 거리(m), avgHeartRate는 평균 심박수, " +
                 "heatmap은 경기장에서의 위치 히트맵입니다.";
 
+        // AI 호출
         Map<String, Object> resp = openAIService.getCompletionFromGPT(prompt);
 
+        // recommendedPlayer 추출
         Map<String, Object> recommendedPlayer = (Map<String, Object>) resp.get("recommendedPlayer");
 
+        // Wiki 이미지 크롤링
         String wikiUrl = (String) recommendedPlayer.get("namuwiki");
 
+
         if (wikiUrl != null && !wikiUrl.isEmpty()) {
-            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
+//            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
+            String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
 
             if (imageUrl != null) {
                 recommendedPlayer.remove("namuwiki");

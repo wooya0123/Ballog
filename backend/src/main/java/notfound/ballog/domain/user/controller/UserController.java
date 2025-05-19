@@ -63,6 +63,7 @@ public class UserController {
         return BaseResponse.ok(response);
     }
 
+    @Operation(summary = "AI 리포트 발급")
     @PostMapping("/ai-recommand")
     public BaseResponse<AiRecommendResponse> getAiRecommend(@AuthenticationPrincipal UUID userId) {
         return BaseResponse.ok(userService.getAiRecommend(userId));
