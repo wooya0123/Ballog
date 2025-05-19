@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,20 +39,21 @@ fun NavigationBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .wrapContentHeight()
     ) {
+        // 바 배경
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .align(Alignment.BottomCenter)
+                .wrapContentHeight()
                 .background(backgroundColor)
                 .border(BorderStroke(1.dp, borderColor))
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp),
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(horizontal = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -61,7 +63,8 @@ fun NavigationBar(
                     selected = selectedTab == NavigationTab.HOME,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
-                    onClick = { onTabSelected(NavigationTab.HOME) }
+                    onClick = { onTabSelected(NavigationTab.HOME) },
+                    modifier = Modifier.weight(1f)
                 )
                 NavigationBarTab(
                     iconRes = R.drawable.ic_calendar,
@@ -69,33 +72,46 @@ fun NavigationBar(
                     selected = selectedTab == NavigationTab.MATCH,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
-                    onClick = { onTabSelected(NavigationTab.MATCH) }
+                    onClick = { onTabSelected(NavigationTab.MATCH) },
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(48.dp))
+                NavigationBarTab(
+                    iconRes = R.drawable.ic_watch, // 아무거나
+                    label = "",
+                    selected = false,
+                    activeColor = Color.Transparent,
+                    inactiveColor = Color.Transparent,
+                    onClick = {},
+                    modifier = Modifier.weight(1f),
+                    enabled = false // 안보이게
+                )
                 NavigationBarTab(
                     iconRes = R.drawable.ic_team,
                     label = "팀",
                     selected = selectedTab == NavigationTab.TEAM,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
-                    onClick = { onTabSelected(NavigationTab.TEAM) }
+                    onClick = { onTabSelected(NavigationTab.TEAM) },
+                    modifier = Modifier.weight(1f)
                 )
                 NavigationBarTab(
                     iconRes = R.drawable.ic_profile,
-                    label = "마이페이지",
+                    label = "내 정보",
                     selected = selectedTab == NavigationTab.MYPAGE,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
-                    onClick = { onTabSelected(NavigationTab.MYPAGE) }
+                    onClick = { onTabSelected(NavigationTab.MYPAGE) },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
 
+        // 워치 아이콘만 위로 튀어나오게 배치
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(56.dp)
                 .align(Alignment.TopCenter)
-                .offset(y = 8.dp)
+                .absoluteOffset(y = (-20).dp) // 위로 튀어나오게
                 .clip(CircleShape)
                 .background(activeColor)
                 .clickable { onTabSelected(NavigationTab.DATA) },
@@ -103,7 +119,7 @@ fun NavigationBar(
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_watch),
-                contentDescription = "Action",
+                contentDescription = "워치",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)
             )
@@ -118,30 +134,35 @@ fun NavigationBarTab(
     selected: Boolean,
     activeColor: Color,
     inactiveColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     val color = if (selected) activeColor else inactiveColor
     Column(
-        modifier = Modifier
-            .width(56.dp)
-            .clickable { onClick() },
+        modifier = modifier
+            .aspectRatio(1f)
+            .then(if (enabled) Modifier.clickable { onClick() } else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = label,
-            color = color,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Normal,
-            fontFamily = pretendard
-        )
+        if (enabled) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = label,
+                tint = color,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                color = color,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = pretendard,
+                maxLines = 1
+            )
+        }
     }
 }
 
