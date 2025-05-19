@@ -5,11 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponse;
+import notfound.ballog.domain.user.request.AddS3ImageUrlRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
-import notfound.ballog.domain.user.response.AiRecommendResponse;
-import notfound.ballog.domain.user.response.GetPlayerCardResponse;
-import notfound.ballog.domain.user.response.GetStatisticsResponse;
-import notfound.ballog.domain.user.response.GetUserResponse;
+import notfound.ballog.domain.user.response.*;
 import notfound.ballog.domain.user.service.PlayerCardService;
 import notfound.ballog.domain.user.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -66,7 +64,16 @@ public class UserController {
     @Operation(summary = "AI 리포트 발급")
     @PostMapping("/ai-recommend")
     public BaseResponse<AiRecommendResponse> getAiRecommend(@AuthenticationPrincipal UUID userId) {
+
+
         return BaseResponse.ok(userService.getAiRecommend(userId));
+    }
+
+    @Operation(summary = "presignedUrl 발급")
+    @PostMapping("/presigned-url")
+    public BaseResponse<AddS3ImageUrlResponse> addS3ImageUrl(@Valid @RequestBody AddS3ImageUrlRequest request) {
+        AddS3ImageUrlResponse response = userService.addS3ImageUrl(request);
+        return BaseResponse.ok(response);
     }
 
 }

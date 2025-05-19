@@ -1,6 +1,5 @@
-package notfound.ballog.domain.video.request;
+package notfound.ballog.domain.user.request;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,7 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AddS3UrlRequest {
-    @NotBlank(message = "파일명을 입력해주세요.")
+public class AddS3ImageUrlRequest {
     private String fileName;
 }

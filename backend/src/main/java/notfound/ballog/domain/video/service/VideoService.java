@@ -14,9 +14,9 @@ import notfound.ballog.domain.video.entity.Video;
 import notfound.ballog.domain.video.repository.HighlightRepository;
 import notfound.ballog.domain.video.repository.LikeRepository;
 import notfound.ballog.domain.video.repository.VideoRepository;
-import notfound.ballog.domain.video.request.AddS3UrlRequest;
+import notfound.ballog.domain.video.request.AddS3VideoUrlRequest;
 import notfound.ballog.domain.video.request.AddVideoRequest;
-import notfound.ballog.domain.video.response.AddS3UrlResponse;
+import notfound.ballog.domain.video.response.AddS3VideoUrlResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.exception.NotFoundException;
 import notfound.ballog.exception.ValidationException;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +34,7 @@ import java.util.UUID;
 public class VideoService {
 
     private final LikeRepository likeRepository;
+
     private final VideoRepository videoRepository;
 
     private final HighlightRepository highlightRepository;
@@ -45,12 +45,14 @@ public class VideoService {
 
     private final S3Util s3Util;
 
-    public AddS3UrlResponse addS3Url(AddS3UrlRequest request) {
+    public AddS3VideoUrlResponse addS3Url(AddS3VideoUrlRequest request) {
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
 
-        String presignedUrl = s3Util.generatePresignedUrl(objectKey);
+        String contentType = "video/mp4";
 
-        return AddS3UrlResponse.of(presignedUrl);
+        String presignedUrl = s3Util.generatePresignedUrl(objectKey, contentType);
+
+        return AddS3VideoUrlResponse.of(presignedUrl);
     }
 
     @Transactional

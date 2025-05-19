@@ -29,7 +29,7 @@ public class S3Util {
     private int expirationMinutes;
 
     // presignedUrl 생성
-    public String generatePresignedUrl(String objectKey) {
+    public String generatePresignedUrl(String objectKey, String contentType) {
         try {
             Instant expirationInstant = Instant.now().plusSeconds(expirationMinutes * 60L);
             Date expiration = Date.from(expirationInstant);
@@ -38,7 +38,7 @@ public class S3Util {
                     .withMethod(HttpMethod.PUT)
                     .withExpiration(expiration);
 
-            request.setContentType("video/mp4");
+            request.setContentType(contentType);
 
             URL url = amazonS3.generatePresignedUrl(request);
 

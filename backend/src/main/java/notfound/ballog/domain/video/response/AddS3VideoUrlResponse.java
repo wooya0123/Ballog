@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AddS3UrlResponse {
+public class AddS3VideoUrlResponse {
     private String s3Url;
 
-    public static AddS3UrlResponse of(String s3Url) {
-        return AddS3UrlResponse.builder()
+    public static AddS3VideoUrlResponse of(String s3Url) {
+        return AddS3VideoUrlResponse.builder()
                 .s3Url(s3Url)
                 .build();
     }

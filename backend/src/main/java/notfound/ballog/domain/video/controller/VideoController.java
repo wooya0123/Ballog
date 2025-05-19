@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.video.request.*;
 import notfound.ballog.domain.video.response.AddHighlightResponse;
-import notfound.ballog.domain.video.response.AddS3UrlResponse;
+import notfound.ballog.domain.video.response.AddS3VideoUrlResponse;
 import notfound.ballog.domain.video.response.GetLikeResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
 import notfound.ballog.domain.video.service.HighlightService;
@@ -43,8 +43,8 @@ public class VideoController {
 
     @Operation(summary = "s3 presigned url 발급")
     @PostMapping("/url")
-    public BaseResponse<AddS3UrlResponse> addS3Url(@RequestBody AddS3UrlRequest request) {
-        AddS3UrlResponse response = videoService.addS3Url(request);
+    public BaseResponse<AddS3VideoUrlResponse> addS3Url(@RequestBody AddS3VideoUrlRequest request) {
+        AddS3VideoUrlResponse response = videoService.addS3Url(request);
 
         return BaseResponse.ok(response);
     }

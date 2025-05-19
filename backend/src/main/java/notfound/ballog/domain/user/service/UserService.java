@@ -3,13 +3,16 @@ package notfound.ballog.domain.user.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.common.response.BaseResponseStatus;
+import notfound.ballog.common.utils.S3Util;
 import notfound.ballog.domain.auth.entity.Auth;
 import notfound.ballog.domain.auth.repository.AuthRepository;
 import notfound.ballog.domain.quarter.entity.GameReport;
 import notfound.ballog.domain.quarter.repository.GameReportRepository;
 import notfound.ballog.domain.user.entity.User;
 import notfound.ballog.domain.user.repository.UserRepository;
+import notfound.ballog.domain.user.request.AddS3ImageUrlRequest;
 import notfound.ballog.domain.user.request.UpdateUserRequest;
+import notfound.ballog.domain.user.response.AddS3ImageUrlResponse;
 import notfound.ballog.domain.user.response.AiRecommendResponse;
 import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
@@ -39,6 +42,7 @@ public class UserService {
     private final WikiCrawlService wikiCrawlService;
     private final NaverCrawlService naverCrawlService;
     private final ObjectMapper objectMapper;
+    private final S3Util s3Util;
 
     // 회원가입
     @Transactional
@@ -208,6 +212,28 @@ public class UserService {
 
         return objectMapper.convertValue(resp, AiRecommendResponse.class);
     }
-    
+
+    public AddS3ImageUrlResponse addS3ImageUrl(AddS3ImageUrlRequest request) {
+        String originalFileName = request.getFileName();
+        String objectKey = s3Util.generateObjectKey(originalFileName, "profileImage");
+
+        // 1. 확장자 추출
+        String ext = "";
+        String contentType = "image/jpeg";
+        int idx = originalFileName.lastIndexOf(".");
+        if (idx > 0) {
+            ext = originalFileName.substring(idx);
+            if (ext.equals(".png")) {
+                contentType = "image/png";
+            }
+            if (ext.equals(".webp")) {
+                contentType = "image/webp";
+            }
+        }
+
+        String presignedUrl = s3Util.generatePresignedUrl(objectKey, contentType);
+
+        return AddS3ImageUrlResponse.of(presignedUrl);
+    }
 }
 
