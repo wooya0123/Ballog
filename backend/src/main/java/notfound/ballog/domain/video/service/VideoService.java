@@ -18,6 +18,7 @@ import notfound.ballog.domain.video.request.AddS3VideoUrlRequest;
 import notfound.ballog.domain.video.request.AddVideoRequest;
 import notfound.ballog.domain.video.response.AddS3VideoUrlResponse;
 import notfound.ballog.domain.video.response.GetVideoListResponse;
+import notfound.ballog.exception.InternalServerException;
 import notfound.ballog.exception.NotFoundException;
 import notfound.ballog.exception.ValidationException;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class VideoService {
 
     private final S3Util s3Util;
 
+    @Transactional
     public AddS3VideoUrlResponse addS3Url(AddS3VideoUrlRequest request) {
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
 
@@ -52,20 +54,40 @@ public class VideoService {
 
         String presignedUrl = s3Util.generatePresignedUrl(objectKey, contentType);
 
-        return AddS3VideoUrlResponse.of(presignedUrl);
+        // 영상이 저장될 objectUrl 추출
+        int idx = presignedUrl.indexOf("?");
+        String objectUrl;
+        if (idx != -1) {
+            objectUrl = presignedUrl.substring(0, idx);
+        } else {
+            throw new InternalServerException(BaseResponseStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 이미 같은 url 주소에 저장된 게 있는지 체크
+        Optional<Video> existingVideo = videoRepository.findByVideoUrl(objectUrl);
+        if (existingVideo.isPresent()) {
+            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
+        }
+
+        // 영상 데이터 저장
+        Video video = Video.ofVideoUrl(objectUrl);
+        Video savedVideo = videoRepository.save(video);
+
+        return AddS3VideoUrlResponse.of(presignedUrl, savedVideo.getVideoId());
     }
 
     @Transactional
     public void uploadVideo(AddVideoRequest request) {
-        Integer matchId = request.getMatchId();
-        Integer quarterNumber = request.getQuarterNumber();
+//        // 업로드한 영상 있는지 확인
+//        Optional<Video> existingVideo = videoRepository
+//                .findByMatch_MatchIdAndQuarterNumberAndDeletedFalse(matchId, quarterNumber);
+//        if (existingVideo.isPresent()) {
+//            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
+//        }
 
-        // 업로드한 영상 있는지 확인
-        Optional<Video> existingVideo = videoRepository
-                .findByMatch_MatchIdAndQuarterNumberAndDeletedFalse(matchId, quarterNumber);
-        if (existingVideo.isPresent()) {
-            throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
-        }
+        // 이미 저장해둔 영상 찾기
+        Video video = videoRepository.findByVideoUrl(request.getVideoUrl())
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
 
         // 해당하는 매치 조회
         Match match = matchRepository.findById(request.getMatchId())
@@ -80,7 +102,8 @@ public class VideoService {
                 .plusMinutes(minutes)
                 .plusSeconds(seconds);
 
-        Video video = Video.of(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
+//        Video video = Video.of(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
+        video.save(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
 
         videoRepository.save(video);
     }

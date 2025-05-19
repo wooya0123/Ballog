@@ -29,7 +29,7 @@ public class Video {
     private Integer videoId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "match_id", nullable = false)
+    @JoinColumn(name = "match_id")
     private Match match;
 
     private Integer quarterNumber;
@@ -53,6 +53,19 @@ public class Video {
                 .quarterNumber(quarterNumber)
                 .videoUrl(videoUrl)
                 .duration(duration)
+                .build();
+    }
+
+    public void save(Match match, Integer quarterNumber, String videoUrl, Duration duration) {
+        this.match = match;
+        this.quarterNumber = quarterNumber;
+        this.videoUrl = videoUrl;
+        this.duration = duration;
+    }
+
+    public static Video ofVideoUrl(String videoUrl) {
+        return Video.builder()
+                .videoUrl(videoUrl)
                 .build();
     }
 
