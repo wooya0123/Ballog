@@ -32,15 +32,19 @@ public class OpenAIService {
     private String model;
 
     public Map<String, Object> getCompletionFromGPT(String prompt) {
+        // 1. http 헤더 구성
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + apiKey);
 
+        // 2. 요청 바디 생성
         Map<String, Object> requestBody = createRequestBody(createStructuredPrompt(prompt));
+        log.info("프롬프트: {}", createStructuredPrompt(prompt));
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
         try {
+            // api 호출
             Map<String, Object> response = restTemplate.postForObject(apiUrl, requestEntity, Map.class);
             return extractContentFromResponse(response);
         } catch (Exception e) {
@@ -91,6 +95,7 @@ public class OpenAIService {
         }
 
         try {
+            log.info("gpt 응답: {}", response);
             List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
             if (choices == null || choices.isEmpty()) {
                 throw new InternalServerException(BaseResponseStatus.RECOMMAND_PLAYER_GPT_ERROR);
