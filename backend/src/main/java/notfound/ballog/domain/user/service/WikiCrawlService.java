@@ -16,8 +16,8 @@ public class WikiCrawlService {
     public String getPlayerImageUrl(String wikiUrl) {
         try {
             Document doc = Jsoup.connect(wikiUrl)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                            "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+//                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+//                            "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
                     .get();
 
             // style="...width:XYZpx..." 에서 XYZ가 395~405 사이인 div들만 선택
