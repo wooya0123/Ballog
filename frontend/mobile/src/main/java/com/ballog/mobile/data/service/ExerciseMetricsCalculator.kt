@@ -5,13 +5,48 @@ import android.util.Log
 import com.ballog.mobile.data.model.GpsPoint
 import com.ballog.mobile.data.repository.MatchRepository
 
+enum class GameSide {
+    LEFT, RIGHT
+}
+
 class ExerciseMetricsCalculator(
     private val context: Context
 ) {
     // 로그 태그 상수 정의
     companion object {
         private const val TAG = "HeatmapCalc"
-        private const val FIELD_INCLUSION_THRESHOLD = 0.8 // 80% 포함 기준
+    }
+
+    /**
+     * 가장 초기의 GPS 포인트를 사용하여 진영을 감지합니다.
+     * @param gpsPoints 시간순으로 정렬된 GPS 포인트 리스트
+     * @return 감지된 게임 진영 (LEFT 또는 RIGHT)
+     */
+    fun detectGameSide(gpsPoints: List<GpsPoint>): GameSide {
+        // 데이터가 없으면 기본값 반환
+        if (gpsPoints.isEmpty()) {
+            Log.i(TAG, "GPS 포인트가 없어 기본값(LEFT) 반환")
+            return GameSide.LEFT // 기본값으로 왼쪽 설정
+        }
+
+        // 전체 경기장 범위 추정
+        val minLng = gpsPoints.minOf { it.longitude }
+        val maxLng = gpsPoints.maxOf { it.longitude }
+
+        // 경기장 중앙선 추정
+        val midLng = (minLng + maxLng) / 2.0
+
+        // 처음 10개 포인트만 사용 (또는 전체가 10개 미만이면 모두 사용)
+        val initialPoints = if (gpsPoints.size > 10) gpsPoints.take(10) else gpsPoints
+
+        // 초기 위치의 평균 경도 계산
+        val avgLng = initialPoints.map { it.longitude }.average()
+
+        // 중앙선과 비교하여 진영 결정
+        val gameSide = if (avgLng < midLng) GameSide.LEFT else GameSide.RIGHT
+
+        Log.i(TAG, "게임 진영 감지: $gameSide (중앙선: $midLng, 초기 평균 경도: $avgLng)")
+        return gameSide
     }
 
     fun calculateHeatmap(gpsPoints: List<GpsPoint>): List<List<Int>> {
@@ -26,57 +61,30 @@ class ExerciseMetricsCalculator(
             return grid.map { it.toList() }
         }
 
-        // 경기장 좌표 가져오기
-        val matchRepository = MatchRepository(context)
-        val fieldCorners = matchRepository.getFieldCorners()
+        // 게임 진영 감지 및 로깅
+        val gameSide = detectGameSide(gpsPoints)
+        Log.i(TAG, "히트맵 생성 시작 - 감지된 진영: $gameSide")
 
-        // 정규화 방식 결정
-        val useFieldBasedNormalization = if (fieldCorners != null) {
-            // 경기장 경계 계산
-            val minLat = fieldCorners.minOf { it.latitude }
-            val maxLat = fieldCorners.maxOf { it.latitude }
-            val minLng = fieldCorners.minOf { it.longitude }
-            val maxLng = fieldCorners.maxOf { it.longitude }
+        // Min-Max 정규화 사용
+        Log.i(TAG, "정규화 방식: Min-Max 정규화 사용")
 
-            Log.d(TAG, "경기장 좌표: 남서(${minLat}, ${minLng}), 북동(${maxLat}, ${maxLng})")
+        // 모든 GPS 포인트를 사용하여 Min-Max 계산
+        val minLat = gpsPoints.minOf { it.latitude }
+        val maxLat = gpsPoints.maxOf { it.latitude }
+        val minLng = gpsPoints.minOf { it.longitude }
+        val maxLng = gpsPoints.maxOf { it.longitude }
 
-            // 경기장 내부에 포함된 GPS 포인트 개수 계산
-            val pointsInField = gpsPoints.count { point ->
-                point.latitude in minLat..maxLat && point.longitude in minLng..maxLng
-            }
+        Log.d(TAG, "GPS 포인트 범위: 남서(${minLat}, ${minLng}), 북동(${maxLat}, ${maxLng})")
 
-            val inclusionRatio = pointsInField.toDouble() / gpsPoints.size
-            val inclusionPercent = (inclusionRatio * 100).toInt()
+        gpsPoints.forEach { point ->
+            val normalizedLat = (point.latitude - minLat) / (maxLat - minLat)
+            val normalizedLng = (point.longitude - minLng) / (maxLng - minLng)
 
-            Log.i(TAG, "경기장 내부 포함 GPS 포인트: $pointsInField/${gpsPoints.size} (${inclusionPercent}%)")
+            val row = (normalizedLat * (ROWS-1)).toInt().coerceIn(0, ROWS-1)
+            val col = (normalizedLng * (COLS-1)).toInt().coerceIn(0, COLS-1)
 
-            // 80% 이상이 경기장 내부에 있으면 경기장 좌표 기반 정규화 사용
-            inclusionRatio >= FIELD_INCLUSION_THRESHOLD
-        } else {
-            Log.w(TAG, "경기장 좌표가 없습니다. Min-Max 정규화 사용")
-            false
-        }
-
-        // 선택된 정규화 방식 적용
-            // 2. Min-Max 정규화 사용
-            Log.i(TAG, "정규화 방식: Min-Max (80% 미만 포함 또는 경기장 좌표 없음)")
-
-            // 모든 GPS 포인트를 사용하여 Min-Max 계산
-            val minLat = gpsPoints.minOf { it.latitude }
-            val maxLat = gpsPoints.maxOf { it.latitude }
-            val minLng = gpsPoints.minOf { it.longitude }
-            val maxLng = gpsPoints.maxOf { it.longitude }
-
-            gpsPoints.forEach { point ->
-                val normalizedLat = (point.latitude - minLat) / (maxLat - minLat)
-                val normalizedLng = (point.longitude - minLng) / (maxLng - minLng)
-
-                val row = (normalizedLat * (ROWS-1)).toInt().coerceIn(0, ROWS-1)
-                val col = (normalizedLng * (COLS-1)).toInt().coerceIn(0, COLS-1)
-
-                val key = Pair(row, col)
-                cellCounts[key] = (cellCounts[key] ?: 0) + 1
-
+            val key = Pair(row, col)
+            cellCounts[key] = (cellCounts[key] ?: 0) + 1
         }
 
         // 최대 카운트 찾기

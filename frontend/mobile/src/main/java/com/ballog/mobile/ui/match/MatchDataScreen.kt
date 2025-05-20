@@ -104,9 +104,6 @@ fun MatchDataScreen(
                             else
                                 viewModel.setSuccess(matchData)
                         }
-                        else{
-                            viewModel.setNoData()
-                        }
                     } catch (e: Exception) {
                         viewModel.setNoData()
                     }
