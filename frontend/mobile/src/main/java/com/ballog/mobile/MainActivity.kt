@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -16,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.ballog.mobile.data.model.AuthResult
 import com.ballog.mobile.data.repository.MatchRepository
 import com.ballog.mobile.navigation.AppNavHost
 import com.ballog.mobile.navigation.Routes
@@ -26,6 +28,7 @@ import com.google.android.gms.wearable.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
@@ -63,6 +66,53 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
             BallogTheme {
                 AppNavHost(navController)
+
+                LaunchedEffect(Unit) {
+                    try {
+                        val hasTokens = tokenManager.hasTokens().first()
+                        val context = applicationContext
+                        val onboardingDone = com.ballog.mobile.data.util.OnboardingPrefs.isOnboardingCompleted(context)
+                        val permissionDone = com.ballog.mobile.data.util.OnboardingPrefs.isPermissionCompleted(context)
+                        val guideDone = com.ballog.mobile.data.util.OnboardingPrefs.isGuideCompleted(context)
+
+                        if (pendingDeepLinkData != null) {
+                            // 딥링크가 있으면 온보딩/권한/가이드 패스, 바로 초대 플로우
+                            if (hasTokens) {
+                                handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                            } else {
+                                navController.navigate(com.ballog.mobile.navigation.Routes.LOGIN) { popUpTo(0) { inclusive = true } }
+                            }
+                        } else {
+                            // 딥링크 없으면 온보딩/권한/가이드 순서대로 분기
+                            when {
+                                !hasTokens -> navController.navigate(com.ballog.mobile.navigation.Routes.ONBOARDING) { popUpTo(0) { inclusive = true } }
+                                !onboardingDone -> navController.navigate(com.ballog.mobile.navigation.Routes.ONBOARDING) { popUpTo(0) { inclusive = true } }
+                                !permissionDone -> navController.navigate(com.ballog.mobile.navigation.Routes.PERMISSION_REQUEST) { popUpTo(0) { inclusive = true } }
+                                !guideDone -> navController.navigate(com.ballog.mobile.navigation.Routes.SAMSUNG_HEALTH_GUIDE) { popUpTo(0) { inclusive = true } }
+                                else -> handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        navController.navigate(com.ballog.mobile.navigation.Routes.ONBOARDING) { popUpTo(0) { inclusive = true } }
+                    }
+                }
+
+                // 로그인 상태가 변경될 때마다 실행
+                LaunchedEffect(authState) {
+                    if (authState is AuthResult.Success) {
+                        println("MainActivity - Login successful, handling navigation")
+                        handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                    }
+                }
+
+                // 딥 링크 이벤트가 발생했을 때 실행
+                LaunchedEffect(deepLinkTrigger) {
+                    if (deepLinkTrigger) {
+                        println("MainActivity - Deep link event triggered")
+                        handleNavigationAfterLogin(navController, teamViewModel, coroutineScope)
+                        _deepLinkEvent.value = false // 이벤트 처리 후 초기화
+                    }
+                }
             }
         }
     }

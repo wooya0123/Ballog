@@ -68,6 +68,8 @@ fun MainScreen(
     val teamNavController = rememberNavController()
     val teamViewModel = remember { TeamViewModel() }
     val matchTabNavController = rememberNavController()
+    // 이동 요청을 위한 State
+    var pendingMatchDetail by remember { mutableStateOf<Pair<Int, String>?>(null) }
     
     // 초기 팀 ID가 있으면 팀 상세 화면으로 자동 이동
     LaunchedEffect(initialTeamId) {
@@ -112,9 +114,18 @@ fun MainScreen(
                     navController = navController,
                     matchTabNavController = matchTabNavController,
                     setSelectedTab = { selectedTab = it },
-                    matchReportService = MatchReportServiceSingleton.getInstance()
+                    matchReportService = MatchReportServiceSingleton.getInstance(),
+                    setPendingMatchDetail = { pendingMatchDetail = it }
                 )
             }
+        }
+    }
+    // 탭이 MATCH로 바뀌고, 이동 요청이 있으면 navigate
+    LaunchedEffect(selectedTab, pendingMatchDetail) {
+        if (selectedTab == NavigationTab.MATCH && pendingMatchDetail != null) {
+            val (matchId, matchName) = pendingMatchDetail!!
+            matchTabNavController.navigate("match/detail/$matchId/$matchName")
+            pendingMatchDetail = null
         }
     }
 }

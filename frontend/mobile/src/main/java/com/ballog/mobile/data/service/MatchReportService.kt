@@ -74,6 +74,10 @@ class MatchReportService(
         _quarterReportList.value = _quarterReportList.value.filter { it.id != id }
     }
 
+    fun clearQuarterReportList(){
+        _quarterReportList.value = emptyList()
+    }
+
     suspend fun fetchDayMatches(days: List<String>) {
         val result = getDayMatches(days)
         _dayMatchesList.value = result

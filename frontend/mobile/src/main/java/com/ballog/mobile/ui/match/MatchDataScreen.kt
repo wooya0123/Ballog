@@ -49,6 +49,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.style.TextAlign
 import com.ballog.mobile.data.repository.IdStore
+import kotlinx.coroutines.delay
 
 @Composable
 fun MatchDataScreen(
@@ -56,7 +57,8 @@ fun MatchDataScreen(
     matchTabNavController: NavHostController,
     setSelectedTab: (NavigationTab) -> Unit,
     viewModel: MatchViewModel = viewModel(),
-    matchReportService: MatchReportService
+    matchReportService: MatchReportService,
+    setPendingMatchDetail: (Pair<Int, String>?) -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -79,7 +81,10 @@ fun MatchDataScreen(
 
     // MatchUiState가 Loading일 때만 데이터 로드
     LaunchedEffect(uiState) {
-        if (uiState is MatchUiState.Loading) {
+        var handled = false
+        if(uiState is MatchUiState.WaitingForStadiumData)
+            viewModel.checkFieldCorners()
+        else if (uiState is MatchUiState.Loading) {
                 scope.launch {
                     try {
                         matchReportService.createMatchReport(idStore.getAll())
@@ -108,9 +113,9 @@ fun MatchDataScreen(
                         viewModel.setNoData()
                     }
                 }
-
+            handled = true
         }
-        if(uiState is MatchUiState.Success) {
+        else if(uiState is MatchUiState.Success) {
             matchReportService.fetchDayMatches(quarterReportList
                 .map { it. date }
                 .toSet()
@@ -127,6 +132,11 @@ fun MatchDataScreen(
             matchData = mapped
 
             viewModel.setSuccess(matchData)
+            handled = true
+        }
+        if(quarterReportList.isEmpty() && handled == false && viewModel.checkStadiumDataState()) {
+            delay(5000)
+            viewModel.setNoData()
         }
     }
 
@@ -413,9 +423,10 @@ fun MatchDataScreen(
                                     quarterReportList.map { quarter ->
                                         idStore.add(quarter.id)
                                     }
+                                    matchReportService.clearQuarterReportList()
                                     setSelectedTab(NavigationTab.MATCH)
-                                    viewModel.setLoading()
-                                    matchTabNavController.navigate("match/detail/${matchReportResponse.matchId}/${matchReportResponse.matchName}")
+                                    setPendingMatchDetail(matchReportResponse.matchId to matchReportResponse.matchName)
+                                    viewModel.setWaitingForStadiumData()
                                 }
                             }
                         }
@@ -781,7 +792,7 @@ fun MatchSelectModal(
                         ) {
                             Text(text = match.matchName, fontWeight = FontWeight.Bold, color = if (isSelected) Color(0xFF00796B) else Color.Unspecified)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "${match.matchDate} ${match.startTime}-${match.endTime}", fontSize = 12.sp, color = Color.Gray)
+                            Text(text = "${match.matchDate} ${match.startTime.substring(0,5)}-${match.endTime.substring(0,5)}", fontSize = 12.sp, color = Color.Gray)
                         }
                     }
                 }

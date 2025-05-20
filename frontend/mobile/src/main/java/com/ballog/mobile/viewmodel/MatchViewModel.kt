@@ -271,6 +271,11 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = MatchUiState.Success(data)
     }
 
+    fun setWaitingForStadiumData(){
+        android.util.Log.d("MatchViewModel", "상태 전환: Waiting")
+        _uiState.value = MatchUiState.WaitingForStadiumData
+    }
+
     override fun onCleared() {
         super.onCleared()
         pollingJob?.cancel()
@@ -288,6 +293,16 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = MatchUiState.WaitingForStadiumData
             }
         }
+    }
+
+    suspend fun checkStadiumDataState(): Boolean {
+        val corners = repository.getFieldCorners()
+        val sharedPrefs = getApplication<Application>().getSharedPreferences(
+            "field_corners",
+            android.content.Context.MODE_PRIVATE
+        )
+        val timestamp = sharedPrefs.getLong("timestamp", 0L)
+        return corners != null && corners.size == 4
     }
 
     private fun checkSamsungHealthData() {
