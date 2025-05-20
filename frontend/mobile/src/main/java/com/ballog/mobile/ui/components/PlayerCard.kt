@@ -56,21 +56,26 @@ fun PlayerCard(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    // 상단 이미지 영역 (전체 채우기)
-                    Box(
+                    BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
                             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                            .background(Gray.Gray700),
-                        contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
-                            model = imageUrl ?: R.drawable.ic_profile, // URL 또는 fallback
-                            contentDescription = "Player Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        val aspectRatio = 3f / 2f // 기본 비율
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(maxWidth / aspectRatio)
+                                .background(Gray.Gray700),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = imageUrl ?: R.drawable.ic_profile,
+                                contentDescription = "Player Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
                     // 이름
                     Box(
