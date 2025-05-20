@@ -1,6 +1,7 @@
 package notfound.ballog.domain.team.repository;
 
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import notfound.ballog.domain.match.dto.ParticipantDto;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+import static notfound.ballog.domain.match.entity.QMatch.match;
 import static notfound.ballog.domain.match.entity.QParticipant.participant;
 import static notfound.ballog.domain.team.entity.QTeam.team;
 import static notfound.ballog.domain.team.entity.QTeamMember.teamMember;
@@ -75,7 +77,14 @@ public class TeamRepositoryImpl implements TeamRepositoryCustom {
                         user.profileImageUrl))
                 .from(participant)
                 .join(user).on(user.userId.eq(participant.userId))
-                .join(teamMember).on(teamMember.userId.eq(participant.userId))
+                .leftJoin(teamMember).on(
+                        teamMember.userId.eq(participant.userId)
+                        .and(teamMember.teamId.eq(
+                                JPAExpressions.select(match.teamId)
+                                    .from(match)
+                                    .where(match.matchId.eq(participant.matchId))
+                        ))
+                )
                 .where(participant.matchId.eq(matchId))
                 .fetch();
     }
