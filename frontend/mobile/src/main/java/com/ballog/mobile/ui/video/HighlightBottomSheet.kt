@@ -38,58 +38,64 @@ fun HighlightBottomSheet(
         sheetState = sheetState,
         onDismissRequest = onDismiss
     ) {
-        HighlightForm(
-            state = highlightState,
-            onStateChange = onStateChange
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        val confirmAction = {
-            // 시간 형식 정규화 및 유효성 검사
-            val normalizedHighlight = normalizeTimeFormat(highlightState)
-            val (isValid, message) = validateTimeRange(normalizedHighlight)
-
-            if (isValid) {
-                onStateChange(normalizedHighlight)
-                onConfirm()
-            } else {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        if (onDelete == null) {
-            // 추가 모드
-            BallogButton(
-                onClick = confirmAction,
-                label = confirmButtonText,
-                buttonColor = ButtonColor.BLACK,
-                type = ButtonType.LABEL_ONLY,
-                modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp) // 시스템 UI를 위한 하단 패딩 추가
+        ) {
+            HighlightForm(
+                state = highlightState,
+                onStateChange = onStateChange
             )
-        } else {
-            // 수정 모드
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            val confirmAction = {
+                // 시간 형식 정규화 및 유효성 검사
+                val normalizedHighlight = normalizeTimeFormat(highlightState)
+                val (isValid, message) = validateTimeRange(normalizedHighlight)
+
+                if (isValid) {
+                    onStateChange(normalizedHighlight)
+                    onConfirm()
+                } else {
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            if (onDelete == null) {
+                // 추가 모드
                 BallogButton(
                     onClick = confirmAction,
                     label = confirmButtonText,
                     buttonColor = ButtonColor.BLACK,
                     type = ButtonType.LABEL_ONLY,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                BallogButton(
-                    onClick = onDelete,
-                    icon = painterResource(id = R.drawable.ic_trash),
-                    buttonColor = ButtonColor.ALERT,
-                    type = ButtonType.ICON_ONLY,
-                    modifier = Modifier.size(48.dp)
-                )
+            } else {
+                // 수정 모드
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    BallogButton(
+                        onClick = confirmAction,
+                        label = confirmButtonText,
+                        buttonColor = ButtonColor.BLACK,
+                        type = ButtonType.LABEL_ONLY,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    BallogButton(
+                        onClick = onDelete,
+                        icon = painterResource(id = R.drawable.ic_trash),
+                        buttonColor = ButtonColor.ALERT,
+                        type = ButtonType.ICON_ONLY,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
             }
         }
     }
