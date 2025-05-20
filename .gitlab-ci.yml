@@ -29,11 +29,6 @@ deploy:
         echo "DB_USERNAME: $DB_USERNAME" >> backend/src/main/resources/env.yml &&
         echo "DB_PASSWORD: $DB_PASSWORD" >> backend/src/main/resources/env.yml &&
         
-        # MySQL 환경변수 추가
-        echo "MYSQL_DB_URL: $MYSQL_DB_URL" >> backend/src/main/resources/env.yml &&
-        echo "MYSQL_USERNAME: $MYSQL_USERNAME" >> backend/src/main/resources/env.yml &&
-        echo "MYSQL_PASSWORD: $MYSQL_PASSWORD" >> backend/src/main/resources/env.yml &&
-        
         # Redis 환경변수 추가
         echo "REDIS_HOST: $REDIS_HOST" >> backend/src/main/resources/env.yml &&
         echo "REDIS_PORT: $REDIS_PORT" >> backend/src/main/resources/env.yml &&
@@ -61,9 +56,6 @@ deploy:
         echo "DB_URL=$DB_URL" > .env &&
         echo "DB_USERNAME=$DB_USERNAME" >> .env &&
         echo "DB_PASSWORD=$DB_PASSWORD" >> .env &&
-        echo "MYSQL_DB_URL=$MYSQL_DB_URL" >> .env &&
-        echo "MYSQL_USERNAME=$MYSQL_USERNAME" >> .env && 
-        echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> .env &&
         
         # 백엔드 서비스 재빌드 및 배포
         echo "$CI_COMMIT_REF_NAME 브랜치: 백엔드 서비스 빌드 및 배포 중..." &&
@@ -74,7 +66,7 @@ deploy:
         
         # 사용하지 않는 이미지 정리
         echo "사용하지 않는 Docker 이미지 정리 중..." &&
-        docker image prune -af --filter "until=24h"
+        docker image prune -af
       "
       
   only:
