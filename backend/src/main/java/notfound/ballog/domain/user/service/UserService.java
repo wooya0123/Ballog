@@ -183,7 +183,7 @@ public class UserService {
         String prompt = "다음은 풋살 경기에서 얻은 5개의 게임 데이터입니다:\n\n" +
                 gameDataList +
                 "\n\n이 데이터를 바탕으로 비슷한 능력치를 가진 프로 축구 선수를 추천해주세요. " +
-                "추천한 프로 축구 선수 이름이 나무위키 또는 위키백과에 실제 등록된 선수명인지 먼저 확인하세요.\n" +
+                "추천한 프로 축구 선수 이름이 한국의 검색 포털 네이버에 실제 등록된 선수명인지 먼저 확인하세요.\n" +
                 "— 검색 결과 첫 페이지에서 선수명을 가져오고, 표기가 다르면 그 표기법을 사용하세요.\n\n" +
                 "유저 이름은 " + user.getNickname() + " 입니다." +
                 "각 데이터의 sprint는 스프린트 횟수, avgSpeed는 평균 속도(km/h), " +
@@ -196,18 +196,19 @@ public class UserService {
         // recommendedPlayer 추출
         Map<String, Object> recommendedPlayer = (Map<String, Object>) resp.get("recommendedPlayer");
 
-        // Wiki 이미지 크롤링
-        String wikiUrl = (String) recommendedPlayer.get("namuwiki");
+//        // Wiki 이미지 크롤링(cloudFlare에 막힘)
+//        String wikiUrl = (String) recommendedPlayer.get("namuwiki");
 
-
-        if (wikiUrl != null && !wikiUrl.isEmpty()) {
+//        if (wikiUrl != null && !wikiUrl.isEmpty()) {
 //            String imageUrl = wikiCrawlService.getPlayerImageUrl(wikiUrl);
-            String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
+//        }
 
-            if (imageUrl != null) {
-                recommendedPlayer.remove("namuwiki");
-                recommendedPlayer.put("imageUrl", imageUrl);
-            }
+        // 네이버 이미지 크롤링
+        String imageUrl = naverCrawlService.getPlayerImageUrl(recommendedPlayer.get("name").toString());
+
+        if (imageUrl != null) {
+            recommendedPlayer.remove("naver");
+            recommendedPlayer.put("imageUrl", imageUrl);
         }
 
         return objectMapper.convertValue(resp, AiRecommendResponse.class);
@@ -217,7 +218,7 @@ public class UserService {
         String originalFileName = request.getFileName();
         String objectKey = s3Util.generateObjectKey(originalFileName, "profileImage");
 
-        // 1. 확장자 추출
+        // 확장자 추출
         String ext = "";
         String contentType = "image/jpeg";
         int idx = originalFileName.lastIndexOf(".");

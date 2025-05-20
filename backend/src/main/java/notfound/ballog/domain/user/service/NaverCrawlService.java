@@ -36,7 +36,6 @@ public class NaverCrawlService {
             // 1) 검색어 인코딩
             String encoded = URLEncoder.encode(playerName, StandardCharsets.UTF_8);
             String url = String.format(NAVER_SEARCH_URL, encoded);
-            log.info("▶ 네이버 검색 url: {}", url);
 
             // 2) 페이지 요청 (timeout 5초, referrer 포함)
             Document doc = Jsoup.connect(url)
@@ -44,7 +43,6 @@ public class NaverCrawlService {
                     .referrer("https://search.naver.com")
                     .timeout(5_000)
                     .get();
-            log.info("▶ 네이버 html: {}", doc);
 
             // 3) 인물 박스 영역 내 이미지 선택
             //    (section.case_normal._au_people_content_wrap img._img)
@@ -59,12 +57,12 @@ public class NaverCrawlService {
 
             // 4) data-src (지연 로딩) 우선, 없으면 src 사용
             String dataSrc = img.attr("data-src");
-            if (dataSrc != null && !dataSrc.isEmpty()) {
+            if (!dataSrc.isEmpty()) {
                 return normalizeUrl(dataSrc);
             }
 
             String src = img.attr("src");
-            if (src != null && !src.isEmpty()) {
+            if (!src.isEmpty()) {
                 return normalizeUrl(src);
             }
 
