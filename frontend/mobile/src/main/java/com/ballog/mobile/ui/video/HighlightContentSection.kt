@@ -499,139 +499,17 @@ private fun VideoThumbnail(
     onThumbnailLoaded: () -> Unit = {},
     onThumbnailLoadFailed: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    
-    // 썸네일 상태
-    var thumbnailBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
-    val isFirstAttempt = remember { mutableStateOf(true) }
-    
-    // 컴포넌트 마운트 시 즉시 썸네일 생성 시도
-    LaunchedEffect(Unit) {
-        if (videoUri != null) {
-            Log.d("VideoThumbnail", "👉 컴포넌트 마운트 시 즉시 썸네일 생성 시도: ${videoUri.toString().take(20)}")
-        }
-    }
-    
-    // 비디오 URI나 쿼터가 변경되면 썸네일 초기화
-    LaunchedEffect(videoUri, selectedQuarter) {
-        if (videoUri == null) return@LaunchedEffect
-        
-        try {
-            isFirstAttempt.value = true
-            thumbnailBitmap = null
-
-            // 백그라운드 스레드에서 썸네일 추출
-            val bitmap = withContext(Dispatchers.IO) {
-                extractThumbnail(context, videoUri)
-            }
-            
-            if (bitmap != null) {
-                thumbnailBitmap = bitmap.asImageBitmap()
-                Log.d("VideoThumbnail", "✅ 썸네일 비트맵 변환 완료")
-                onThumbnailLoaded()
-            } else {
-                Log.d("VideoThumbnail", "⚠️ 직접 추출 실패, AsyncImage로 대체")
-                isFirstAttempt.value = false
-            }
-        } catch (e: Exception) {
-            Log.e("VideoThumbnail", "❌ 썸네일 처리 과정 중 오류", e)
-            isFirstAttempt.value = false
-            onThumbnailLoadFailed()
-        }
-    }
-    
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 직접 추출한 비트맵이 있으면 표시
-        if (thumbnailBitmap != null) {
-            Image(
-                bitmap = thumbnailBitmap!!,
-                contentDescription = "비디오 썸네일",
-                modifier = Modifier.fillMaxSize()
-            )
-        } 
-        // 직접 추출 실패한 경우 AsyncImage로 대체
-        else if (!isFirstAttempt.value) {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(videoUri)
-                    .crossfade(true)
-                    .placeholderOf(videoUri)
-                    .build(),
-                contentDescription = "비디오 썸네일 대체",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(fallbackColor),
-                onSuccess = {
-                    Log.d("VideoThumbnail", "✅ AsyncImage 썸네일 로드 성공: $selectedQuarter")
-                    onThumbnailLoaded()
-                },
-                onError = {
-                    Log.e("VideoThumbnail", "❌ AsyncImage 썸네일 로드 실패: $selectedQuarter")
-                    onThumbnailLoadFailed()
-                }
-            )
-        } else {
-            // 로딩 중 상태 - 아무것도 표시하지 않음
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(fallbackColor)
-            )
-        }
-    }
-}
-
-/**
- * 비디오에서 썸네일을 추출하는 헬퍼 함수
- */
-private fun extractThumbnail(context: android.content.Context, videoUri: Uri): Bitmap? {
-    try {
-        Log.d("VideoThumbnail", "🖼️ 직접 추출 시도: ${videoUri.toString().take(20)}...")
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, videoUri)
-        
-        // 여러 시간대에서 썸네일 획득 시도
-        val frames = listOf(
-            0L, 
-            1000000L, // 1초
-            3000000L  // 3초
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(fallbackColor),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_video),
+            contentDescription = "비디오 아이콘",
+            modifier = Modifier.size(48.dp)
         )
-        
-        var resultBitmap: Bitmap? = null
-        
-        for (timeUs in frames) {
-            try {
-                // API 레벨 따라 다른 메서드 사용
-                resultBitmap = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST)
-                } else {
-                    retriever.getFrameAtTime(timeUs)
-                }
-                
-                if (resultBitmap != null) {
-                    Log.d("VideoThumbnail", "✅ ${timeUs/1000000}초 지점에서 프레임 획득 성공")
-                    break
-                }
-            } catch (e: Exception) {
-                Log.e("VideoThumbnail", "❌ ${timeUs/1000000}초 지점 프레임 획득 실패", e)
-            }
-        }
-        
-        // 마지막 시도: 미디어 메타데이터에서 썸네일 사용하기
-        if (resultBitmap == null) {
-            Log.d("VideoThumbnail", "🔍 임베디드 썸네일 시도")
-            resultBitmap = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                retriever.getFrameAtIndex(0)
-            } else {
-                retriever.frameAtTime
-            }
-        }
-        
-        // 정리
-        retriever.release()
-        return resultBitmap
-    } catch (e: Exception) {
-        Log.e("VideoThumbnail", "❌ 썸네일 추출 실패: ${e.message}")
-        return null
     }
+    onThumbnailLoaded()
 }

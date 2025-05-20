@@ -70,7 +70,7 @@ fun HighlightCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HighlightTimeStamp(startTime = startTime, endTime = endTime)
+                TimeStamp(startTime = startTime, endTime = endTime)
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -88,17 +88,6 @@ fun HighlightCard(
             }
         }
     }
-}
-
-@Composable
-private fun HighlightTimeStamp(startTime: String, endTime: String) {
-    Text(
-        text = "$startTime ~ $endTime",
-        color = Gray.Gray600,
-        fontSize = 14.sp,
-        fontFamily = pretendard,
-        fontWeight = FontWeight.Normal
-    )
 }
 
 @Preview(showBackground = true)
