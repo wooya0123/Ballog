@@ -17,10 +17,15 @@ import notfound.ballog.domain.user.response.AiRecommendResponse;
 import notfound.ballog.domain.user.response.GetStatisticsResponse;
 import notfound.ballog.domain.user.response.GetUserResponse;
 import notfound.ballog.exception.NotFoundException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +43,15 @@ public class UserService {
     private final GameReportRepository gameReportRepository;
 
     private final PlayerCardService playerCardService;
+
     private final OpenAIService openAIService;
-    private final WikiCrawlService wikiCrawlService;
+
     private final NaverCrawlService naverCrawlService;
+
+    private final RedisTemplate<String, AiRecommendResponse> aiRecommendRedisTemplate;
+
     private final ObjectMapper objectMapper;
+
     private final S3Util s3Util;
 
     // 회원가입
@@ -163,6 +173,14 @@ public class UserService {
     }
 
     public AiRecommendResponse getAiRecommend(UUID userId) {
+        // 캐싱된 데이터가 있는지 조회
+        String redisKey = "aiRecommend:" + userId;
+
+        AiRecommendResponse cachedResponse = aiRecommendRedisTemplate.opsForValue().get(redisKey);
+        if (cachedResponse != null) {
+            return cachedResponse;
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.USER_NOT_FOUND));
 
@@ -211,7 +229,18 @@ public class UserService {
             recommendedPlayer.put("imageUrl", imageUrl);
         }
 
-        return objectMapper.convertValue(resp, AiRecommendResponse.class);
+        // gpt 분석 결과
+        AiRecommendResponse result = objectMapper.convertValue(resp, AiRecommendResponse.class);
+
+        // TTL: 해당일 자정까지
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDateTime now = LocalDateTime.now(zone);
+        LocalDateTime nextMid = now.toLocalDate().plusDays(1).atStartOfDay();
+        Duration untilMid = Duration.between(now, nextMid);
+
+        aiRecommendRedisTemplate.opsForValue().set(redisKey, result, untilMid);
+
+        return result;
     }
 
     public AddS3ImageUrlResponse addS3ImageUrl(AddS3ImageUrlRequest request) {
