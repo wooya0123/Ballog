@@ -42,7 +42,8 @@ data class PresignedVideoUploadResponseWrapper(
 )
 
 data class PresignedVideoUploadResponse(
-    val s3Url: String
+    val s3Url: String,
+    val videoId: Int
 )
 
 // 업로드 완료 후 영상 저장 요청 (기존 UploadSuccessRequest 대체)
