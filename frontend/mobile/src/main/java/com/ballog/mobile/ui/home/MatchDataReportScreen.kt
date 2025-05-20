@@ -119,16 +119,16 @@ fun MatchDataReportScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     // 선수 이미지
                     Box(
-                        modifier = Modifier
-                            .size(118.dp)
-                            .background(Color.Gray, RoundedCornerShape(59.dp)),
+//                        modifier = Modifier
+//                            .size(118.dp)
+//                            .background(Color.Gray, RoundedCornerShape(59.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         if (!imageUrl.isNullOrBlank()) {
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = "선수 이미지",
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier.size(120.dp)
                             )
                         } else {
                             Icon(

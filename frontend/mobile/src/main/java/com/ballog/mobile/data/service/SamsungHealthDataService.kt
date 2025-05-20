@@ -92,7 +92,7 @@ class SamsungHealthDataService(private val context: Context) {
     private suspend fun readExercise(): List<Exercise> {
         // 최근 7일 데이터 조회를 위한 시간 설정
         val endTime = LocalDateTime.now()
-        val startTime = endTime.minusDays(1)
+        val startTime = endTime.minusDays(2)
 
         try {
             // 데이터 요청 객체 생성

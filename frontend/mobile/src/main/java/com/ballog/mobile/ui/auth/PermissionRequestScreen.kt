@@ -131,37 +131,64 @@ fun PermissionRequestScreen(
             .fillMaxSize()
             .background(Gray.Gray100)
     ) {
-        // 중앙 컨텐츠: 아이콘만
-        Row(
+        // 중앙 컨텐츠: 아이콘, 이미지, 텍스트를 위아래로 배치
+        Column(
             modifier = Modifier.align(Alignment.Center),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(12.dp))
+            // 이미지는 한 줄(Row)로 배치
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(12.dp))
+                ) {
+                    Image(
+                        painter = painterResource(id = R.mipmap.ballog_logo_foreground),
+                        contentDescription = "App Icon",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Image(
-                    painter = painterResource(id = R.mipmap.ballog_logo_foreground),
-                    contentDescription = "App Icon",
-                    modifier = Modifier.fillMaxSize()
+                    painter = painterResource(id = R.drawable.ic_link),
+                    contentDescription = "ic_link",
+                    modifier = Modifier.size(30.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        Gray.Gray700.copy(alpha = 0.4f)
+                    )
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.samsung_health_72x72),
+                    contentDescription = "Samsung Health",
+                    modifier = Modifier.size(60.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Image(
-                painter = painterResource(id = R.drawable.ic_link),
-                contentDescription = "ic_link",
-                modifier = Modifier.size(30.dp),
-                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                    Gray.Gray700.copy(alpha = 0.4f)
-                )
+            Spacer(modifier = Modifier.height(140.dp))
+            // 텍스트는 세로(Column)로 배치
+            Text(
+                text = "Samsung Health 연결",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = pretendard,
+                color = Primary,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Image(
-                painter = painterResource(id = R.drawable.samsung_health_72x72),
-                contentDescription = "Samsung Health",
-                modifier = Modifier.size(60.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "볼로그는 삼성헬스와 함께합니다",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = pretendard,
+                color = Gray.Gray700,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp
             )
         }
         // 하단 컨텐츠: 텍스트, 점, 버튼
@@ -171,48 +198,6 @@ fun PermissionRequestScreen(
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Samsung Health 연결",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = pretendard,
-                color = Primary,
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "볼로그는 삼성헬스와 함께합니다",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = pretendard,
-                color = Gray.Gray700,
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(Primary)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(Gray.Gray300)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
             BallogButton(
                 onClick = {
                     OnboardingPrefs.setPermissionCompleted(context, true)
