@@ -26,6 +26,7 @@ import com.ballog.mobile.navigation.TopNavType
 import com.ballog.mobile.viewmodel.UserViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
 fun MatchDataReportScreen(
@@ -39,13 +40,23 @@ fun MatchDataReportScreen(
         viewModel.fetchAiRecommend()
     }
 
-    val conclusion = aiRecommend?.conclusion
-    val analysis = aiRecommend?.analysis
-    val similarPlayerName = aiRecommend?.recommendedPlayer?.name
-    val similarPlayerPosition = aiRecommend?.recommendedPlayer?.position
-    val style = aiRecommend?.recommendedPlayer?.style
-    val reason = aiRecommend?.recommendedPlayer?.reason
-    val imageUrl = aiRecommend?.recommendedPlayer?.imageUrl
+    if (aiRecommend == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val conclusion = aiRecommend.conclusion
+    val analysis = aiRecommend.analysis
+    val similarPlayerName = aiRecommend.recommendedPlayer?.name
+    val similarPlayerPosition = aiRecommend.recommendedPlayer?.position
+    val style = aiRecommend.recommendedPlayer?.style
+    val reason = aiRecommend.recommendedPlayer?.reason
+    val imageUrl = aiRecommend.recommendedPlayer?.imageUrl
 
     Column(
         modifier = Modifier
@@ -168,7 +179,7 @@ fun MatchDataReportScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = style.toString(),
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         fontFamily = pretendard,
@@ -184,7 +195,7 @@ fun MatchDataReportScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = reason.toString(),
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         fontFamily = pretendard
