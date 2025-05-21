@@ -92,14 +92,6 @@ fun MatchDataReportScreen(
                 fontFamily = pretendard,
                 modifier = Modifier.padding(start = 24.dp, bottom = 4.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = analysis.toString(),
-                fontSize = 14.sp,
-                color = Gray.Gray500,
-                fontFamily = pretendard,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp)
-            )
             // 비슷한 선수 카드
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -114,17 +106,16 @@ fun MatchDataReportScreen(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
                     .fillMaxWidth()
-                    .height(210.dp)
-                    .background(Color(0xFF1b1b1d), RoundedCornerShape(16.dp)),
+                    .height(210.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = similarPlayerName.toString(),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Primary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Gray.Gray700,
                         fontFamily = pretendard
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -139,23 +130,23 @@ fun MatchDataReportScreen(
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = "선수 이미지",
-                                modifier = Modifier.size(120.dp)
+                                modifier = Modifier.size(160.dp)
                             )
                         } else {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_profile),
                                 contentDescription = "선수 이미지",
                                 tint = Color.White,
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier.size(120.dp)
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = similarPlayerPosition.toString(),
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White,
+                        color = Gray.Gray600,
                         fontFamily = pretendard
                     )
                 }
