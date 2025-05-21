@@ -1,6 +1,7 @@
 package notfound.ballog.domain.team.repository;
 
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -48,30 +49,30 @@ public class TeamRepositoryImpl implements TeamRepositoryCustom {
                 .fetch();
     }
 
-@Override
-public List<PlayerCardDto> findPlayerCardByTeamId(Integer teamId) {
-    return queryFactory
-            .select(Projections.constructor(PlayerCardDto.class,
-                    user.nickname,
-                    teamMember.role,
-                    user.profileImageUrl,
-                    Projections.constructor(CardStat.class,
-                            playerCard.speed,
-                            playerCard.stamina,
-                            playerCard.attack,
-                            playerCard.defense,
-                            playerCard.recovery)))
-            .from(teamMember)
-            .where(teamMember.teamId.eq(teamId))
-            .join(user).on(teamMember.userId.eq(user.userId))
-            .join(playerCard).on(playerCard.user.userId.eq(user.userId))
-            .orderBy(
-                    new CaseBuilder()
-                            .when(teamMember.role.eq("MANAGER")).then(0)
-                            .otherwise(1),
-                    user.nickname.asc())
-            .fetch();
-}
+    @Override
+    public List<PlayerCardDto> findPlayerCardByTeamId(Integer teamId) {
+        return queryFactory
+                .select(Projections.constructor(PlayerCardDto.class,
+                        user.nickname,
+                        teamMember.role,
+                        user.profileImageUrl,
+                        Projections.constructor(CardStat.class,
+                                playerCard.speed,
+                                playerCard.stamina,
+                                playerCard.defense,
+                                playerCard.attack,
+                                playerCard.recovery)))
+                .from(teamMember)
+                .where(teamMember.teamId.eq(teamId))
+                .join(user).on(teamMember.userId.eq(user.userId))
+                .join(playerCard).on(playerCard.user.userId.eq(user.userId))
+                .orderBy(
+                        new CaseBuilder()
+                                .when(teamMember.role.eq("MANAGER")).then(0)
+                                .otherwise(1).asc(),
+                        user.nickname.asc())
+                .fetch();
+    }
 
     @Override
     public List<ParticipantDto> findParticipantsByUserIdAndMatchId(UUID userId, Integer matchId) {
