@@ -68,7 +68,7 @@ fun MatchDataReportScreen(
             .background(Color.White)
     ) {
         TopNavItem(
-            title = "경기 분석 레포트",
+            title = "플레이스타일 분석 레포트",
             type = TopNavType.DETAIL_WITH_BACK,
             onBackClick = onBack,
         )
@@ -78,7 +78,7 @@ fun MatchDataReportScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            // 경기 데이터 분석 요약
+            // 매치 데이터 분석 요약
             Row(
                 modifier = Modifier
                     .padding(start = 24.dp, bottom = 8.dp),

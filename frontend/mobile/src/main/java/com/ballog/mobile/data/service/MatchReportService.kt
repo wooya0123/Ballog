@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 /**
- * 경기 리포트 데이터를 생성하고 서버에 전송하는 서비스
+ * 매치 리포트 데이터를 생성하고 서버에 전송하는 서비스
  */
 class MatchReportService(
     private val context: Context,
@@ -115,7 +115,7 @@ class MatchReportService(
         matchRepository.clearFieldCorners()
     }
     /**
-     * 삼성 헬스 데이터를 가져와 경기 리포트를 생성하고 서버에 전송합니다.
+     * 삼성 헬스 데이터를 가져와 매치 리포트를 생성하고 서버에 전송합니다.
      */
     suspend fun createMatchReport(usedId: List<String>) {
         Log.d(TAG, "[createMatchReport] 호출됨")

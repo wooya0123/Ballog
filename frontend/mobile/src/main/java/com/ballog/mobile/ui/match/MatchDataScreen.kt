@@ -682,14 +682,14 @@ fun MatchDataModal(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "경기 진영을 선택해주세요",
+                        text = "내 진영을 선택해 주세요",
                         fontFamily = pretendard,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
                         color = Gray.Gray800,
                     )
                     Text(
-                        text = "진영은 초기 GPS 기반 자동 배정되어있습니다",
+                        text = "진영은 초기 GPS 기반 자동 배정되어 있습니다",
                         fontFamily = pretendard,
                         fontWeight = FontWeight.Normal,
                         fontSize = 8.sp,

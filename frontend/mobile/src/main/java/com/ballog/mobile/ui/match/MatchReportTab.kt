@@ -151,8 +151,8 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
             if (selectedQuarter?.reportData != null) {
                 val report = selectedQuarter.reportData
                 val reportCards = listOf(
-                    Triple("분석시간", calculateDuration(report.startTime, report.endTime), "분"),
-                    Triple("이동거리", "%.1f".format(report.distance.toDouble()), "km"),
+                    Triple("총 시간", calculateDuration(report.startTime, report.endTime), "분"),
+                    Triple("이동 거리", "%.1f".format(report.distance.toDouble()), "km"),
                     Triple("최고 속도", "%.1f".format(report.maxSpeed.toDouble()), "km/h"),
                     Triple("평균 속도", "%.1f".format(report.avgSpeed.toDouble()), "km/h"),
                     Triple("스프린트", report.sprint.toString(), "회"),
@@ -173,7 +173,7 @@ fun MatchReportTab(matchDetail: MatchDetailResponseDto) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "아직 경기 기록이 등록되지 않았어요",
+                        text = "아직 매치 기록이 등록되지 않았어요",
                         fontSize = 14.sp,
                         fontFamily = pretendard,
                         fontWeight = FontWeight.Normal,
