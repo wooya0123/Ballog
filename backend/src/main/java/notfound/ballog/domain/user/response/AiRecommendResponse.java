@@ -13,7 +13,10 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AiRecommendResponse {
 
-    private String analysis;
+    private String heatmapAnalysis;
+    private String sprintAnalysis;
+    private String speedAnalysis;
+    private String staminaAnalysis;
     private RecommendedPlayer recommendedPlayer;
     private String conclusion;
 
