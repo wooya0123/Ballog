@@ -2,6 +2,7 @@ package notfound.ballog.domain.user.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.common.utils.S3Util;
 import notfound.ballog.domain.auth.entity.Auth;
@@ -21,11 +22,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class UserService {
 
@@ -138,6 +138,11 @@ public class UserService {
             int numCols = heatmapList.get(0).get(0).size();
             int count = heatmapList.size();
 
+            log.info("heatmapList numCols: " + numCols);
+            log.info("heatmapList numRows: " + numRows);
+            log.info("heatmapList size: " + count);
+
+
             // 3) 행 단위 순회
             for (int i = 0; i < numRows; i++) {
                 List<Integer> averagedRow = new ArrayList<>();
@@ -149,6 +154,9 @@ public class UserService {
                     // 5) 5개의 heatmap에서 같은 (i,j) 위치 값을 모두 더하기
                     for (List<List<Integer>> singleHeatmap : heatmapList) {
                         // 만약 일부 heatmap에 해당 위치가 없으면 0 처리
+
+                        log.info("singleHeatmap size: " + singleHeatmap.size());
+
                         List<Integer> row = singleHeatmap.get(i);
                         int value = (j < row.size() ? row.get(j) : 0);
                         sum += value;
