@@ -219,36 +219,40 @@ fun MeasurementScreen(onComplete: () -> Unit) {
             return
         }
 
-        isCountingDown = true
-        errorMessage = null
+        attemptLocationMeasurement()            // 카운트 다운 없이 바로 위치 측정
     }
 
+//        isCountingDown = true
+//        errorMessage = null
+//    }
+
     // 측정 화면 UI 부분 수정
-    if (isCountingDown) {
-        // 카운트다운 UI
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = countdownValue.toString(),
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold,
-                color = BallogCyan
-            )
-        }
-
-        LaunchedEffect(isCountingDown) {
-            for (i in 3 downTo 1) {
-                countdownValue = i
-                delay(1000)
-            }
-
-            // 카운트다운 종료 후 위치 측정
-            isCountingDown = false
-            attemptLocationMeasurement()
-        }
-    } else if (isMeasuring) {
+//    if (isCountingDown) {
+//        // 카운트다운 UI
+//        Box(
+//            modifier = Modifier.fillMaxSize(),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Text(
+//                text = countdownValue.toString(),
+//                fontSize = 40.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = BallogCyan
+//            )
+//        }
+//
+//        LaunchedEffect(isCountingDown) {
+//            for (i in 3 downTo 1) {
+//                countdownValue = i
+//                delay(1000)
+//            }
+//
+//            // 카운트다운 종료 후 위치 측정
+//            isCountingDown = false
+//            attemptLocationMeasurement()
+//        }
+//}
+    if (isMeasuring) {
         // 측정 중 UI
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -269,51 +273,51 @@ fun MeasurementScreen(onComplete: () -> Unit) {
             }
         }
     } else if (showCompletionScreen) {
-        if (isDataSent) {
-            // 1) 전송 완료 후, 화면 중앙에 카운트다운 텍스트
-            var uiCountdown by remember { mutableStateOf(5) }
-            LaunchedEffect(isDataSent) {
-                // 5→1초 카운트다운
-                for (sec in 5 downTo 1) {
-                    uiCountdown = sec
-                    delay(1000)
-                }
-                // 카운트다운 끝나면 헬스 앱 실행
-                launchSamsungHealthRunning(context)
-                onComplete()
-            }
-
-            Box(modifier = Modifier.fillMaxSize()) {
-                // 중앙에 모아진 텍스트
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "경기장 측정 완료!",
-                        color = BallogWhite,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "$uiCountdown 초 후 삼성 헬스로 이동합니다",
-                        color = BallogWhite,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "삼성 헬스에서\nBallog를 선택해주세요",
-                        color = BallogCyan,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        } else {
+//        if (isDataSent) {
+//            // 1) 전송 완료 후, 화면 중앙에 카운트다운 텍스트
+//            var uiCountdown by remember { mutableStateOf(5) }
+//            LaunchedEffect(isDataSent) {
+//                // 5→1초 카운트다운
+//                for (sec in 5 downTo 1) {
+//                    uiCountdown = sec
+//                    delay(1000)
+//                }
+//                // 카운트다운 끝나면 헬스 앱 실행
+//                launchSamsungHealthRunning(context)
+//                onComplete()
+//            }
+//
+//            Box(modifier = Modifier.fillMaxSize()) {
+//                // 중앙에 모아진 텍스트
+//                Column(
+//                    modifier = Modifier
+//                        .align(Alignment.Center)
+//                        .padding(horizontal = 16.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//                    verticalArrangement = Arrangement.spacedBy(8.dp)
+//                ) {
+//                    Text(
+//                        text = "경기장 측정 완료!",
+//                        color = BallogWhite,
+//                        fontSize = 20.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                    Text(
+//                        text = "$uiCountdown 초 후 삼성 헬스로 이동합니다",
+//                        color = BallogWhite,
+//                        fontSize = 14.sp,
+//                        textAlign = TextAlign.Center
+//                    )
+//                    Text(
+//                        text = "삼성 헬스에서\nBallog를 선택해주세요",
+//                        color = BallogCyan,
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        textAlign = TextAlign.Center
+//                    )
+//                }
+//            }
+//        } else {
             Column(modifier = Modifier.fillMaxSize()) {
                 // 1) 상단 영역: weight 1.2f — 완료 메시지 + 안내 메시지
                 Box(
@@ -331,34 +335,44 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                         verticalArrangement = Arrangement.spacedBy(8.dp) // 텍스트 간격
                     ) {
                         // 완료 헤더
-                        Text(
-                            text = "측정 완료!",
-                            color = BallogWhite,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (isDataSent) {
+                            Text(
+                                text = "전송 완료!",
+                                color = BallogWhite,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        else {
+                            Text(
+                                text = "측정 완료!",
+                                color = BallogWhite,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
                         if (isDataSent) {
-                            // Samsung Health 이동 안내
-                            Text(
-                                text = "5초 후 삼성 헬스로 이동합니다",
-                                color = BallogWhite,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = "삼성 헬스에서 Ballog를\n선택해주세요",
-                                color = BallogCyan,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+//                            // Samsung Health 이동 안내
+//                            Text(
+//                                text = "5초 후 삼성 헬스로 이동합니다",
+//                                color = BallogWhite,
+//                                fontSize = 14.sp,
+//                                textAlign = TextAlign.Center,
+//                                modifier = Modifier.fillMaxWidth()
+//                            )
+//                            Text(
+//                                text = "삼성 헬스에서 Ballog를\n선택해주세요",
+//                                color = BallogCyan,
+//                                fontSize = 16.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                textAlign = TextAlign.Center,
+//                                modifier = Modifier.fillMaxWidth()
+//                            )
                         } else {
                             // 데이터 전송 전 안내
                             Text(
-                                text = "경기장 데이터를\n모바일에 전송해주세요!",
+                                text = "경기 데이터를\n모바일에 전송해주세요!",
                                 color = BallogCyan,
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center,
@@ -393,7 +407,7 @@ fun MeasurementScreen(onComplete: () -> Unit) {
                     }
                 }
             }
-        }
+//        }
     } else {
         // 스크롤 가능한 측정 화면
         Column(modifier = Modifier.fillMaxSize()) {
