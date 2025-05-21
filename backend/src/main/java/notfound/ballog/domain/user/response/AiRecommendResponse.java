@@ -29,6 +29,7 @@ public class AiRecommendResponse {
         private String position;
         private String style;
         private String reason;
+        private String train;
         private String imageUrl;
     }
 
