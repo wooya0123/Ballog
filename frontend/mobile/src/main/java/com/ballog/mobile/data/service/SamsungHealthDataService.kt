@@ -35,7 +35,6 @@ class SamsungHealthDataService(private val context: Context) {
 
     /** 삼성 헬스 데이터 저장소 */
     private val healthDataStore: HealthDataStore = HealthDataService.getStore(context)
-    private val metricsCalculator = ExerciseMetricsCalculator(context)
 
     companion object {
         /** 시간 형식 (시:분) */
@@ -51,10 +50,8 @@ class SamsungHealthDataService(private val context: Context) {
         private const val APP_NAME = "Ballog"
 
         /** 스프린트로 간주할 최소 속력 (m/s) */
-        private const val SPRINT_THRESHOLD_SPEED = 2.8f // 약 18 km/h
+        private const val SPRINT_THRESHOLD_SPEED = 6.0
 
-        /** 스프린트 상태가 유지되어야 하는 최소 시간 (밀리초) */
-        private const val SPRINT_MIN_DURATION = 500 // 0.2초
     }
 
     /**
@@ -92,7 +89,7 @@ class SamsungHealthDataService(private val context: Context) {
     private suspend fun readExercise(): List<Exercise> {
         // 최근 7일 데이터 조회를 위한 시간 설정
         val endTime = LocalDateTime.now()
-        val startTime = endTime.minusDays(3)
+        val startTime = endTime.minusDays(1)
 
         try {
             // 데이터 요청 객체 생성
@@ -234,8 +231,7 @@ class SamsungHealthDataService(private val context: Context) {
 
     /**
      * 실시간 데이터 세그먼트를 분석하여 스프린트 횟수를 계산합니다.
-     * 속력이 SPRINT_THRESHOLD_SPEED 이상이고, 그 상태가 SPRINT_MIN_DURATION 이상 유지되면
-     * 하나의 스프린트로 간주합니다.
+     * 속력이 일정 이상인 세그먼트마다 1 스프린트로 간주합니다.
      *
      * @param segments 실시간 데이터 세그먼트 목록
      * @return 스프린트 횟수
@@ -244,46 +240,15 @@ class SamsungHealthDataService(private val context: Context) {
         if (segments.isEmpty()) return 0
 
         var sprintCount = 0
-        var isInSprint = false
-        var sprintStartTime = 0L
 
-        // 시간 순으로 정렬
-        val sortedSegments = segments.sortedBy { it.startTime }
+        for (segment in segments) {
+            // m/s를 km/h로 변환 (m/s * 3.6 = km/h)
+            val speedKmh = segment.speed * 3.6
 
-        for (segment in sortedSegments) {
-            // 속력이 임계값 이상인 경우
-            if (segment.speed >= SPRINT_THRESHOLD_SPEED) {
-                // 현재 스프린트 중이 아니면 새 스프린트 시작
-                if (!isInSprint) {
-                    isInSprint = true
-                    sprintStartTime = segment.startTime
-                }
-                // 이미 스프린트 중이면 계속 진행
-            } else {
-                // 스프린트가 끝난 경우
-                if (isInSprint) {
-                    // 스프린트 지속 시간 계산
-                    val sprintDuration = segment.startTime - sprintStartTime
-
-                    // 최소 지속 시간을 초과했으면 스프린트 카운트 증가
-                    if (sprintDuration >= SPRINT_MIN_DURATION) {
-                        sprintCount++
-                        Log.d(TAG, "스프린트 감지: 지속시간 ${sprintDuration}ms, 시작 시간: $sprintStartTime")
-                    }
-
-                    isInSprint = false
-                }
-            }
-        }
-
-        // 마지막 세그먼트가 스프린트 중이었는지 확인
-        if (isInSprint) {
-            val lastSegment = sortedSegments.last()
-            val sprintDuration = lastSegment.startTime - sprintStartTime
-
-            if (sprintDuration >= SPRINT_MIN_DURATION) {
+            // 속력이 임계값 이상이면 스프린트 카운트 증가
+            if (speedKmh >= SPRINT_THRESHOLD_SPEED) {
                 sprintCount++
-                Log.d(TAG, "마지막 스프린트 감지: 지속시간 ${sprintDuration}ms, 시작 시간: $sprintStartTime")
+                Log.d(TAG, "스프린트 감지: 속력 ${String.format("%.1f", speedKmh)} km/h")
             }
         }
 
