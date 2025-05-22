@@ -23,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.ballog.mobile.data.dto.HighlightAddRequest
 import com.ballog.mobile.data.dto.HighlightUpdateRequest
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.unit.dp
+import com.ballog.mobile.ui.components.LoadingDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +39,9 @@ fun MatchVideoTab(matchId: Int) {
     // ViewModel과 상태 초기화
     val videoViewModel: VideoViewModel = viewModel()
     val videoUiState by videoViewModel.videoUiState.collectAsState()
+    val isUploading by videoViewModel.isUploading.collectAsState()
+    val isExtractingHighlights by videoViewModel.isExtractingHighlights.collectAsState()
+    val error by videoViewModel.error.collectAsState()
 
     var selectedQuarter by remember { mutableStateOf("1 쿼터") }
     var expanded by remember { mutableStateOf(false) }
@@ -46,6 +52,31 @@ fun MatchVideoTab(matchId: Int) {
     var editingHighlight by remember { mutableStateOf(HighlightUiState()) }
     var deleteVideoId by remember { mutableStateOf(-1) }
     
+    // 에러 다이얼로그 표시
+    error?.let { errorMessage ->
+        AlertDialog(
+            onDismissRequest = { videoViewModel.setError(null) },
+            title = { Text("오류") },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                TextButton(onClick = { videoViewModel.setError(null) }) {
+                    Text("확인")
+                }
+            }
+        )
+    }
+
+    // 로딩 다이얼로그 표시
+    if (isUploading || isExtractingHighlights) {
+        LoadingDialog(
+            message = when {
+                isUploading && isExtractingHighlights -> "하이라이트 추출 중..."
+                isUploading -> "영상 업로드 중..."
+                else -> "하이라이트를\n추출하는 중입니다..."
+            }
+        )
+    }
+
     // 쿼터 옵션 계산
     val quarterOptions = remember(videoUiState.totalQuarters) {
         (1..videoUiState.totalQuarters).map { "$it 쿼터" }

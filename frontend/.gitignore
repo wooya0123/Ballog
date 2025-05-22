@@ -18,3 +18,6 @@
 .cxx
 local.properties
 .kotlin/
+
+/mobile/keystore/
+/watch/keystore/

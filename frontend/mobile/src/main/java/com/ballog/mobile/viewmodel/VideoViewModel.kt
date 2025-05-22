@@ -36,6 +36,12 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _isUploading = MutableStateFlow(false)
+    val isUploading: StateFlow<Boolean> = _isUploading.asStateFlow()
+
+    private val _isExtractingHighlights = MutableStateFlow(false)
+    val isExtractingHighlights: StateFlow<Boolean> = _isExtractingHighlights.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -120,7 +126,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                _isUploading.value = true
+                _error.value = null
 
                 val request = PresignedVideoUploadRequest(
                     fileName = file.name
@@ -196,6 +203,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                             Log.d("VideoViewModel", "📁 원본 비디오 파일: ${file.absolutePath}")
                                             Log.d("VideoViewModel", "📊 비디오 파일 크기: ${file.length() / 1024}KB")
                                             
+                                            _isExtractingHighlights.value = true
                                             val audioFile = AudioUtils.extractAudioToM4a(context, file)
                                             if (audioFile != null) {
                                                 Log.d("VideoViewModel", "✅ 오디오 파일 추출 성공")
@@ -253,6 +261,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                                                 }
                                             } else {
                                                 Log.e("VideoViewModel", "❌ 오디오 파일 추출 실패")
+                                                _error.value = "오디오 파일 추출에 실패했습니다."
                                             }
                                         } else {
                                             Log.e("VideoViewModel", "❌ 저장된 영상을 찾을 수 없음")
@@ -294,7 +303,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e("VideoViewModel", "🔥 업로드 예외 발생", e)
                 _error.value = e.message
             } finally {
-                _isLoading.value = false
+                _isUploading.value = false
+                _isExtractingHighlights.value = false
             }
         }
     }
@@ -431,6 +441,7 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                _error.value = null
                 
                 Log.d("VideoViewModel", "🎵 오디오 추출 프로세스 시작")
                 Log.d("VideoViewModel", "📁 원본 비디오 파일: ${videoFile.absolutePath}")
@@ -497,6 +508,9 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e("VideoViewModel", "❌ 오디오 파일 추출 실패")
                     _error.value = "오디오 파일 추출에 실패했습니다."
                 }
+            } catch (e: Exception) {
+                Log.e("VideoViewModel", "🔥 하이라이트 추출 중 예외 발생", e)
+                _error.value = e.message
             } finally {
                 _isLoading.value = false
             }
