@@ -14,4 +14,10 @@ import java.util.List;
 @Builder
 public class ExtractHighlightResponse {
     private List<HighlightDto> highlightList;
+
+    public static ExtractHighlightResponse of(List<HighlightDto> highlightList) {
+        return ExtractHighlightResponse.builder()
+                .highlightList(highlightList)
+                .build();
+    }
 }

@@ -9,10 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notfound.ballog.common.response.BaseResponse;
 import notfound.ballog.domain.video.request.*;
-import notfound.ballog.domain.video.response.AddHighlightResponse;
-import notfound.ballog.domain.video.response.AddS3VideoUrlResponse;
-import notfound.ballog.domain.video.response.GetLikeResponse;
-import notfound.ballog.domain.video.response.GetVideoListResponse;
+import notfound.ballog.domain.video.response.*;
 import notfound.ballog.domain.video.service.HighlightService;
 import notfound.ballog.domain.video.service.VideoService;
 import org.springframework.data.domain.Pageable;
@@ -88,15 +85,15 @@ public class VideoController {
     @PostMapping(value = "/highlight/auto",
                 consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public BaseResponse<Void> extractHighlight(
+    public BaseResponse<ExtractHighlightResponse> extractHighlight(
             @RequestPart("file") MultipartFile file,
             @RequestPart("videoId") Integer videoId
     ) throws IOException {
         log.info("영상 아이디 ------------ {}", videoId);
 
-        highlightService.extractHighlight(videoId, file);
+        ExtractHighlightResponse response = highlightService.extractHighlight(videoId, file);
 
-        return BaseResponse.ok();
+        return BaseResponse.ok(response);
     }
 
 

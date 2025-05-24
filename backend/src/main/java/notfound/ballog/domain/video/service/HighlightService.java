@@ -21,6 +21,7 @@ import notfound.ballog.domain.video.response.AddHighlightResponse;
 import notfound.ballog.domain.video.response.ExtractHighlightResponse;
 import notfound.ballog.domain.video.response.GetLikeResponse;
 import notfound.ballog.exception.DuplicateDataException;
+import notfound.ballog.exception.InternalServerException;
 import notfound.ballog.exception.NotFoundException;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Pageable;
@@ -80,7 +81,7 @@ public class HighlightService {
     }
 
     @Transactional
-    public void extractHighlight(Integer videoId, MultipartFile file) throws IOException {
+    public ExtractHighlightResponse extractHighlight(Integer videoId, MultipartFile file) throws IOException {
         // Video 조회
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
@@ -117,16 +118,22 @@ public class HighlightService {
             log.info("하이라이트 리스트--------------- {}", highlightList);
         }
 
+        List<HighlightDto> savedHighlightList = null;
         if (highlightList != null) {
             log.info("하이라이트 갯수--------------- {}", highlightList.size());
             for (HighlightDto highlightDto : highlightList) {
                 Highlight highlight = Highlight.of(video, highlightDto);
 
-                highlightRepository.save(highlight);
+                Highlight savedHighlight = highlightRepository.save(highlight);
+
+                HighlightDto dto = HighlightDto.of(savedHighlight, false);
+                savedHighlightList.add(dto);
             }
         } else {
-            throw new NotFoundException(BaseResponseStatus.HIGHLIGHT_EXTRACT_FAIL);
+            throw new InternalServerException(BaseResponseStatus.HIGHLIGHT_EXTRACT_FAIL);
         }
+
+        return ExtractHighlightResponse.of(savedHighlightList);
     }
 
 
