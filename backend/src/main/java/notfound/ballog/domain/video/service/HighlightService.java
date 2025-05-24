@@ -119,7 +119,7 @@ public class HighlightService {
             log.info("하이라이트 리스트--------------- {}", highlightList);
         }
 
-        List<HighlightExtractionDto> savedHighlightList = null;
+        List<HighlightExtractionDto> savedHighlightList = new ArrayList<>();
         if (highlightList != null) {
             log.info("하이라이트 갯수--------------- {}", highlightList.size());
             for (HighlightExtractionDto highlightExtractionDto : highlightList) {
