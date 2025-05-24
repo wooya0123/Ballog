@@ -48,6 +48,7 @@ public class VideoService {
 
     @Transactional
     public AddS3VideoUrlResponse addS3Url(AddS3VideoUrlRequest request) {
+        Integer matchId = request.getMatchId();
         String objectKey = s3Util.generateObjectKey(request.getFileName(), "video");
 
         String contentType = "video/mp4";
@@ -64,13 +65,16 @@ public class VideoService {
         }
 
         // 이미 같은 url 주소에 저장된 게 있는지 체크
-        Optional<Video> existingVideo = videoRepository.findByVideoUrl(objectUrl);
+        Optional<Video> existingVideo = videoRepository.findByMatch_MatchIdAndVideoUrl(matchId, objectUrl);
         if (existingVideo.isPresent()) {
             throw new ValidationException(BaseResponseStatus.VIDEO_ALREADY_EXIST);
         }
 
-        // 영상 데이터 저장
-        Video video = Video.ofVideoUrl(objectUrl);
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND));
+
+        // 영상 데이터 임시 저장
+        Video video = Video.ofVideoUrl(match, objectUrl);
         Video savedVideo = videoRepository.save(video);
 
         return AddS3VideoUrlResponse.of(presignedUrl, savedVideo.getVideoId());
@@ -86,12 +90,12 @@ public class VideoService {
 //        }
 
         // 이미 저장해둔 영상 찾기
-        Video video = videoRepository.findByVideoUrl(request.getVideoUrl())
+        Video video = videoRepository.findByMatch_MatchIdAndVideoUrl(request.getMatchId(), request.getVideoUrl())
                 .orElseThrow(() -> new NotFoundException(BaseResponseStatus.VIDEO_NOT_FOUND));
 
-        // 해당하는 매치 조회
-        Match match = matchRepository.findById(request.getMatchId())
-                        .orElseThrow(() -> new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND));
+//        // 해당하는 매치 조회
+//        Match match = matchRepository.findById(request.getMatchId())
+//                        .orElseThrow(() -> new NotFoundException(BaseResponseStatus.MATCH_NOT_FOUND));
 
         // Duration 타입으로 변환
         String[] part = request.getDuration().split(":");
@@ -103,7 +107,7 @@ public class VideoService {
                 .plusSeconds(seconds);
 
 //        Video video = Video.of(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
-        video.save(match, request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
+        video.save(request.getQuarterNumber(), request.getVideoUrl(), videoDuration);
 
         videoRepository.save(video);
     }

@@ -56,15 +56,15 @@ public class Video {
                 .build();
     }
 
-    public void save(Match match, Integer quarterNumber, String videoUrl, Duration duration) {
-        this.match = match;
+    public void save(Integer quarterNumber, String videoUrl, Duration duration) {
         this.quarterNumber = quarterNumber;
         this.videoUrl = videoUrl;
         this.duration = duration;
     }
 
-    public static Video ofVideoUrl(String videoUrl) {
+    public static Video ofVideoUrl(Match match, String videoUrl) {
         return Video.builder()
+                .match(match)
                 .videoUrl(videoUrl)
                 .build();
     }

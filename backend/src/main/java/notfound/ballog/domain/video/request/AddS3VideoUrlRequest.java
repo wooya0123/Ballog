@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class AddS3VideoUrlRequest {
+    private Integer matchId;
+
     @NotBlank(message = "파일명을 입력해주세요.")
     private String fileName;
 }
