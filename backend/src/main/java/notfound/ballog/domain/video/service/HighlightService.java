@@ -8,6 +8,7 @@ import notfound.ballog.common.response.BaseResponseStatus;
 import notfound.ballog.domain.match.entity.Match;
 import notfound.ballog.domain.match.repository.MatchRepository;
 import notfound.ballog.domain.video.dto.HighlightDto;
+import notfound.ballog.domain.video.dto.HighlightExtractionDto;
 import notfound.ballog.domain.video.entity.Highlight;
 import notfound.ballog.domain.video.entity.Like;
 import notfound.ballog.domain.video.entity.Video;
@@ -112,22 +113,21 @@ public class HighlightService {
                 .block();
 
         // DB에 하이라이트 저장
-        List<HighlightDto> highlightList = null;
+        List<HighlightExtractionDto> highlightList = null;
         if (highlightResponse != null) {
             highlightList = highlightResponse.getHighlightList();
             log.info("하이라이트 리스트--------------- {}", highlightList);
         }
 
-        List<HighlightDto> savedHighlightList = null;
+        List<HighlightExtractionDto> savedHighlightList = null;
         if (highlightList != null) {
             log.info("하이라이트 갯수--------------- {}", highlightList.size());
-            for (HighlightDto highlightDto : highlightList) {
-                Highlight highlight = Highlight.of(video, highlightDto);
+            for (HighlightExtractionDto highlightExtractionDto : highlightList) {
+                Highlight highlight = Highlight.of(video, highlightExtractionDto);
 
                 Highlight savedHighlight = highlightRepository.save(highlight);
 
-                HighlightDto dto = HighlightDto.of(savedHighlight, false);
-                savedHighlightList.add(dto);
+                savedHighlightList.add(HighlightExtractionDto.of(savedHighlight));
             }
         } else {
             throw new InternalServerException(BaseResponseStatus.HIGHLIGHT_EXTRACT_FAIL);

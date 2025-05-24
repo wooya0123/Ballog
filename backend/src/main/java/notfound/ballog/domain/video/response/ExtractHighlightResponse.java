@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import notfound.ballog.domain.video.dto.HighlightDto;
+import notfound.ballog.domain.video.dto.HighlightExtractionDto;
 
 import java.util.List;
 
@@ -13,9 +14,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ExtractHighlightResponse {
-    private List<HighlightDto> highlightList;
+    private List<HighlightExtractionDto> highlightList;
 
-    public static ExtractHighlightResponse of(List<HighlightDto> highlightList) {
+    public static ExtractHighlightResponse of(List<HighlightExtractionDto> highlightList) {
         return ExtractHighlightResponse.builder()
                 .highlightList(highlightList)
                 .build();
