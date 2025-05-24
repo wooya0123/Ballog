@@ -67,13 +67,9 @@ fun MatchVideoTab(matchId: Int) {
     }
 
     // 로딩 다이얼로그 표시
-    if (isUploading || isExtractingHighlights) {
+    if (isExtractingHighlights) {
         LoadingDialog(
-            message = when {
-                isUploading && isExtractingHighlights -> "하이라이트 추출 중..."
-                isUploading -> "영상 업로드 중..."
-                else -> "하이라이트를\n추출하는 중입니다..."
-            }
+            message =  "하이라이트 추출 중..."
         )
     }
 

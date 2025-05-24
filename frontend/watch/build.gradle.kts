@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,44 +9,20 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.ballog.watch"
+        applicationId = "com.ballog.mobile"
         minSdk = 34
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
     }
 
-    signingConfigs {
-        create("release") {
-            val props = Properties().apply {
-                load(rootProject.file("local.properties").inputStream())
-            }
-
-            storeFile = file(props["KEYSTORE_PATH"] as String)
-            storePassword = props["KEYSTORE_PASSWORD"] as String
-            keyAlias = props["KEY_ALIAS"] as String
-            keyPassword = props["KEY_PASSWORD"] as String
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-        }
-    }
-
-    applicationVariants.all {
-        outputs.all {
-            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            val appName = "ballog"
-            val moduleName = "watch"
-            val version = defaultConfig.versionName
-            outputImpl.outputFileName = "$appName-$moduleName-v$version.apk"
         }
     }
 

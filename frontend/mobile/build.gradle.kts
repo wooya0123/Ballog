@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -24,37 +22,14 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // 빈 AWS 키 설정 - 실제 키는 S3Utils에서 assets/aws.properties에서 로드
         buildConfigField("String", "AWS_ACCESS_KEY", "\"\"")
         buildConfigField("String", "AWS_SECRET_KEY", "\"\"")
-    }
-
-    applicationVariants.all {
-        outputs.all {
-            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            val appName = "ballog"
-            val moduleName = "mobile"
-            val version = defaultConfig.versionName
-            outputImpl.outputFileName = "$appName-$moduleName-v$version.apk"
-        }
-    }
-
-    signingConfigs {
-        create("release") {
-            val props = Properties().apply {
-                load(rootProject.file("local.properties").inputStream())
-            }
-
-            storeFile = file(props["KEYSTORE_PATH"] as String)
-            storePassword = props["KEYSTORE_PASSWORD"] as String
-            keyAlias = props["KEY_ALIAS"] as String
-            keyPassword = props["KEY_PASSWORD"] as String
-        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -64,9 +39,10 @@ android {
 
     buildFeatures {
         compose = true
-        buildConfig = true
+        buildConfig = true  // BuildConfig 클래스 생성 활성화
     }
 
+    // ✅ composeOptions는 생략 가능하나 명시하려면 최신 버전으로 맞춤
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.13"
     }
@@ -86,7 +62,6 @@ android {
         }
     }
 }
-
 
 dependencies {
     implementation(libs.androidx.tv.material)
@@ -143,6 +118,5 @@ dependencies {
     // Media3 (ExoPlayer 최신 버전)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
-    
-}
 
+}
