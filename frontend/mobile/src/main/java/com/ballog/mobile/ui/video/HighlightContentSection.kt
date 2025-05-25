@@ -57,9 +57,6 @@ fun HighlightContentSection(
     onHighlightClick: (String) -> Unit = {},
     viewModel: VideoViewModel = viewModel()
 ) {
-    val isUploading by viewModel.isUploading.collectAsState()
-    val context = LocalContext.current
-
     Column(modifier = Modifier.fillMaxSize()) {
         VideoPlaceholderBox(
             videoUri = videoUri,
@@ -88,30 +85,16 @@ fun HighlightContentSection(
             Spacer(modifier = Modifier.height(20.dp))
 
             if (videoUri == null) {
-                if (isUploading) {
-                    BallogButton(
-                        onClick = {},
-                        enabled = false,
-                        type = ButtonType.BOTH,
-                        buttonColor = ButtonColor.GRAY,
-                        icon = painterResource(id = R.drawable.ic_upload),
-                        label = "업로드 중",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    )
-                } else {
-                    BallogButton(
-                        onClick = onUploadClick,
-                        type = ButtonType.BOTH,
-                        buttonColor = ButtonColor.GRAY,
-                        icon = painterResource(id = R.drawable.ic_upload),
-                        label = "영상 업로드",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    )
-                }
+                BallogButton(
+                    onClick = onUploadClick,
+                    type = ButtonType.BOTH,
+                    buttonColor = ButtonColor.GRAY,
+                    icon = painterResource(id = R.drawable.ic_upload),
+                    label = "영상 업로드",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                )
             } else {
                 highlights.forEach { highlight ->
                     HighlightCard(
