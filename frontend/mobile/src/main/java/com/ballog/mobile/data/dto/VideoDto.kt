@@ -31,6 +31,7 @@ data class HighlightDto(
 )
 
 data class PresignedVideoUploadRequest(
+    val matchId: Int,
     val fileName: String
 )
 
@@ -112,14 +113,5 @@ data class HighlightExtractionRequest(
 )
 
 data class HighlightExtractionResponse(
-    val isSuccess: Boolean,
-    val code: Int,
-    val message: String,
-    val result: List<ExtractedHighlight>
-)
-
-data class ExtractedHighlight(
-    val startTime: String,  // "00:01:23" 형식
-    val endTime: String,    // "00:01:36" 형식
-    val confidence: Float   // 하이라이트 신뢰도 (0.0 ~ 1.0)
+    val highlightList: List<HighlightDto>
 )

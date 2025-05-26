@@ -65,5 +65,5 @@ interface VideoApi {
         @Header("Authorization") token: String,
         @Part file: MultipartBody.Part,
         @Part("videoId") videoId: Int
-    ): Response<ApiResponse<List<ExtractedHighlight>>>
+    ): Response<ApiResponse<HighlightExtractionResponse>>
 }
